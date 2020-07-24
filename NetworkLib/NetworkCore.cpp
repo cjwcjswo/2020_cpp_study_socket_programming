@@ -3,6 +3,12 @@
 
 using namespace std;
 
+/*
+
+		Private 영역
+
+*/
+
 ErrorCode NetworkCore::Init()
 {
 	WSADATA wsa_data;
@@ -12,17 +18,35 @@ ErrorCode NetworkCore::Init()
 		return ErrorCode::WSA_START_UP_FAIL;
 	}
 
-	int addr_family = AF_INET;
-	this->accept_socket_ = socket(addr_family, SOCK_STREAM, 0);
+	this->accept_socket_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->accept_socket_ == INVALID_SOCKET)
 	{
 		return ErrorCode::SOCKET_INIT_FAIL;
 	}
 
+	ErrorCode error_code = this->Bind();
+	if (error_code != ErrorCode::SUCCESS)
+	{
+		return error_code;
+	}
+
+	error_code = this->Listen();
+	if (error_code != ErrorCode::SUCCESS)
+	{
+		return error_code;
+	}
+
+	cout << "Init Ok" << endl;
+
+	return ErrorCode::SUCCESS;
+}
+
+ErrorCode NetworkCore::Bind()
+{
 	SOCKADDR_IN socket_addr_in;
 	int socket_addr_in_size = sizeof(socket_addr_in);
 	ZeroMemory(&socket_addr_in, socket_addr_in_size);
-	socket_addr_in.sin_family = addr_family;
+	socket_addr_in.sin_family = AF_INET;
 	socket_addr_in.sin_port = htons(32452);
 	socket_addr_in.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 
@@ -31,18 +55,80 @@ ErrorCode NetworkCore::Init()
 		return ErrorCode::SOCKET_BIND_FAIL;
 	}
 
+	return ErrorCode::SUCCESS;
+}
+
+ErrorCode NetworkCore::Listen()
+{
 	if (listen(this->accept_socket_, SOMAXCONN) == SOCKET_ERROR)
 	{
 		return ErrorCode::SOCKET_LISTEN_FAIL;
 	}
 
-	cout << "Init Ok" << endl;
+	return ErrorCode::SUCCESS;
+}
+
+ErrorCode NetworkCore::AcceptClient()
+{
+	SOCKADDR_IN socket_addr_in;
+	int size = sizeof(socket_addr_in);
+	SOCKET client_socket = accept(this->accept_socket_, (SOCKADDR*)&socket_addr_in, &size);
+	if (client_socket != INVALID_SOCKET)
+	{
+		FD_SET(client_socket, &this->read_set_);
+		FD_SET(client_socket, &this->write_set_);
+		client_deque_.push_back(client_socket);
+
+		cout << static_cast<int>(client_socket) << " connect" << endl;
+		return ErrorCode::SUCCESS;
+	}
+
+	return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
+}
+
+ErrorCode NetworkCore::CheckSelectResult(int select_result)
+{
+	if (select_result == 0)
+	{
+		return ErrorCode::SOCKET_SELECT_RESULT_ZERO;
+	}
+	
+	if (select_result < 0)
+	{
+		return ErrorCode::SOCKET_SELECT_FAIL;
+	}
 
 	return ErrorCode::SUCCESS;
 }
 
+ErrorCode NetworkCore::SelectClient(const fd_set& read_set, const fd_set& write_set)
+{
+	for (auto& client_socket : client_deque_)
+	{
+		char buf[BUFSIZ];
+		int len = recv(client_socket, buf, BUFSIZ, 0);
+		if (len == 0)
+		{
+			FD_CLR(client_socket, &this->read_set_);
+			FD_CLR(client_socket, &this->write_set_);
 
-NetworkCore::NetworkCore() : accept_socket_(0)
+			for (auto itr = client_deque_.begin(); itr != client_deque_.end(); ++itr)
+			{
+				client_deque_.erase(itr);
+				break;
+			}
+			cout << client_socket << " disconnect" << endl;
+		}
+	}
+}
+
+/*
+
+		Public 영역
+
+*/
+
+NetworkCore::NetworkCore() : accept_socket_(0), read_set_(), write_set_()
 {
 }
 
@@ -51,7 +137,7 @@ NetworkCore::~NetworkCore()
 	Stop();
 }
 
-ErrorCode NetworkCore::Start()
+ErrorCode NetworkCore::Run()
 {
 	cout << "Start" << endl;
 	ErrorCode error_code = Init();
@@ -61,69 +147,40 @@ ErrorCode NetworkCore::Start()
 	}
 
 
-	fd_set read_set, write_set, except_set;
-	fd_set tmp_read_set, tmp_write_set, tmp_except_set;
+	FD_ZERO(&this->read_set_);
+	FD_ZERO(&this->write_set_);
+	FD_SET(this->accept_socket_, &this->read_set_);
 
-	FD_ZERO(&read_set);
-	FD_ZERO(&write_set);
-	FD_ZERO(&except_set);
-
-	FD_SET(this->accept_socket_, &read_set);
-	FD_SET(this->accept_socket_, &except_set);
-
-	tmp_read_set = read_set;
-	tmp_write_set = write_set;
-	tmp_except_set = except_set;
 
 	while (true)
 	{
-		read_set = tmp_read_set;
-		write_set = tmp_write_set;
-		except_set = tmp_except_set;
+		auto read_set = this->read_set_;
+		auto write_set = this->write_set_;
 
-		int result = select(NULL, &read_set, &write_set, &except_set, nullptr);
-		if (result == 0)
+		int select_result = select(NULL, &read_set, &write_set, nullptr, nullptr);
+		
+		error_code = this->CheckSelectResult(select_result);
+		if (error_code != ErrorCode::SUCCESS)
 		{
-			cout << "NONE" << endl;
+			cout << static_cast<int>(error_code) << endl;
 			continue;
-		}
-		if (result == SOCKET_ERROR)
-		{
-			return ErrorCode::SOCKET_SELECT_FAIL;
 		}
 
 		if (FD_ISSET(this->accept_socket_, &read_set))
 		{
-			SOCKADDR_IN socket_addr_in;
-			int size = sizeof(socket_addr_in);
-			SOCKET client_socket = accept(this->accept_socket_, (SOCKADDR*)&socket_addr_in, &size);
-			if (client_socket != INVALID_SOCKET)
+			error_code = this->AcceptClient();
+			if (error_code != ErrorCode::SUCCESS)
 			{
-				FD_SET(client_socket, &tmp_read_set);
-				FD_SET(client_socket, &tmp_write_set);
-				FD_SET(client_socket, &tmp_except_set);
-				client_deque_.push_back(client_socket);
-
-				cout << static_cast<int>(client_socket) << " connect" << endl;
+				cout << static_cast<int>(error_code) << endl;
+				continue;
 			}
 		}
-		for (auto& client_socket : client_deque_)
-		{
-			char buf[BUFSIZ];
-			int len = recv(client_socket, buf, BUFSIZ, 0);
-			if (len == 0)
-			{
-				FD_CLR(client_socket, &tmp_read_set);
-				FD_CLR(client_socket, &tmp_write_set);
-				FD_CLR(client_socket, &tmp_except_set);
 
-				for (auto itr = client_deque_.begin(); itr != client_deque_.end(); ++itr)
-				{
-					client_deque_.erase(itr);
-					break;
-				}
-				cout << client_socket << " disconnect" << endl;
-			}
+		error_code = this->SelectClient(read_set, write_set);
+		if (error_code != ErrorCode::SUCCESS)
+		{
+			cout << static_cast<int>(error_code) << endl;
+			continue;
 		}
 	}
 

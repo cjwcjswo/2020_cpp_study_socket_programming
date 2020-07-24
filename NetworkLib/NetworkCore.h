@@ -8,10 +8,18 @@ class NetworkCore
 {
 private:
 	ErrorCode Init();
+	ErrorCode Bind();
+	ErrorCode Listen();
+	ErrorCode CheckSelectResult(int select_result);
+	ErrorCode AcceptClient();
+	ErrorCode SelectClient(const fd_set& read_set, const fd_set& write_set);
 
 private:
 	SOCKET accept_socket_;
 	std::deque<SOCKET> client_deque_;
+
+	fd_set read_set_;
+	fd_set write_set_;
 
 public:
 	NetworkCore();
@@ -19,7 +27,7 @@ public:
 
 	static void LoadConfig();
 
-	ErrorCode Start();
+	ErrorCode Run();
 	ErrorCode Stop();
 };
 

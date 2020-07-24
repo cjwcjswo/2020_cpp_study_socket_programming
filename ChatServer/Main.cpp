@@ -4,5 +4,5 @@
 int main()
 {
     NetworkCore core;
-    core.Start();
+    core.Run();
 }
