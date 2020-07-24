@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChatServer", "ChatServer.vcxproj", "{C702228E-FE85-481B-A0C9-1F995B38A3FB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68} = {A4BEFCF1-3E43-49CE-841A-07D51A248C68}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkLib", "..\NetworkLib\NetworkLib.vcxproj", "{A4BEFCF1-3E43-49CE-841A-07D51A248C68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Debug|x64.ActiveCfg = Debug|x64
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Debug|x64.Build.0 = Debug|x64
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Debug|x86.ActiveCfg = Debug|Win32
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Debug|x86.Build.0 = Debug|Win32
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Release|x64.ActiveCfg = Release|x64
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Release|x64.Build.0 = Release|x64
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Release|x86.ActiveCfg = Release|Win32
+		{C702228E-FE85-481B-A0C9-1F995B38A3FB}.Release|x86.Build.0 = Release|Win32
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Debug|x64.ActiveCfg = Debug|x64
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Debug|x64.Build.0 = Debug|x64
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Debug|x86.ActiveCfg = Debug|Win32
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Debug|x86.Build.0 = Debug|Win32
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Release|x64.ActiveCfg = Release|x64
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Release|x64.Build.0 = Release|x64
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Release|x86.ActiveCfg = Release|Win32
+		{A4BEFCF1-3E43-49CE-841A-07D51A248C68}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {79A325AB-C2CC-45E1-8C4D-6A2C13A3E938}
+	EndGlobalSection
+EndGlobal
