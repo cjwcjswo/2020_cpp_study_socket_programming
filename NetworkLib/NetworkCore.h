@@ -12,7 +12,7 @@ private:
 	ErrorCode Listen();
 	ErrorCode CheckSelectResult(int select_result);
 	ErrorCode AcceptClient();
-	ErrorCode SelectClient(const fd_set& read_set, const fd_set& write_set);
+	void SelectClient(const fd_set& read_set, const fd_set& write_set);
 
 private:
 	SOCKET accept_socket_;
@@ -20,6 +20,8 @@ private:
 
 	fd_set read_set_;
 	fd_set write_set_;
+
+	char read_buf_[BUFSIZ];
 
 public:
 	NetworkCore();

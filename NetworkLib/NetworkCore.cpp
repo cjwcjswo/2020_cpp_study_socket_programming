@@ -101,23 +101,29 @@ ErrorCode NetworkCore::CheckSelectResult(int select_result)
 	return ErrorCode::SUCCESS;
 }
 
-ErrorCode NetworkCore::SelectClient(const fd_set& read_set, const fd_set& write_set)
+void NetworkCore::SelectClient(const fd_set& read_set, const fd_set& write_set)
 {
 	for (auto& client_socket : client_deque_)
 	{
-		char buf[BUFSIZ];
-		int len = recv(client_socket, buf, BUFSIZ, 0);
-		if (len == 0)
+		if (FD_ISSET(client_socket, &read_set))
 		{
-			FD_CLR(client_socket, &this->read_set_);
-			FD_CLR(client_socket, &this->write_set_);
-
-			for (auto itr = client_deque_.begin(); itr != client_deque_.end(); ++itr)
+			int len = recv(client_socket, read_buf_, BUFSIZ, 0);
+			if (len == 0)
 			{
-				client_deque_.erase(itr);
-				break;
+				FD_CLR(client_socket, &this->read_set_);
+				FD_CLR(client_socket, &this->write_set_);
+
+				for (auto itr = client_deque_.begin(); itr != client_deque_.end(); ++itr)
+				{
+					client_deque_.erase(itr);
+					break;
+				}
+				cout << client_socket << " disconnect" << endl;
 			}
-			cout << client_socket << " disconnect" << endl;
+		}
+		if (FD_ISSET(client_socket, &write_set))
+		{
+
 		}
 	}
 }
@@ -128,7 +134,7 @@ ErrorCode NetworkCore::SelectClient(const fd_set& read_set, const fd_set& write_
 
 */
 
-NetworkCore::NetworkCore() : accept_socket_(0), read_set_(), write_set_()
+NetworkCore::NetworkCore() : accept_socket_(0), read_set_(), write_set_(), read_buf_()
 {
 }
 
@@ -176,12 +182,7 @@ ErrorCode NetworkCore::Run()
 			}
 		}
 
-		error_code = this->SelectClient(read_set, write_set);
-		if (error_code != ErrorCode::SUCCESS)
-		{
-			cout << static_cast<int>(error_code) << endl;
-			continue;
-		}
+		this->SelectClient(read_set, write_set);
 	}
 
 	return ErrorCode::SUCCESS;
