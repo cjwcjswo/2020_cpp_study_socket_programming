@@ -18,14 +18,14 @@ ErrorCode NetworkCore::Init()
 		return ErrorCode::WSA_START_UP_FAIL;
 	}
 
-	// client accept socket init
+	// Client Accept Socket Init
 	this->accept_socket_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->accept_socket_ == INVALID_SOCKET)
 	{
 		return ErrorCode::SOCKET_INIT_FAIL;
 	}
 
-	// reuse address
+	// Reuse Address
 	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
 	char reuse_addr = 1;
 	if (setsockopt(this->accept_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)) < 0)
@@ -90,7 +90,7 @@ ErrorCode NetworkCore::AcceptClient()
 		linger ling = { 0, 0 };
 		setsockopt(client_socket, SOL_SOCKET, SO_LINGER, (char*)&ling, sizeof(ling));
 
-		// set non-blocking mode (https://www.joinc.co.kr/w/man/4200/ioctlsocket)
+		// Set Non-Blocking Mode (https://www.joinc.co.kr/w/man/4200/ioctlsocket)
 		unsigned long mode = 1;
 		if (ioctlsocket(client_socket, FIONBIO, &mode) == SOCKET_ERROR)
 		{
@@ -195,8 +195,8 @@ ErrorCode NetworkCore::ReceiveClient(SharedPtrClientSession client_session, cons
 			}
 		}
 
-		ReceivePacket receive_packet = { client_session->index(), client_session->unique_id(), header_ptr->packet_id, require_body_size, &client_session->receive_buff_[current_receive_pos]};
-		this->receive_packet_queue_.push(receive_packet);
+		ReceivePacket receive_packet = { client_session->index(), client_session->unique_id(), header_ptr->packet_id, require_body_size, &client_session->receive_buff_[current_receive_pos] };
+		this->PushReceivePacket(receive_packet);
 		current_receive_pos += require_body_size;
 	}
 
@@ -204,6 +204,38 @@ ErrorCode NetworkCore::ReceiveClient(SharedPtrClientSession client_session, cons
 	client_session->previous_receive_buff_pos_ = current_receive_pos;
 
 	return ErrorCode::SUCCESS;
+}
+
+void NetworkCore::SelectProcess()
+{
+	ErrorCode error_code;
+	while (this->is_running_)
+	{
+		auto read_set = this->read_set_;
+		auto write_set = this->write_set_;
+
+		// Block
+		int select_result = select(NULL, &read_set, &write_set, nullptr, nullptr);
+
+		error_code = this->CheckSelectResult(select_result);
+		if (error_code != ErrorCode::SUCCESS)
+		{
+			cout << static_cast<int>(error_code) << endl;
+			continue;
+		}
+
+		if (FD_ISSET(this->accept_socket_, &read_set))
+		{
+			error_code = this->AcceptClient();
+			if (error_code != ErrorCode::SUCCESS)
+			{
+				cout << static_cast<int>(error_code) << endl;
+				continue;
+			}
+		}
+
+		this->SelectClient(read_set, write_set);
+	}
 }
 
 ErrorCode NetworkCore::SendClient(SharedPtrClientSession client_session, const fd_set& write_set)
@@ -233,9 +265,15 @@ ErrorCode NetworkCore::SendClient(SharedPtrClientSession client_session, const f
 	return ErrorCode::SUCCESS;
 }
 
+void NetworkCore::PushReceivePacket(const ReceivePacket receive_packet)
+{
+	std::lock_guard<std::mutex> lock(this->mutex_);
+	this->receive_packet_queue_.push(receive_packet);
+}
+
 void NetworkCore::CloseSession(const ErrorCode error_code, const SharedPtrClientSession client_session)
 {
-	std::cout << "[" << static_cast<int>(error_code) << "]: " << client_session->String() <<  std::endl;
+	std::cout << "[" << static_cast<int>(error_code) << "]: " << client_session->String() << std::endl;
 	SOCKET client_socket = client_session->socket();
 	this->client_session_manager.DisconnectClientSession(client_socket);
 	closesocket(client_socket);
@@ -267,39 +305,13 @@ ErrorCode NetworkCore::Run()
 		return error_code;
 	}
 
-
 	FD_ZERO(&this->read_set_);
 	FD_ZERO(&this->write_set_);
 	FD_SET(this->accept_socket_, &this->read_set_);
 
-
-	while (true)
-	{
-		auto read_set = this->read_set_;
-		auto write_set = this->write_set_;
-
-		// Block
-		int select_result = select(NULL, &read_set, &write_set, nullptr, nullptr);
-
-		error_code = this->CheckSelectResult(select_result);
-		if (error_code != ErrorCode::SUCCESS)
-		{
-			cout << static_cast<int>(error_code) << endl;
-			continue;
-		}
-
-		if (FD_ISSET(this->accept_socket_, &read_set))
-		{
-			error_code = this->AcceptClient();
-			if (error_code != ErrorCode::SUCCESS)
-			{
-				cout << static_cast<int>(error_code) << endl;
-				continue;
-			}
-		}
-
-		this->SelectClient(read_set, write_set);
-	}
+	// Start Thread
+	this->is_running_ = true;
+	this->ptr_select_thread = std::make_unique<std::thread>([&]() {this->SelectProcess(); });
 
 	return ErrorCode::SUCCESS;
 }
@@ -307,13 +319,35 @@ ErrorCode NetworkCore::Run()
 ErrorCode NetworkCore::Stop()
 {
 	// Stop Accept Socket
-	shutdown(this->accept_socket_, SD_BOTH);
-	closesocket(this->accept_socket_);
-	WSACleanup();
+	if (this->is_running_)
+	{
+		for (auto client_session : this->client_session_manager.client_deque())
+		{
+			this->CloseSession(ErrorCode::SUCCESS, client_session);
+		}
 
-	cout << "Stop Server";
+		shutdown(this->accept_socket_, SD_BOTH);
+		closesocket(this->accept_socket_);
+		WSACleanup();
+		this->is_running_ = false;
+		this->ptr_select_thread->join();
+		cout << "Stop Server";
+	}
 
 	return ErrorCode::SUCCESS;
+}
+
+ReceivePacket NetworkCore::GetReceivePacket()
+{
+	std::lock_guard<std::mutex> lock(this->mutex_);
+	if (this->receive_packet_queue_.empty())
+	{
+		return ReceivePacket{};
+	}
+	auto receive_packet = this->receive_packet_queue_.front();
+	this->receive_packet_queue_.pop();
+
+	return receive_packet;
 }
 
 void NetworkCore::LoadConfig()
