@@ -5,6 +5,12 @@
 * **Windows 10**
 * **Visual Studio 2019**
 * **C++17**
+
+## 코딩 컨벤션
+
+* 코딩 컨벤션은 기본적으로 Google C++ 코딩 컨벤션을 준수한다. (https://google.github.io/styleguide/cppguide.html)
+* 예외적으로 파일 이름은 Pascal Case 표기법을 사용한다. (network_core.cpp (X), NetworkCore.cpp (O))
+
 ## TODO
 
 * **진행 중 & 해야하는 일감**
