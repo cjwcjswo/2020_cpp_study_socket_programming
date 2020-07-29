@@ -14,7 +14,8 @@ class ClientSession
 public:
 	ClientSession();
 	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket);
-	~ClientSession();
+
+	~ClientSession() = default;
 
 
 public:

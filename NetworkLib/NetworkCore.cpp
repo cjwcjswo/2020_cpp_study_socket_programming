@@ -333,7 +333,7 @@ ErrorCode NetworkCore::Init()
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	mClientSessionManager->Init(100);
+	mClientSessionManager->Init(100); // TODO: Load Config
 
 	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
 
