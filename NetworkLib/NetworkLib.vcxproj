@@ -23,6 +23,7 @@
     <ClInclude Include="ClientSessionManager.h" />
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="NetworkCore.h" />
+    <ClInclude Include="PrimitiveTypes.h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>

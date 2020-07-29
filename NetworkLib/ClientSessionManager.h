@@ -1,30 +1,47 @@
 #pragma once
 #pragma comment(lib,"ws2_32")
+
 #include <deque>
 #include <memory>
 #include <WinSock2.h>
 
-#include "ClientSession.h"
+#include "PrimitiveTypes.h"
 
-using SharedPtrClientSession = std::shared_ptr<ClientSession>;
+
+class ClientSession;
+
 
 class ClientSessionManager
 {
 private:
-	unsigned long GenerateUniqueId() const;
+	using SharedPtrClientSession = std::shared_ptr<ClientSession>;
+
 
 private:
-	std::deque<SharedPtrClientSession> client_deque_{};
-	inline static unsigned long unique_id_generator = 0; // is atomic?
-	int max_session_size_ = 0;
+	std::deque<SharedPtrClientSession> mClientDeque{};
+	int mMaxSessionSize = 0;
+
+
+private:
+	inline static unsigned long mUniqueIdGenerator = 0; // is atomic?
+	
 
 public:
-	explicit ClientSessionManager(int max_client_session_size) : max_session_size_(max_client_session_size) {};
+	explicit ClientSessionManager(const int maxClientSessionSize);
+	~ClientSessionManager();
 
-	const std::deque<SharedPtrClientSession>& client_deque() const { return this->client_deque_; };
-	void ConnectClientSession(const SOCKET& client_socket);
-	void DisconnectClientSession(const int client_index);
-	void DisconnectClientSession(const unsigned long client_unique_id);
-	void DisconnectClientSession(const SOCKET client_socket);
+
+private:
+	unsigned long GenerateUniqueId() const;
+
+
+public:
+	inline const std::deque<SharedPtrClientSession>& ClientDeque() const noexcept { return this->mClientDeque; };
+
+	void ConnectClientSession(const SOCKET& clientSocket);
+
+	void DisconnectClientSession(const int32 clientIndex);
+	void DisconnectClientSession(const uint64 clientUniqueId);
+	void DisconnectClientSession(const SOCKET clientSocket);
 };
 

@@ -1,43 +1,58 @@
+#include <iostream>
 #include "ClientSessionManager.h"
+#include "ClientSession.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ClientSessionManager::ClientSessionManager(const int maxClientSessionSize): mMaxSessionSize(maxClientSessionSize)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ClientSessionManager::~ClientSessionManager()
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned long ClientSessionManager::GenerateUniqueId() const
 {
-	return ++this->unique_id_generator;
+	return ++mUniqueIdGenerator;
 }
 
-void ClientSessionManager::ConnectClientSession(const SOCKET& client_socket)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ClientSessionManager::ConnectClientSession(const SOCKET& clientSocket)
 {
-	int index = this->client_deque_.size();
-	unsigned long unique_id = this->GenerateUniqueId();
-	SharedPtrClientSession client_session = std::make_shared<ClientSession>(index, unique_id, client_socket);
-	this->client_deque_.push_back(client_session);
-	std::cout << "Connect Client Session: " << client_session->String() << std::endl;
+	int32 index = mClientDeque.size();
+	uint64 uniqueId = GenerateUniqueId();
+	SharedPtrClientSession clientSession = std::make_shared<ClientSession>(index, uniqueId, clientSocket);
+	mClientDeque.push_back(clientSession);
+	std::cout << "Connect Client Session: " << clientSession->String() << std::endl;
 }
 
-void ClientSessionManager::DisconnectClientSession(const int client_index)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ClientSessionManager::DisconnectClientSession(const int32 clientIndex)
 {
-	this->client_deque_.erase(this->client_deque_.begin() + client_index);
+	mClientDeque.erase(mClientDeque.begin() + clientIndex);
 }
 
-void ClientSessionManager::DisconnectClientSession(const unsigned long client_unique_id)
+void ClientSessionManager::DisconnectClientSession(const uint64 clientUniqueId)
 {
-	for (auto iter = client_deque_.begin(); iter != client_deque_.end(); ++iter)
+	for (auto iter = mClientDeque.begin(); iter != mClientDeque.end(); ++iter)
 	{
-		if ((*iter)->unique_id() == client_unique_id)
+		if ((*iter)->mUniqueId == clientUniqueId)
 		{
-			this->client_deque_.erase(iter);
+			mClientDeque.erase(iter);
 			return;
 		}
 	}
 }
 
-void ClientSessionManager::DisconnectClientSession(const SOCKET client_socket)
+void ClientSessionManager::DisconnectClientSession(const SOCKET clientSocket)
 {
-	for (auto iter = client_deque_.begin(); iter != client_deque_.end(); ++iter)
+	for (auto iter = mClientDeque.begin(); iter != mClientDeque.end(); ++iter)
 	{
-		if ((*iter)->socket() == client_socket)
+		if ((*iter)->mSocket == clientSocket)
 		{
-			this->client_deque_.erase(iter);
+			mClientDeque.erase(iter);
 			return;
 		}
 	}
