@@ -12,13 +12,14 @@
 class ClientSession
 {
 public:
+	ClientSession();
 	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket);
 	~ClientSession();
 
 
 public:
 	constexpr static int BUFFER_SIZE = 1024;
-
+	constexpr static int INVALID_INDEX = -1;
 
 public:
 	int mRemainDataSize = 0;
@@ -28,12 +29,14 @@ public:
 	char mReceiveBuffer[BUFFER_SIZE] = { 0, };
 	char mSendBuffer[BUFFER_SIZE] = { 0, };
 
-	int32 mIndex = -1;
+	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = 0;
 	SOCKET mSocket = INVALID_SOCKET;
 
 
 public:
-	std::string String() const;
+	inline bool IsConnect() const { return mSocket != INVALID_SOCKET; };
+
+	void Clear();
 };
 

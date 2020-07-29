@@ -3,49 +3,58 @@
 #include "ClientSession.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSessionManager::ClientSessionManager(const int maxClientSessionSize): mMaxSessionSize(maxClientSessionSize)
+void ClientSessionManager::Init(const int maxClientSessionNum) noexcept
 {
+	mMaxSessionSize = maxClientSessionNum;
+	mClientVector.reserve(maxClientSessionNum);
+
+	for (int i = 0; i < maxClientSessionNum; ++i)
+	{
+		mClientIndexPool.push(i);
+		mClientVector.emplace_back(-1, 0, INVALID_SOCKET);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSessionManager::~ClientSessionManager()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned long ClientSessionManager::GenerateUniqueId() const
+uint64  ClientSessionManager::GenerateUniqueId() const
 {
 	return ++mUniqueIdGenerator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession ClientSessionManager::CreateClientSession(const SOCKET& clientSocket) const
+int32 ClientSessionManager::AllocClientSessionIndex()
 {
-	int32 index = mClientDeque.size();
-	uint64 uniqueId = GenerateUniqueId();
-	return ClientSession(index, uniqueId, clientSocket);
+	if (mClientIndexPool.empty())
+	{
+		return ClientSession::INVALID_INDEX;
+	}
+	int32 index = mClientIndexPool.front();
+	mClientIndexPool.pop();
+
+	return index;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSessionManager::ConnectClientSession(const ClientSession& clientSession)
+void ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
 {
-	SharedPtrClientSession ptrClientSession = std::make_shared<ClientSession>(clientSession);
-	mClientDeque.push_back(ptrClientSession);
+	mClientVector[clientSession.mIndex] = clientSession;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSessionManager::DisconnectClientSession(const int32 clientIndex)
 {
-	mClientDeque.erase(mClientDeque.begin() + clientIndex);
+	mClientVector[clientIndex].Clear();
+	mClientIndexPool.push(clientIndex);
 }
 
 void ClientSessionManager::DisconnectClientSession(const uint64 clientUniqueId)
 {
-	for (auto iter = mClientDeque.begin(); iter != mClientDeque.end(); ++iter)
+	for (int i = 0; i < mMaxSessionSize; i++)
 	{
-		if ((*iter)->mUniqueId == clientUniqueId)
+		if (mClientVector[i].mUniqueId == clientUniqueId)
 		{
-			mClientDeque.erase(iter);
+			mClientVector[i].Clear();
+			mClientIndexPool.push(i);
 			return;
 		}
 	}
@@ -53,11 +62,12 @@ void ClientSessionManager::DisconnectClientSession(const uint64 clientUniqueId)
 
 void ClientSessionManager::DisconnectClientSession(const SOCKET clientSocket)
 {
-	for (auto iter = mClientDeque.begin(); iter != mClientDeque.end(); ++iter)
+	for (int i = 0; i < mMaxSessionSize; i++)
 	{
-		if ((*iter)->mSocket == clientSocket)
+		if (mClientVector[i].mSocket == clientSocket)
 		{
-			mClientDeque.erase(iter);
+			mClientVector[i].Clear();
+			mClientIndexPool.push(i);
 			return;
 		}
 	}

@@ -15,17 +15,14 @@
 class ClientSessionManager;
 class ClientSession;
 
-
 class NetworkCore
 {
 private:
-	using UniquePtrClientSessionManager = std::unique_ptr<ClientSessionManager>;
 	using UniquePtrThread = std::unique_ptr<std::thread>;
-	using SharedPtrClientSession = std::shared_ptr<ClientSession>;
 
 
 private:
-	UniquePtrClientSessionManager mClientSessionManager = nullptr;
+	ClientSessionManager* mClientSessionManager;
 
 	UniquePtrThread mSelectThread = nullptr;
 	std::mutex mMutex = {};
@@ -50,23 +47,23 @@ public:
 
 
 private:
-	ErrorCode Init();
-	ErrorCode Bind();
-	ErrorCode Listen();
-	ErrorCode CheckSelectResult(int selectResult);
-	ErrorCode AcceptClient();
-	ErrorCode ReceiveClient(SharedPtrClientSession clientSession, const fd_set& readSet);
-	ErrorCode SendClient(SharedPtrClientSession clientSession, const fd_set& readSet);
+	Core::ErrorCode Bind();
+	Core::ErrorCode Listen();
+	Core::ErrorCode CheckSelectResult(int selectResult);
+	Core::ErrorCode AcceptClient();
+	Core::ErrorCode ReceiveClient(ClientSession& clientSession, const fd_set& readSet);
+	Core::ErrorCode SendClient(ClientSession& clientSession, const fd_set& readSet);
 	
 	void PushReceivePacket(const Core::ReceivePacket receivePacket);
 	void SelectProcess();
 	void SelectClient(const fd_set& readSet, const fd_set& writeSet);
-	void CloseSession(const ErrorCode errorCode, const SharedPtrClientSession clientSession);
+	void CloseSession(const Core::ErrorCode errorCode, const ClientSession& clientSession);
 
 
 public:
-	ErrorCode Run();
-	ErrorCode Stop();
+	Core::ErrorCode Init();
+	Core::ErrorCode Run();
+	Core::ErrorCode Stop();
 	Core::ReceivePacket GetReceivePacket();
 };
 

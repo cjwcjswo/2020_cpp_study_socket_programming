@@ -1,7 +1,8 @@
 #pragma once
 #pragma comment(lib,"ws2_32")
 
-#include <deque>
+#include <vector>
+#include <queue>
 #include <memory>
 #include <WinSock2.h>
 
@@ -14,11 +15,9 @@ class ClientSession;
 class ClientSessionManager
 {
 private:
-	using SharedPtrClientSession = std::shared_ptr<ClientSession>;
+	std::vector<ClientSession> mClientVector{};
+	std::queue<int32> mClientIndexPool{};
 
-
-private:
-	std::deque<SharedPtrClientSession> mClientDeque{};
 	int mMaxSessionSize = 0;
 
 
@@ -27,20 +26,19 @@ private:
 	
 
 public:
-	explicit ClientSessionManager(const int maxClientSessionSize);
-	~ClientSessionManager();
-
-
-private:
-	unsigned long GenerateUniqueId() const;
+	ClientSessionManager() = default;
+	~ClientSessionManager() = default;
 
 
 public:
-	inline const std::deque<SharedPtrClientSession>& ClientDeque() const noexcept { return this->mClientDeque; };
+	void Init(const int maxClientSessionNum) noexcept;
 
-	ClientSession CreateClientSession(const SOCKET& clientSocket) const;
+	inline const std::vector<ClientSession>& ClientVector() const noexcept { return mClientVector; };
 
-	void ConnectClientSession(const ClientSession& clientSession);
+	uint64 GenerateUniqueId() const;
+	int32 AllocClientSessionIndex();
+
+	void ConnectClientSession(ClientSession& clientSession);
 
 	void DisconnectClientSession(const int32 clientIndex);
 	void DisconnectClientSession(const uint64 clientUniqueId);

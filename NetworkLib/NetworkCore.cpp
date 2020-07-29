@@ -7,7 +7,6 @@ using namespace Core;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 NetworkCore::NetworkCore()
 {
-	mClientSessionManager = std::make_unique<ClientSessionManager>(50);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,48 +19,6 @@ NetworkCore::~NetworkCore()
 void NetworkCore::LoadConfig()
 {
 
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Init()
-{
-	WSADATA wsaData;
-	
-	if (SOCKET_ERROR == WSAStartup(MAKEWORD(2, 2), &wsaData))
-	{
-		return ErrorCode::WSA_START_UP_FAIL;
-	}
-
-	// Client Accept Socket Init
-	mAcceptSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (INVALID_SOCKET == mAcceptSocket)
-	{
-		return ErrorCode::SOCKET_INIT_FAIL;
-	}
-
-	// Reuse Address
-	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
-	char reuseAddr = 1;
-	if (setsockopt(mAcceptSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) < 0)
-	{
-		return ErrorCode::SOCKET_INIT_REUSE_ADDR_FAIL;
-	}
-
-	ErrorCode errorCode = Bind();
-	if (ErrorCode::SUCCESS != errorCode)
-	{
-		return errorCode;
-	}
-
-	errorCode = Listen();
-	if (ErrorCode::SUCCESS != errorCode)
-	{
-		return errorCode;
-	}
-
-	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
-
-	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,22 +61,36 @@ ErrorCode NetworkCore::AcceptClient()
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
 
-	FD_SET(clientSocket, &mReadSet);
-	FD_SET(clientSocket, &mWriteSet);
+	ClientSession clientSession;
+	clientSession.mSocket = clientSocket;
+
+	clientSession.mIndex = mClientSessionManager->AllocClientSessionIndex();
+	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
+	{
+		CloseSession(ErrorCode::SOCKET_INDEX_POOL_IS_FULL, clientSession);
+		return ErrorCode::SOCKET_INDEX_POOL_IS_FULL;
+	}
 
 	linger ling = { 0, 0 };
-	setsockopt(clientSocket, SOL_SOCKET, SO_LINGER, (char*)&ling, sizeof(ling));
+	setsockopt(clientSession.mSocket, SOL_SOCKET, SO_LINGER, (char*)&ling, sizeof(ling));
 
 	// Set Non-Blocking Mode (https://www.joinc.co.kr/w/man/4200/ioctlsocket)
 	unsigned long mode = 1;
-	if (SOCKET_ERROR == ioctlsocket(clientSocket, FIONBIO, &mode))
+	if (SOCKET_ERROR == ioctlsocket(clientSession.mSocket, FIONBIO, &mode))
 	{
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
 
-	ClientSession clientSession = mClientSessionManager->CreateClientSession(clientSocket);
+	FD_SET(clientSession.mSocket, &mReadSet);
+	FD_SET(clientSession.mSocket, &mWriteSet);
+	
+	clientSession.mUniqueId = mClientSessionManager->GenerateUniqueId();
+
 	mClientSessionManager->ConnectClientSession(clientSession);
+
 	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::Connect), 0, nullptr});
+
+	GLogger->PrintConsole(Color::GREEN, L"ConnectSession: %d / %d\n", clientSession.mIndex, clientSession.mUniqueId);
 
 	return ErrorCode::SUCCESS;
 }
@@ -143,15 +114,21 @@ ErrorCode NetworkCore::CheckSelectResult(int selectResult)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 {
-	for (SharedPtrClientSession clientSession : mClientSessionManager->ClientDeque())
+	for (ClientSession clientSession : mClientSessionManager->ClientVector())
 	{
-		SOCKET clientSocket = clientSession->mSocket;
+		if (!clientSession.IsConnect())
+		{
+			continue;
+		}
+
+		SOCKET clientSocket = clientSession.mSocket;
 		if (FD_ISSET(clientSocket, &readSet))
 		{
 			ErrorCode errorCode = ReceiveClient(clientSession, readSet);
 			if (ErrorCode::SUCCESS != errorCode)
 			{
 				CloseSession(errorCode, clientSession);
+				continue;
 			}
 		}
 		if (FD_ISSET(clientSocket, &writeSet))
@@ -166,16 +143,16 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::ReceiveClient(SharedPtrClientSession clientSession, const fd_set& readSet)
+ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession, const fd_set& readSet)
 {
 	int receivePos = 0;
-	if (clientSession->mRemainDataSize > 0)
+	if (clientSession.mRemainDataSize > 0)
 	{
-		memcpy_s(clientSession->mReceiveBuffer, clientSession->mRemainDataSize, &clientSession->mReceiveBuffer[clientSession->mPreviousReceiveBufferPos], clientSession->mRemainDataSize);
-		receivePos += clientSession->mRemainDataSize;
+		memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
+		receivePos += clientSession.mRemainDataSize;
 	}
 
-	int length = recv(clientSession->mSocket, &clientSession->mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE, 0);
+	int length = recv(clientSession.mSocket, &clientSession.mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE, 0);
 	if (0 == length)
 	{
 		return ErrorCode::SOCKET_RECEIVE_ZERO;
@@ -193,20 +170,20 @@ ErrorCode NetworkCore::ReceiveClient(SharedPtrClientSession clientSession, const
 		}
 	}
 
-	memcpy_s(clientSession->mReceiveBuffer, clientSession->mRemainDataSize, &clientSession->mReceiveBuffer[clientSession->mPreviousReceiveBufferPos], clientSession->mRemainDataSize);
-	clientSession->mRemainDataSize += length;
+	memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
+	clientSession.mRemainDataSize += length;
 	int currentReceivePos = 0;
 	PacketHeader* header;
 
-	while ((clientSession->mRemainDataSize - currentReceivePos) >= PACKET_HEADER_SIZE)
+	while ((clientSession.mRemainDataSize - currentReceivePos) >= PACKET_HEADER_SIZE)
 	{
-		header = reinterpret_cast<PacketHeader*>(&clientSession->mReceiveBuffer[currentReceivePos]);
+		header = reinterpret_cast<PacketHeader*>(&clientSession.mReceiveBuffer[currentReceivePos]);
 		currentReceivePos += PACKET_HEADER_SIZE;
 		uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
 
 		if (requireBodySize > 0)
 		{
-			if (requireBodySize > clientSession->mRemainDataSize - currentReceivePos)
+			if (requireBodySize > clientSession.mRemainDataSize - currentReceivePos)
 			{
 				currentReceivePos -= PACKET_HEADER_SIZE;
 				break;
@@ -217,13 +194,13 @@ ErrorCode NetworkCore::ReceiveClient(SharedPtrClientSession clientSession, const
 			}
 		}
 
-		ReceivePacket receivePacket = { clientSession->mIndex, clientSession->mUniqueId, header->mPacketId, requireBodySize, &clientSession->mReceiveBuffer[currentReceivePos] };
+		ReceivePacket receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, requireBodySize, &clientSession.mReceiveBuffer[currentReceivePos] };
 		PushReceivePacket(receivePacket);
 		currentReceivePos += requireBodySize;
 	}
 
-	clientSession->mRemainDataSize -= currentReceivePos;
-	clientSession->mPreviousReceiveBufferPos = currentReceivePos;
+	clientSession.mRemainDataSize -= currentReceivePos;
+	clientSession.mPreviousReceiveBufferPos = currentReceivePos;
 
 	return ErrorCode::SUCCESS;
 }
@@ -260,28 +237,28 @@ void NetworkCore::SelectProcess()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::SendClient(SharedPtrClientSession clientSession, const fd_set& writeSet)
+ErrorCode NetworkCore::SendClient(ClientSession& clientSession, const fd_set& writeSet)
 {
-	if (clientSession->mSendSize <= 0)
+	if (clientSession.mSendSize <= 0)
 	{
 		return ErrorCode::SUCCESS;
 	}
 
-	int length = send(clientSession->mSocket, clientSession->mSendBuffer, clientSession->mSendSize, 0);
+	int length = send(clientSession.mSocket, clientSession.mSendBuffer, clientSession.mSendSize, 0);
 	if (length <= 0)
 	{
 		return ErrorCode::SOCKET_SEND_SIZE_ZERO;
 	}
 
-	if (clientSession->mSendSize > length)
+	if (clientSession.mSendSize > length)
 	{
-		auto remain = clientSession->mSendSize - length;
-		memmove_s(clientSession->mSendBuffer, remain, &clientSession->mSendBuffer[length], remain);
-		clientSession->mSendSize -= length;
+		auto remain = clientSession.mSendSize - length;
+		memmove_s(clientSession.mSendBuffer, remain, &clientSession.mSendBuffer[length], remain);
+		clientSession.mSendSize -= length;
 	}
 	else
 	{
-		clientSession->mSendSize = 0;
+		clientSession.mSendSize = 0;
 	}
 
 	return ErrorCode::SUCCESS;
@@ -295,26 +272,78 @@ void NetworkCore::PushReceivePacket(const ReceivePacket receivePacket)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::CloseSession(const ErrorCode errorCode, const SharedPtrClientSession clientSession)
+void NetworkCore::CloseSession(const ErrorCode errorCode, const ClientSession& clientSession)
 {
-	PushReceivePacket(ReceivePacket{ clientSession->mIndex, clientSession->mUniqueId, static_cast<uint16>(PacketId::Disconnect), 0, nullptr });
-	SOCKET clientSocket = clientSession->mSocket;
-	mClientSessionManager->DisconnectClientSession(clientSocket);
+	GLogger->PrintConsole(Color::GREEN, L"CloseSession[%d]: %d / %d\n", static_cast<int>(errorCode), clientSession.mIndex, clientSession.mUniqueId);
+
+	SOCKET clientSocket = clientSession.mSocket;
+	if (!clientSession.IsConnect())
+	{
+		return;
+	}
+
 	closesocket(clientSocket);
 	FD_CLR(clientSocket, &mReadSet);
 	FD_CLR(clientSocket, &mWriteSet);
+
+	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
+	{
+		return;
+	}
+
+	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::Disconnect), 0, nullptr });
+	mClientSessionManager->DisconnectClientSession(clientSession.mIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ErrorCode NetworkCore::Init()
+{
+	WSADATA wsaData;
+
+	if (SOCKET_ERROR == WSAStartup(MAKEWORD(2, 2), &wsaData))
+	{
+		return ErrorCode::WSA_START_UP_FAIL;
+	}
+
+	// Client Accept Socket Init
+	mAcceptSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (INVALID_SOCKET == mAcceptSocket)
+	{
+		return ErrorCode::SOCKET_INIT_FAIL;
+	}
+
+	// Reuse Address
+	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
+	char reuseAddr = 1;
+	if (setsockopt(mAcceptSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) < 0)
+	{
+		return ErrorCode::SOCKET_INIT_REUSE_ADDR_FAIL;
+	}
+
+	ErrorCode errorCode = Bind();
+	if (ErrorCode::SUCCESS != errorCode)
+	{
+		return errorCode;
+	}
+
+	errorCode = Listen();
+	if (ErrorCode::SUCCESS != errorCode)
+	{
+		return errorCode;
+	}
+
+	mClientSessionManager = new ClientSessionManager();
+	mClientSessionManager->Init(100);
+
+	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkCore::Run()
 {
 	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Run\n");
-
-	ErrorCode errorCode = Init();
-	if (errorCode != ErrorCode::SUCCESS)
-	{
-		return errorCode;
-	}
 
 	FD_ZERO(&mReadSet);
 	FD_ZERO(&mWriteSet);
@@ -333,9 +362,12 @@ ErrorCode NetworkCore::Stop()
 	// Stop Accept Socket
 	if (mIsRunning)
 	{
-		for (auto clientSession : mClientSessionManager->ClientDeque())
+		for (ClientSession clientSession : mClientSessionManager->ClientVector())
 		{
-			CloseSession(ErrorCode::SUCCESS, clientSession);
+			if (clientSession.IsConnect())
+			{
+				CloseSession(ErrorCode::SUCCESS, clientSession);
+			}
 		}
 
 		shutdown(mAcceptSocket, SD_BOTH);

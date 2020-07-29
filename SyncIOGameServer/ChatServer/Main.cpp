@@ -1,18 +1,17 @@
 ﻿#include <iostream>
-#include "../../NetworkLib/NetworkCore.h"
+#include "ChatServer.h"
 
 int main()
 {
-    NetworkCore core;
-    core.Run();
-    while (true)
+    ChatServer server;
+    if (CS::ErrorCode::SUCCESS != server.Init())
     {
-        // Test Code
-        Core::ReceivePacket receivePacket = core.GetReceivePacket();
-        if (0 != receivePacket.mPacketId)
-        {
-            GLogger->PrintConsole(Color::YELLOW, L"[PacketId: %d] SessionIndex: %d, SessionUniqueId: %d\n",
-                receivePacket.mPacketId, receivePacket.mSessionIndex, receivePacket.mSessionUniqueId);
-        }
+        return -1;
     }
+    if (CS::ErrorCode::SUCCESS != server.Run())
+    {
+        return -1;
+    }
+
+    return 0;
 }
