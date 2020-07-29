@@ -7,6 +7,7 @@
 #include <mutex>
 #include <WinSock2.h>
 
+#include "Logger.h"
 #include "PrimitiveTypes.h"
 #include "Protocol.h"
 #include "ErrorCode.h"

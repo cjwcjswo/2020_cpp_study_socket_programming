@@ -11,7 +11,8 @@ int main()
         Core::ReceivePacket receivePacket = core.GetReceivePacket();
         if (0 != receivePacket.mPacketId)
         {
-            std::cout << "[PacketId: " << receivePacket.mPacketId << "] Index: " << receivePacket.mSessionIndex << ", " << receivePacket.mSessionUniqueId << std::endl;
+            GLogger->PrintConsole(Color::YELLOW, L"[PacketId: %d] SessionIndex: %d, SessionUniqueId: %d\n",
+                receivePacket.mPacketId, receivePacket.mSessionIndex, receivePacket.mSessionUniqueId);
         }
     }
 }

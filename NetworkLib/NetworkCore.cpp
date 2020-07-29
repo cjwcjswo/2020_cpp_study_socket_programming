@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "NetworkCore.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
@@ -28,7 +26,7 @@ void NetworkCore::LoadConfig()
 ErrorCode NetworkCore::Init()
 {
 	WSADATA wsaData;
-
+	
 	if (SOCKET_ERROR == WSAStartup(MAKEWORD(2, 2), &wsaData))
 	{
 		return ErrorCode::WSA_START_UP_FAIL;
@@ -61,7 +59,7 @@ ErrorCode NetworkCore::Init()
 		return errorCode;
 	}
 
-	std::cout << "Init Ok" << std::endl;
+	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
 
 	return ErrorCode::SUCCESS;
 }
@@ -310,7 +308,8 @@ void NetworkCore::CloseSession(const ErrorCode errorCode, const SharedPtrClientS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkCore::Run()
 {
-	std::cout << "Start" << std::endl;
+	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Run\n");
+
 	ErrorCode errorCode = Init();
 	if (errorCode != ErrorCode::SUCCESS)
 	{
@@ -344,7 +343,8 @@ ErrorCode NetworkCore::Stop()
 		WSACleanup();
 		mIsRunning = false;
 		mSelectThread->join();
-		std::cout << "Stop Server";
+		
+		GLogger->PrintConsole(Color::GREEN, L"NetworkLib Stop\n");
 	}
 
 	return ErrorCode::SUCCESS;

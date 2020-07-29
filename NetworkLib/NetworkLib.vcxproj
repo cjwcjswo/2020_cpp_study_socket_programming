@@ -22,6 +22,7 @@
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="ClientSessionManager.h" />
     <ClInclude Include="ErrorCode.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="NetworkCore.h" />
     <ClInclude Include="PrimitiveTypes.h" />
     <ClInclude Include="Protocol.h" />
@@ -29,6 +30,7 @@
   <ItemGroup>
     <ClCompile Include="ClientSession.cpp" />
     <ClCompile Include="ClientSessionManager.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="NetworkCore.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
