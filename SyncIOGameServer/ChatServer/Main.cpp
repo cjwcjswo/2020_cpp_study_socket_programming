@@ -8,8 +8,10 @@ int main()
     while (true)
     {
         // Test Code
-        Sleep(5000);
-        std::cout << "Packet Check" << std::endl;
-        core.GetReceivePacket();
+        Core::ReceivePacket receivePacket = core.GetReceivePacket();
+        if (0 != receivePacket.mPacketId)
+        {
+            std::cout << "[PacketId: " << receivePacket.mPacketId << "] Index: " << receivePacket.mSessionIndex << ", " << receivePacket.mSessionUniqueId << std::endl;
+        }
     }
 }

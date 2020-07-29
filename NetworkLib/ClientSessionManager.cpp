@@ -19,13 +19,18 @@ unsigned long ClientSessionManager::GenerateUniqueId() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSessionManager::ConnectClientSession(const SOCKET& clientSocket)
+ClientSession ClientSessionManager::CreateClientSession(const SOCKET& clientSocket) const
 {
 	int32 index = mClientDeque.size();
 	uint64 uniqueId = GenerateUniqueId();
-	SharedPtrClientSession clientSession = std::make_shared<ClientSession>(index, uniqueId, clientSocket);
-	mClientDeque.push_back(clientSession);
-	std::cout << "Connect Client Session: " << clientSession->String() << std::endl;
+	return ClientSession(index, uniqueId, clientSocket);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ClientSessionManager::ConnectClientSession(const ClientSession& clientSession)
+{
+	SharedPtrClientSession ptrClientSession = std::make_shared<ClientSession>(clientSession);
+	mClientDeque.push_back(ptrClientSession);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

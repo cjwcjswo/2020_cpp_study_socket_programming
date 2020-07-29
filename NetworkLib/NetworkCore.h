@@ -11,7 +11,6 @@
 #include "Protocol.h"
 #include "ErrorCode.h"
 
-
 class ClientSessionManager;
 class ClientSession;
 
@@ -30,7 +29,7 @@ private:
 	UniquePtrThread mSelectThread = nullptr;
 	std::mutex mMutex = {};
 
-	std::queue<ReceivePacket> mReceivePacketQueue{};
+	std::queue<Core::ReceivePacket> mReceivePacketQueue{};
 
 	SOCKET mAcceptSocket = INVALID_SOCKET;
 
@@ -58,7 +57,7 @@ private:
 	ErrorCode ReceiveClient(SharedPtrClientSession clientSession, const fd_set& readSet);
 	ErrorCode SendClient(SharedPtrClientSession clientSession, const fd_set& readSet);
 	
-	void PushReceivePacket(const ReceivePacket receivePacket);
+	void PushReceivePacket(const Core::ReceivePacket receivePacket);
 	void SelectProcess();
 	void SelectClient(const fd_set& readSet, const fd_set& writeSet);
 	void CloseSession(const ErrorCode errorCode, const SharedPtrClientSession clientSession);
@@ -67,6 +66,6 @@ private:
 public:
 	ErrorCode Run();
 	ErrorCode Stop();
-	ReceivePacket GetReceivePacket();
+	Core::ReceivePacket GetReceivePacket();
 };
 

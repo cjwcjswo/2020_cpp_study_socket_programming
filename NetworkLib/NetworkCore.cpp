@@ -4,6 +4,8 @@
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
+using namespace Core;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 NetworkCore::NetworkCore()
 {
@@ -117,7 +119,9 @@ ErrorCode NetworkCore::AcceptClient()
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
 
-	mClientSessionManager->ConnectClientSession(clientSocket);
+	ClientSession clientSession = mClientSessionManager->CreateClientSession(clientSocket);
+	mClientSessionManager->ConnectClientSession(clientSession);
+	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::Connect), 0, nullptr});
 
 	return ErrorCode::SUCCESS;
 }
@@ -295,7 +299,7 @@ void NetworkCore::PushReceivePacket(const ReceivePacket receivePacket)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::CloseSession(const ErrorCode errorCode, const SharedPtrClientSession clientSession)
 {
-	std::cout << "[" << static_cast<int>(errorCode) << "]: " << clientSession->String() << std::endl;
+	PushReceivePacket(ReceivePacket{ clientSession->mIndex, clientSession->mUniqueId, static_cast<uint16>(PacketId::Disconnect), 0, nullptr });
 	SOCKET clientSocket = clientSession->mSocket;
 	mClientSessionManager->DisconnectClientSession(clientSocket);
 	closesocket(clientSocket);

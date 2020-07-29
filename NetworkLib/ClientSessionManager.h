@@ -38,7 +38,9 @@ private:
 public:
 	inline const std::deque<SharedPtrClientSession>& ClientDeque() const noexcept { return this->mClientDeque; };
 
-	void ConnectClientSession(const SOCKET& clientSocket);
+	ClientSession CreateClientSession(const SOCKET& clientSocket) const;
+
+	void ConnectClientSession(const ClientSession& clientSession);
 
 	void DisconnectClientSession(const int32 clientIndex);
 	void DisconnectClientSession(const uint64 clientUniqueId);
