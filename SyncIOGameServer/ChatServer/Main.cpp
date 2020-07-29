@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-#include "../NetworkLib/NetworkCore.h"
+#include "../../NetworkLib/NetworkCore.h"
 
 int main()
 {

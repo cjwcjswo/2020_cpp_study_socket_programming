@@ -8,8 +8,7 @@
 
 ## 코딩 컨벤션
 
-* 코딩 컨벤션은 기본적으로 Google C++ 코딩 컨벤션을 준수한다. (https://google.github.io/styleguide/cppguide.html)
-* 예외적으로 파일 이름은 Pascal Case 표기법을 사용한다. (network_core.cpp (X), NetworkCore.cpp (O))
+* 코딩 컨벤션은 기본적으로 언리얼 코딩 컨벤션을 준수한다 (https://docs.unrealengine.com/ko/Programming/Development/CodingStandard/index.html)
 
 ## TODO
 * **진행 중 일감**
