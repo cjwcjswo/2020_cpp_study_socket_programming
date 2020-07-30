@@ -1,10 +1,10 @@
 #pragma once
 #pragma comment(lib,"ws2_32")
 
+#include <WinSock2.h>
 #include <vector>
 #include <queue>
-#include <memory>
-#include <WinSock2.h>
+
 
 #include "PrimitiveTypes.h"
 
@@ -15,8 +15,8 @@ class ClientSession;
 class ClientSessionManager
 {
 private:
-	std::vector<ClientSession> mClientVector{};
-	std::queue<int32> mClientIndexPool{};
+	std::vector<ClientSession> mClientVector;
+	std::queue<int32> mClientIndexPool;
 
 	int mMaxSessionSize = 0;
 
@@ -37,6 +37,10 @@ public:
 
 	uint64 GenerateUniqueId() const;
 	int32 AllocClientSessionIndex();
+
+	ClientSession* FindClientSession(const int32 index);
+	ClientSession* FindClientSession(const uint64 uniqueId);
+	ClientSession* FindClientSession(const SOCKET socket);
 
 	void ConnectClientSession(ClientSession& clientSession);
 

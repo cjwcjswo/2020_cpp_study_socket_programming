@@ -9,8 +9,8 @@ namespace Core
 #pragma pack(push, 1)
 	struct PacketHeader
 	{
-		unsigned short mPacketSize = 0;
-		unsigned short mPacketId = 0;
+		uint16 mPacketSize = 0;
+		uint16 mPacketId = 0;
 	};
 #pragma pack(pop)
 

@@ -9,18 +9,23 @@
 
 class User;
 
+
 class UserManager
 {
 private:
-	std::vector<User> mUserPool{};
-	std::queue<int32> mUserIndexPool{};
+	std::vector<User> mUserPool;
+	std::queue<int32> mUserIndexPool;
 
-	int mMaxUserNum;
+	int mMaxUserNum = 0;
 
 
 public:
 	UserManager() = default;
 	~UserManager() = default;
+
+
+private:
+	int32 AllocUserIndex();
 
 	
 public:

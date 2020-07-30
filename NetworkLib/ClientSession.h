@@ -1,21 +1,16 @@
 #pragma once
 #pragma comment(lib,"ws2_32")
 
-#include <iostream>
-#include <sstream>
-#include <string>
 #include <WinSock2.h>
-
 #include "PrimitiveTypes.h"
 
 
 class ClientSession
 {
 public:
-	ClientSession();
 	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket);
 
-	~ClientSession() = default;
+	~ClientSession();
 
 
 public:
@@ -27,8 +22,8 @@ public:
 	int mPreviousReceiveBufferPos = 0;
 	int mSendSize = 0;
 
-	char mReceiveBuffer[BUFFER_SIZE] = { 0, };
-	char mSendBuffer[BUFFER_SIZE] = { 0, };
+	char* mReceiveBuffer;
+	char* mSendBuffer;
 
 	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = 0;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
@@ -13,6 +12,45 @@ void ClientSessionManager::Init(const int maxClientSessionNum) noexcept
 		mClientIndexPool.push(i);
 		mClientVector.emplace_back(-1, 0, INVALID_SOCKET);
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ClientSession* ClientSessionManager::FindClientSession(const int32 index)
+{
+	ClientSession* session = &mClientVector[index];
+	if (!session->IsConnect())
+	{
+		return nullptr;
+	}
+
+	return session;
+}
+
+ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
+{
+	
+	for (int i = 0; i < mMaxSessionSize; i++)
+	{
+		if (mClientVector[i].mUniqueId == uniqueId)
+		{
+			return &mClientVector[i];
+		}
+	}
+
+	return nullptr;
+}
+
+ClientSession* ClientSessionManager::FindClientSession(const SOCKET socket)
+{
+	for (int i = 0; i < mMaxSessionSize; i++)
+	{
+		if (mClientVector[i].mSocket == socket)
+		{
+			return &mClientVector[i];
+		}
+	}
+
+	return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,26 +87,24 @@ void ClientSessionManager::DisconnectClientSession(const int32 clientIndex)
 
 void ClientSessionManager::DisconnectClientSession(const uint64 clientUniqueId)
 {
-	for (int i = 0; i < mMaxSessionSize; i++)
+	ClientSession* session = FindClientSession(clientUniqueId);
+	if (nullptr == session)
 	{
-		if (mClientVector[i].mUniqueId == clientUniqueId)
-		{
-			mClientVector[i].Clear();
-			mClientIndexPool.push(i);
-			return;
-		}
+		return;
 	}
+
+	mClientIndexPool.push(session->mIndex);
+	session->Clear();
 }
 
 void ClientSessionManager::DisconnectClientSession(const SOCKET clientSocket)
 {
-	for (int i = 0; i < mMaxSessionSize; i++)
+	ClientSession* session = FindClientSession(clientSocket);
+	if (nullptr == session)
 	{
-		if (mClientVector[i].mSocket == clientSocket)
-		{
-			mClientVector[i].Clear();
-			mClientIndexPool.push(i);
-			return;
-		}
+		return;
 	}
+
+	mClientIndexPool.push(session->mIndex);
+	session->Clear();
 }

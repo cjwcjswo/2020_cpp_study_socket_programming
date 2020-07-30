@@ -22,12 +22,13 @@ private:
 
 
 private:
-	ClientSessionManager* mClientSessionManager;
+	ClientSessionManager* mClientSessionManager = nullptr;
 
 	UniquePtrThread mSelectThread = nullptr;
-	std::mutex mMutex = {};
+	std::mutex mPacketMutex;
+	std::mutex mSessionMutex;
 
-	std::queue<Core::ReceivePacket> mReceivePacketQueue{};
+	std::queue<Core::ReceivePacket> mReceivePacketQueue;
 
 	SOCKET mAcceptSocket = INVALID_SOCKET;
 
@@ -38,7 +39,7 @@ private:
 
 
 public:
-	NetworkCore();
+	NetworkCore() = default;
 	~NetworkCore();
 
 
@@ -51,9 +52,10 @@ private:
 	Core::ErrorCode Listen();
 	Core::ErrorCode CheckSelectResult(int selectResult);
 	Core::ErrorCode AcceptClient();
-	Core::ErrorCode ReceiveClient(ClientSession& clientSession, const fd_set& readSet);
-	Core::ErrorCode SendClient(ClientSession& clientSession, const fd_set& readSet);
-	
+	Core::ErrorCode ReceiveClient(ClientSession& clientSession);
+	Core::ErrorCode SendClient(ClientSession& clientSession);
+	Core::ErrorCode SendProcess(ClientSession& clientSession, const uint16 packetId, const char* bodyData, const int bodySize);
+
 	void PushReceivePacket(const Core::ReceivePacket receivePacket);
 	void SelectProcess();
 	void SelectClient(const fd_set& readSet, const fd_set& writeSet);
@@ -64,6 +66,11 @@ public:
 	Core::ErrorCode Init();
 	Core::ErrorCode Run();
 	Core::ErrorCode Stop();
-	Core::ReceivePacket GetReceivePacket();
-};
 
+	Core::ReceivePacket GetReceivePacket();
+
+	void Broadcast(const uint16 packetId, const char* bodyData, const int bodySize);
+
+	Core::ErrorCode Send(const int32 sessionIndex, const uint16 packetId, const char* bodyData, const int bodySize);
+	Core::ErrorCode Send(const uint64 sessionUniqueId, const uint16 packetId, const char* bodyData, const int bodySize);
+};
