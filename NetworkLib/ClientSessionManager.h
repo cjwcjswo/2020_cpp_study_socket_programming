@@ -33,7 +33,7 @@ public:
 public:
 	void Init(const int maxClientSessionNum) noexcept;
 
-	inline const std::vector<ClientSession>& ClientVector() const noexcept { return mClientVector; };
+	inline std::vector<ClientSession>& ClientVector() noexcept { return mClientVector; };
 
 	uint64 GenerateUniqueId() const;
 	int32 AllocClientSessionIndex();

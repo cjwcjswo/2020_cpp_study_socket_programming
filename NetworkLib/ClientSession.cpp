@@ -6,6 +6,8 @@ ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOC
 {
 	mSendBuffer = new char[BUFFER_SIZE];
 	mReceiveBuffer = new char[BUFFER_SIZE];
+	ZeroMemory(mSendBuffer, BUFFER_SIZE);
+	ZeroMemory(mReceiveBuffer, BUFFER_SIZE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,6 +16,7 @@ ClientSession::~ClientSession()
 	delete[] mSendBuffer;
 	delete[] mReceiveBuffer;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::Clear()

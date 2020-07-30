@@ -17,6 +17,7 @@ public:
 	constexpr static int BUFFER_SIZE = 1024;
 	constexpr static int INVALID_INDEX = -1;
 
+
 public:
 	int mRemainDataSize = 0;
 	int mPreviousReceiveBufferPos = 0;

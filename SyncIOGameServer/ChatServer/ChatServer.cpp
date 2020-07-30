@@ -16,7 +16,7 @@ ChatServer::~ChatServer()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ChatServer::Init()
 {
-	Core::ErrorCode errorCode = mNetworkCore.Init();
+	Core::ErrorCode errorCode = mNetworkCore.Init(150);
 	if (Core::ErrorCode::SUCCESS != errorCode)
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
@@ -47,7 +47,7 @@ ErrorCode ChatServer::Run()
 		ErrorCode errorCode = mPacketHandler->Process(receivePacket);
 		if (ErrorCode::SUCCESS != errorCode)
 		{
-			GLogger->PrintConsole(Color::RED, L"Packet Process Error(%d) / [UniqueId: %d], [PacketId: %d]",
+			GLogger->PrintConsole(Color::RED, L"Packet Process Error(%d) / [UniqueId: %d], [PacketId: %d]\n",
 				static_cast<int>(errorCode), receivePacket.mSessionUniqueId, receivePacket.mSessionUniqueId, receivePacket.mPacketId);
 		}
 	}

@@ -110,7 +110,7 @@ ErrorCode NetworkCore::CheckSelectResult(int selectResult)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 {
-	for (ClientSession clientSession : mClientSessionManager->ClientVector())
+	for (ClientSession& clientSession : mClientSessionManager->ClientVector())
 	{
 		if (!clientSession.IsConnect())
 		{
@@ -292,7 +292,7 @@ void NetworkCore::CloseSession(const ErrorCode errorCode, const ClientSession& c
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Init()
+ErrorCode NetworkCore::Init(const int maxSessionSize)
 {
 	WSADATA wsaData;
 
@@ -329,7 +329,7 @@ ErrorCode NetworkCore::Init()
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	mClientSessionManager->Init(100); // TODO: Load Config
+	mClientSessionManager->Init(maxSessionSize); // TODO: Load Config
 
 	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
 
@@ -356,6 +356,13 @@ ErrorCode NetworkCore::Run()
 ErrorCode NetworkCore::Stop()
 {
 	// Stop Accept Socket
+	if (mAcceptSocket == INVALID_SOCKET)
+	{
+		return ErrorCode::SUCCESS;
+	}
+	shutdown(mAcceptSocket, SD_BOTH);
+	closesocket(mAcceptSocket);
+
 	if (mIsRunning)
 	{
 		for (ClientSession clientSession : mClientSessionManager->ClientVector())
@@ -365,9 +372,6 @@ ErrorCode NetworkCore::Stop()
 				CloseSession(ErrorCode::SUCCESS, clientSession);
 			}
 		}
-
-		shutdown(mAcceptSocket, SD_BOTH);
-		closesocket(mAcceptSocket);
 		WSACleanup();
 		mIsRunning = false;
 		mSelectThread->join();

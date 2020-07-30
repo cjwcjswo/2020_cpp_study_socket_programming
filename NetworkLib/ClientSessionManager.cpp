@@ -10,7 +10,7 @@ void ClientSessionManager::Init(const int maxClientSessionNum) noexcept
 	for (int i = 0; i < maxClientSessionNum; ++i)
 	{
 		mClientIndexPool.push(i);
-		mClientVector.emplace_back(-1, 0, INVALID_SOCKET);
+		mClientVector.emplace_back(i, 0, INVALID_SOCKET);
 	}
 }
 
@@ -75,7 +75,9 @@ int32 ClientSessionManager::AllocClientSessionIndex()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
 {
-	mClientVector[clientSession.mIndex] = clientSession;
+	ClientSession& session = mClientVector[clientSession.mIndex];
+	session.mUniqueId = clientSession.mUniqueId;
+	session.mSocket = clientSession.mSocket;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

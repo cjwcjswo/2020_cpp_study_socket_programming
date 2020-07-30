@@ -17,11 +17,11 @@ class ClientSession;
 
 class NetworkCore
 {
-private:
+protected:
 	using UniquePtrThread = std::unique_ptr<std::thread>;
 
 
-private:
+protected:
 	ClientSessionManager* mClientSessionManager = nullptr;
 
 	UniquePtrThread mSelectThread = nullptr;
@@ -47,7 +47,7 @@ public:
 	static void LoadConfig();
 
 
-private:
+protected:
 	Core::ErrorCode Bind();
 	Core::ErrorCode Listen();
 	Core::ErrorCode CheckSelectResult(int selectResult);
@@ -63,7 +63,7 @@ private:
 
 
 public:
-	Core::ErrorCode Init();
+	Core::ErrorCode Init(const int maxSessionSize);
 	Core::ErrorCode Run();
 	Core::ErrorCode Stop();
 
