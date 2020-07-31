@@ -14,10 +14,13 @@ public:
 
 public:
 	User() = default;
+	explicit User(const int32 sessionIndex, const uint64 sessionUniqueId, const uint64 uid) : mSessionIndex(sessionIndex), mSessionUniqueId(sessionUniqueId), mUid(uid) {};
+
 	~User() = default;
 
 
 public:
+	void Connect(const User& User);
 	void Clear();
 };
 

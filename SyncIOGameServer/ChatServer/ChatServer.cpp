@@ -26,6 +26,8 @@ ErrorCode ChatServer::Init()
 	mUserManager->Init(100);
 
 	mPacketHandler = new PacketHandler(&mNetworkCore, mUserManager);
+
+	GLogger->PrintConsole(Color::GREEN, L"ChatServer Init Success\n");
 	
 	return ErrorCode::SUCCESS;
 }
@@ -35,6 +37,8 @@ ErrorCode ChatServer::Run()
 {
 	mIsRunning = true;
 	mNetworkCore.Run(); // Async
+
+	GLogger->PrintConsole(Color::GREEN, L"ChatServer Start\n");
 
 	while (mIsRunning)
 	{
@@ -47,8 +51,8 @@ ErrorCode ChatServer::Run()
 		ErrorCode errorCode = mPacketHandler->Process(receivePacket);
 		if (ErrorCode::SUCCESS != errorCode)
 		{
-			GLogger->PrintConsole(Color::RED, L"Packet Process Error(%d) / [UniqueId: %d], [PacketId: %d]\n",
-				static_cast<int>(errorCode), receivePacket.mSessionUniqueId, receivePacket.mSessionUniqueId, receivePacket.mPacketId);
+			GLogger->PrintConsole(Color::RED, L"Packet Process Error(%d) / [PacketId: %u, UniqueId: %u]\n",
+				static_cast<int>(errorCode), receivePacket.mPacketId, receivePacket.mSessionUniqueId);
 		}
 	}
 
@@ -58,5 +62,7 @@ ErrorCode ChatServer::Run()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ChatServer::Stop()
 {
+	GLogger->PrintConsole(Color::GREEN, L"ChatServer Stop\n");
+
 	mIsRunning = false;
 }

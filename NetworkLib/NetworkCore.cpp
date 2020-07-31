@@ -84,9 +84,7 @@ ErrorCode NetworkCore::AcceptClient()
 
 	mClientSessionManager->ConnectClientSession(clientSession);
 
-	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::Connect), 0, nullptr});
-
-	GLogger->PrintConsole(Color::GREEN, L"ConnectSession: %d / %d\n", clientSession.mIndex, clientSession.mUniqueId);
+	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::CONNECT), 0, nullptr});
 
 	return ErrorCode::SUCCESS;
 }
@@ -270,8 +268,6 @@ void NetworkCore::PushReceivePacket(const ReceivePacket receivePacket)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::CloseSession(const ErrorCode errorCode, const ClientSession& clientSession)
 {
-	GLogger->PrintConsole(Color::GREEN, L"CloseSession[%d]: %d / %d\n", static_cast<int>(errorCode), clientSession.mIndex, clientSession.mUniqueId);
-
 	SOCKET clientSocket = clientSession.mSocket;
 	if (!clientSession.IsConnect())
 	{
@@ -287,7 +283,7 @@ void NetworkCore::CloseSession(const ErrorCode errorCode, const ClientSession& c
 		return;
 	}
 
-	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::Disconnect), 0, nullptr });
+	PushReceivePacket(ReceivePacket{ clientSession.mIndex, clientSession.mUniqueId, static_cast<uint16>(PacketId::DISCONNECT), 0, nullptr });
 	mClientSessionManager->DisconnectClientSession(clientSession.mIndex);
 }
 
@@ -331,16 +327,12 @@ ErrorCode NetworkCore::Init(const int maxSessionSize)
 	mClientSessionManager = new ClientSessionManager();
 	mClientSessionManager->Init(maxSessionSize); // TODO: Load Config
 
-	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Init Success\n");
-
 	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkCore::Run()
 {
-	GLogger->PrintConsole(Color::GREEN, L"NetworkLib Run\n");
-
 	FD_ZERO(&mReadSet);
 	FD_ZERO(&mWriteSet);
 	FD_SET(mAcceptSocket, &mReadSet);
@@ -375,8 +367,6 @@ ErrorCode NetworkCore::Stop()
 		WSACleanup();
 		mIsRunning = false;
 		mSelectThread->join();
-		
-		GLogger->PrintConsole(Color::GREEN, L"NetworkLib Stop\n");
 	}
 
 	return ErrorCode::SUCCESS;

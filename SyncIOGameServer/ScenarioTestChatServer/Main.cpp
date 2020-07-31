@@ -1,4 +1,6 @@
+#include <wchar.h>
 #include "ScenarioClient.h"
+
 
 int main()
 {
@@ -19,12 +21,24 @@ int main()
 		return -1;
 	}
 
+	const wchar* message = L"hi lol";
+	CS::ChatRequest request;
+	request.mMessageLen = static_cast<int16>(wcslen(message));
+	wmemcpy_s(request.mMessage, request.mMessageLen, message, request.mMessageLen);
+	errorCode = client.Send(static_cast<uint16>(CS::PacketId::CHAT_REQUEST), reinterpret_cast<char*>(&request), sizeof(request) - (CS::MAX_CHAT_SIZE - request.mMessageLen));
+	if (ErrorCode::SUCCESS != errorCode)
+	{
+		GLogger->PrintConsole(Color::RED, L"Scenario Client Send Fail: %d\n", static_cast<int>(errorCode));
+		return -1;
+	}
+
 	errorCode = client.Disconnect();
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		GLogger->PrintConsole(Color::RED, L"Scenario Client Disconnect Fail: %d\n", static_cast<int>(errorCode));
 		return -1;
 	}
+
 
 	return 0;
 }

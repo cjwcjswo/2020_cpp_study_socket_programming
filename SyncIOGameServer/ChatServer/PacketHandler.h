@@ -11,7 +11,7 @@ class PacketHandler
 {
 private:
 	using Packet = Core::ReceivePacket;
-	using PacketFunc = CS::ErrorCode (PacketHandler::*)(Packet);
+	using PacketFunc = CS::ErrorCode (PacketHandler::*)(const Packet);
 
 
 private:
@@ -27,10 +27,12 @@ public:
 
 
 private:
-	CS::ErrorCode Chat(Packet packet);
+	CS::ErrorCode Connect(const Packet packet);
+	CS::ErrorCode Disconnect(const Packet packet);
+	CS::ErrorCode Chat(const Packet packet);
 
 	
 public:
-	CS::ErrorCode Process(Packet packet);
+	CS::ErrorCode Process(const Packet packet);
 };
 

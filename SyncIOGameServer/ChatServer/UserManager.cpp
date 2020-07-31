@@ -41,16 +41,31 @@ ErrorCode UserManager::Connect(User& user)
 	}
 	
 	user.mIndex = userIndex;
-	mUserPool[userIndex] = user;
+
+	mUserPool[userIndex].Connect(user);
 
 	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CS::ErrorCode UserManager::Disconnect(User& user)
+CS::ErrorCode UserManager::Disconnect(const int32 userIndex)
 {
-	mUserPool[user.mIndex].Clear();
-	mUserIndexPool.push(user.mIndex);
+	mUserPool[userIndex].Clear();
+	mUserIndexPool.push(userIndex);
 
 	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+User* UserManager::FindUser(const uint64 sessionUniqueId)
+{
+	for (User& user : mUserPool)
+	{
+		if (user.mSessionUniqueId == sessionUniqueId)
+		{
+			return &user;
+		}
+	}
+
+	return nullptr;
 }

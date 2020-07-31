@@ -32,6 +32,8 @@ public:
 	CS::ErrorCode Init(const int maxUserNum);
 
 	CS::ErrorCode Connect(User& user);
-	CS::ErrorCode Disconnect(User& user);
+	CS::ErrorCode Disconnect(const int32 userIndex);
+
+	User* FindUser(const uint64 sessionUniqueId);
 };
 

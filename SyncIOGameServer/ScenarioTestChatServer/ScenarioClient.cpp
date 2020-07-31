@@ -52,8 +52,28 @@ ErrorCode ScenarioClient::Disconnect()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode ScenarioClient::Send()
+ErrorCode ScenarioClient::Send(const uint16 packetId, const char* bodyData, const int bodySize)
 {
+	uint16 totalSize = Core::PACKET_HEADER_SIZE + bodySize;
+	if (totalSize > BUFFER_SIZE)
+	{
+		return ErrorCode::CLIENT_SEND_BUFFER_IS_FULL;
+	}
+
+	Core::PacketHeader header{ totalSize, packetId };
+	memcpy_s(mSendBuffer, Core::PACKET_HEADER_SIZE, reinterpret_cast<char*>(&header), Core::PACKET_HEADER_SIZE);
+	
+	if (bodySize > 0)
+	{
+		memcpy_s(&mSendBuffer[Core::PACKET_HEADER_SIZE], bodySize, bodyData, bodySize);
+	}
+
+	int length = send(mConnectSocket, mSendBuffer, totalSize, 0);
+	if (length <= 0)
+	{
+		return ErrorCode::SOCKET_SEND_FAIL;
+	}
+
 	return ErrorCode::SUCCESS;
 }
 
