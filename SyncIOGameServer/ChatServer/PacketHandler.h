@@ -29,6 +29,7 @@ public:
 private:
 	CS::ErrorCode Connect(const Packet packet);
 	CS::ErrorCode Disconnect(const Packet packet);
+	CS::ErrorCode Login(const Packet packet);
 	CS::ErrorCode Chat(const Packet packet);
 
 	

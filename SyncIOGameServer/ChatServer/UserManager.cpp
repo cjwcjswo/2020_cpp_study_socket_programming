@@ -57,15 +57,26 @@ CS::ErrorCode UserManager::Disconnect(const int32 userIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const uint64 uid)
+{
+	User* user = FindUser(sessionUniqueId);
+	if (nullptr == user)
+	{
+		return ErrorCode::INVALID_USER;
+	}
+	user->Login(uid);
+
+	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 User* UserManager::FindUser(const uint64 sessionUniqueId)
 {
-	for (User& user : mUserPool)
+	auto userIter = std::find_if(mUserPool.begin(), mUserPool.end(), [sessionUniqueId](User& user) {return user.mSessionUniqueId == sessionUniqueId; });
+	if (userIter == mUserPool.end())
 	{
-		if (user.mSessionUniqueId == sessionUniqueId)
-		{
-			return &user;
-		}
+		return nullptr;
 	}
 
-	return nullptr;
+	return &(*userIter);
 }

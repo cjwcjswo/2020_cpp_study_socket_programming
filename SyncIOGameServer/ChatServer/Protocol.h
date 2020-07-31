@@ -3,7 +3,8 @@
 #include "../../NetworkLib/PrimitiveTypes.h"
 #include "ErrorCode.h"
 
-namespace CS {
+namespace CS 
+{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr static int PACKET_ID_START = 100;
 	constexpr static int PACKET_ID_END = 10000;
@@ -12,6 +13,9 @@ namespace CS {
 	{
 		PACKET_START = PACKET_ID_START,
 		//////////////////////////////////////////////////////////////
+		LOGIN_REQUEST,
+		LOGIN_RESPONSE,
+
 		CHAT_REQUEST,
 		CHAT_RESPONSE,
 		CHAT_BROADCAST,
@@ -22,9 +26,22 @@ namespace CS {
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	struct ResponsePacketBase
+	struct PacketBase
 	{
 		ErrorCode mErrorCode = ErrorCode::SUCCESS;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	constexpr static int AUTH_KEY_SIZE = 64;
+
+	struct LoginRequest
+	{
+		uint64 mUid = 0;
+		char mAuthKey[AUTH_KEY_SIZE] = { 0, };
+	};
+
+	struct LoginResponse: PacketBase
+	{
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +53,7 @@ namespace CS {
 		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
 
-	struct ChatResponse : ResponsePacketBase
+	struct ChatResponse : PacketBase
 	{
 	};
 

@@ -67,7 +67,7 @@ ErrorCode PacketHandler::Process(const Packet packet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode PacketHandler::Connect(const Packet packet)
 {
-	User newUser{ packet.mSessionIndex, packet.mSessionUniqueId, packet.mSessionUniqueId };
+	User newUser{ packet.mSessionIndex, packet.mSessionUniqueId };
 
 	ErrorCode errorCode = mUserManager->Connect(newUser);
 	if (ErrorCode::SUCCESS != errorCode)
@@ -90,6 +90,32 @@ ErrorCode PacketHandler::Disconnect(const Packet packet)
 	}
 
 	GLogger->PrintConsole(Color::LGREEN, L"<Disconnect> User: %lu\n", packet.mSessionUniqueId);
+
+	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ErrorCode PacketHandler::Login(const Packet packet)
+{
+	LoginResponse response;
+	response.mErrorCode = ErrorCode::SUCCESS;
+
+	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
+	if (nullptr == user)
+	{
+		response.mErrorCode = ErrorCode::INVALID_USER;
+		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		return ErrorCode::INVALID_USER;
+	}
+
+	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
+
+	// TODO: Redis 검증 추가
+	mUserManager->Login(packet.mSessionUniqueId, request->mUid);
+
+	mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+
+	GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
 
 	return ErrorCode::SUCCESS;
 }
