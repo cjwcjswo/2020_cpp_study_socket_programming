@@ -2,6 +2,7 @@
 
 #include "PrimitiveTypes.h"
 
+
 namespace Core {
 	enum class ErrorCode : uint16
 	{

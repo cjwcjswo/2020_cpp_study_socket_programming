@@ -7,13 +7,14 @@
 #include <mutex>
 #include <WinSock2.h>
 
-#include "Logger.h"
 #include "PrimitiveTypes.h"
 #include "Protocol.h"
 #include "ErrorCode.h"
 
+
 class ClientSessionManager;
 class ClientSession;
+
 
 class NetworkCore
 {
@@ -23,8 +24,8 @@ protected:
 
 protected:
 	ClientSessionManager* mClientSessionManager = nullptr;
-
 	UniquePtrThread mSelectThread = nullptr;
+
 	std::mutex mPacketMutex;
 	std::mutex mSessionMutex;
 

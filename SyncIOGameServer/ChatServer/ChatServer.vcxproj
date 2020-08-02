@@ -89,11 +89,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>..\ThirdParty\hiredis;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>hiredis.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\hiredis\msvc\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,11 +123,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>..\ThirdParty\hiredis;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>hiredis.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\hiredis\msvc\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +154,7 @@
     <ClCompile Include="ChatServer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PacketHandler.cpp" />
+    <ClCompile Include="RedisManager.cpp" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="UserManager.cpp" />
   </ItemGroup>
@@ -163,6 +168,7 @@
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="RedisManager.h" />
     <ClInclude Include="User.h" />
     <ClInclude Include="UserManager.h" />
   </ItemGroup>

@@ -1,3 +1,6 @@
+#pragma comment(lib,"ws2_32")
+
+#include <WinSock2.h>
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
@@ -40,19 +43,6 @@ ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
 	return nullptr;
 }
 
-ClientSession* ClientSessionManager::FindClientSession(const SOCKET socket)
-{
-	for (int i = 0; i < mMaxSessionSize; i++)
-	{
-		if (mClientVector[i].mSocket == socket)
-		{
-			return &mClientVector[i];
-		}
-	}
-
-	return nullptr;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint64  ClientSessionManager::GenerateUniqueId() const
 {
@@ -81,27 +71,15 @@ void ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSessionManager::DisconnectClientSession(const int32 clientIndex)
+void ClientSessionManager::DisconnectClientSession(const int32 index)
 {
-	mClientVector[clientIndex].Clear();
-	mClientIndexPool.push(clientIndex);
+	mClientVector[index].Clear();
+	mClientIndexPool.push(index);
 }
 
-void ClientSessionManager::DisconnectClientSession(const uint64 clientUniqueId)
+void ClientSessionManager::DisconnectClientSession(const uint64 uniqueId)
 {
-	ClientSession* session = FindClientSession(clientUniqueId);
-	if (nullptr == session)
-	{
-		return;
-	}
-
-	mClientIndexPool.push(session->mIndex);
-	session->Clear();
-}
-
-void ClientSessionManager::DisconnectClientSession(const SOCKET clientSocket)
-{
-	ClientSession* session = FindClientSession(clientSocket);
+	ClientSession* session = FindClientSession(uniqueId);
 	if (nullptr == session)
 	{
 		return;

@@ -1,11 +1,13 @@
 #pragma once
 
+#include "../../NetworkLib/Protocol.h"
 #include "ErrorCode.h"
 #include "Protocol.h"
-#include "../../NetworkLib/Protocol.h"
+
 
 class NetworkCore;
 class UserManager;
+
 
 class PacketHandler
 {
@@ -15,12 +17,13 @@ private:
 
 
 private:
-	NetworkCore* mNetworkCore;
-	UserManager* mUserManager;
+	NetworkCore* mNetworkCore = nullptr;
+	UserManager* mUserManager = nullptr;
 
 	PacketFunc mPacketFuncArray[CS::PACKET_ID_END - CS::PACKET_ID_START + 1];
 
 	void EnrollPacketFunc(CS::PacketId packetId, PacketFunc);
+
 
 public:
 	explicit PacketHandler(NetworkCore* networkCore, UserManager* userManager);

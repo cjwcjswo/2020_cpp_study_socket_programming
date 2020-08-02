@@ -1,9 +1,10 @@
 #include <wchar.h>
 
+#include "../../NetworkLib/NetworkCore.h"
+#include "../../NetworkLib/Logger.h"
 #include "PacketHandler.h"
 #include "UserManager.h"
 #include "User.h"
-#include "../../NetworkLib/NetworkCore.h"
 
 
 using namespace CS;

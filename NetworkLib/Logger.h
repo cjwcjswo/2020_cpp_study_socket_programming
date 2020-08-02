@@ -1,6 +1,8 @@
 #pragma once
 
+#include <Windows.h>
 #include "PrimitiveTypes.h"
+
 
 enum class Color : uint8
 {
@@ -22,6 +24,7 @@ enum class Color : uint8
     COLOR_COUNT
 };
 
+
 class Logger
 {
 public:
@@ -36,9 +39,7 @@ private:
 
 public:
     void PrintConsole(Color color, const wchar* str, ...);
-
     void SetColor(bool isStdOut, Color color);
-
     void ResetColor(bool isStdOut);
 };
 

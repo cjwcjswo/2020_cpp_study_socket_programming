@@ -10,6 +10,7 @@ enum class UserState : uint8
 	LOGIN,
 };
 
+
 class User
 {
 public:
@@ -21,6 +22,7 @@ public:
 
 	UserState mState = UserState::DISCONNECT;
 
+
 public:
 	User() = default;
 	explicit User(const int32 sessionIndex, const uint64 sessionUniqueId) : mSessionIndex(sessionIndex), mSessionUniqueId(sessionUniqueId) {};
@@ -30,9 +32,7 @@ public:
 
 public:
 	void Clear();
-
 	void Connect(const User& User);
-
 	void Login(uint64 uid);
 };
 

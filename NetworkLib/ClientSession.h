@@ -1,7 +1,5 @@
 #pragma once
-#pragma comment(lib,"ws2_32")
 
-#include <WinSock2.h>
 #include "PrimitiveTypes.h"
 
 
@@ -23,8 +21,8 @@ public:
 	int mPreviousReceiveBufferPos = 0;
 	int mSendSize = 0;
 
-	char* mReceiveBuffer;
-	char* mSendBuffer;
+	char* mReceiveBuffer = nullptr;
+	char* mSendBuffer = nullptr;
 
 	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = 0;

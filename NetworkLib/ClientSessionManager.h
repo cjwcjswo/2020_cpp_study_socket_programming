@@ -1,10 +1,7 @@
 #pragma once
-#pragma comment(lib,"ws2_32")
 
-#include <WinSock2.h>
 #include <vector>
 #include <queue>
-
 
 #include "PrimitiveTypes.h"
 
@@ -40,12 +37,10 @@ public:
 
 	ClientSession* FindClientSession(const int32 index);
 	ClientSession* FindClientSession(const uint64 uniqueId);
-	ClientSession* FindClientSession(const SOCKET socket);
 
 	void ConnectClientSession(ClientSession& clientSession);
 
-	void DisconnectClientSession(const int32 clientIndex);
-	void DisconnectClientSession(const uint64 clientUniqueId);
-	void DisconnectClientSession(const SOCKET clientSocket);
+	void DisconnectClientSession(const int32 index);
+	void DisconnectClientSession(const uint64 uniqueId);
 };
 

@@ -1,21 +1,22 @@
 #pragma once
 
-#include "../../NetworkLib/NetworkCore.h"
 #include "ErrorCode.h"
 
+
+class NetworkCore;
 class UserManager;
 class PacketHandler;
+
 
 class ChatServer
 {
 private:
-	NetworkCore mNetworkCore;
-
+	NetworkCore* mNetworkCore = nullptr;
 	UserManager* mUserManager = nullptr;
 	PacketHandler* mPacketHandler = nullptr;
 	
-
 	bool mIsRunning = false;
+
 
 public:
 	ChatServer() = default;
@@ -26,5 +27,4 @@ public:
 	CS::ErrorCode Init();
 	CS::ErrorCode Run();
 	void Stop();
-
 };

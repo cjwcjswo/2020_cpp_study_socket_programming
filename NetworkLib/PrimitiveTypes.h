@@ -1,5 +1,6 @@
 #pragma once
 
+
 using uchar = unsigned char;
 using wchar = wchar_t;
 
