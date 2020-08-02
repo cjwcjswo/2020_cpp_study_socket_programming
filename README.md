@@ -8,8 +8,7 @@
 
 ## 코딩 컨벤션
 
-* ~코딩 컨벤션은 기본적으로 언리얼 코딩 컨벤션을 준수한다 (https://docs.unrealengine.com/ko/Programming/Development/CodingStandard/index.html)~
-* 따로 컨벤션 정리 예정(2020-07-29)
+* [convention.md](convention.md)
 
 ## TODO
 * **진행 중 일감**
