@@ -1,4 +1,5 @@
 #include "NetworkCore.h"
+#include "TCPSocket.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
@@ -9,50 +10,19 @@ using namespace Core;
 NetworkCore::~NetworkCore()
 {
 	Stop();
+	delete mAcceptSocket;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::LoadConfig()
 {
-
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Bind()
-{
-	SOCKADDR_IN socketAddrIn;
-	int socketAddrInSize = sizeof(socketAddrIn);
-	ZeroMemory(&socketAddrIn, socketAddrInSize);
-	socketAddrIn.sin_family = AF_INET;
-	socketAddrIn.sin_port = htons(32452);
-	socketAddrIn.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-
-	if (SOCKET_ERROR == bind(mAcceptSocket, (SOCKADDR*)&socketAddrIn, socketAddrInSize))
-	{
-		return ErrorCode::SOCKET_BIND_FAIL;
-	}
-
-	return ErrorCode::SUCCESS;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Listen()
-{
-	if (SOCKET_ERROR == listen(mAcceptSocket, SOMAXCONN))
-	{
-		return ErrorCode::SOCKET_LISTEN_FAIL;
-	}
-
-	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkCore::AcceptClient()
 {
-	SOCKADDR_IN socketAddrIn;
-	int size = sizeof(socketAddrIn);
-	SOCKET clientSocket = accept(mAcceptSocket, (SOCKADDR*)&socketAddrIn, &size);
-	if (INVALID_SOCKET == clientSocket)
+	TCPSocket clientSocket = mAcceptSocket->Accept();
+	if (INVALID_SOCKET == clientSocket.Socket())
 	{
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
@@ -67,18 +37,15 @@ ErrorCode NetworkCore::AcceptClient()
 		return ErrorCode::SOCKET_INDEX_POOL_IS_FULL;
 	}
 
-	linger ling = { 0, 0 };
-	setsockopt(clientSession.mSocket, SOL_SOCKET, SO_LINGER, (char*)&ling, sizeof(ling));
+	mAcceptSocket->SetLingerMode();
 
-	// Set Non-Blocking Mode (https://www.joinc.co.kr/w/man/4200/ioctlsocket)
-	unsigned long mode = 1;
-	if (SOCKET_ERROR == ioctlsocket(clientSession.mSocket, FIONBIO, &mode))
+	if (ErrorCode::SUCCESS != mAcceptSocket->SetNonBlockingMode())
 	{
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
 
-	FD_SET(clientSession.mSocket, &mReadSet);
-	FD_SET(clientSession.mSocket, &mWriteSet);
+	FD_SET(mAcceptSocket->Socket(), &mReadSet);
+	FD_SET(mAcceptSocket->Socket(), &mWriteSet);
 	
 	clientSession.mUniqueId = mClientSessionManager->GenerateUniqueId();
 
@@ -115,8 +82,8 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 			continue;
 		}
 
-		SOCKET clientSocket = clientSession.mSocket;
-		if (FD_ISSET(clientSocket, &readSet))
+		TCPSocket clientSocket = clientSession.mSocket;
+		if (FD_ISSET(clientSocket.Socket(), &readSet))
 		{
 			ErrorCode errorCode = ReceiveClient(clientSession);
 			if (ErrorCode::SUCCESS != errorCode)
@@ -125,7 +92,7 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 				continue;
 			}
 		}
-		if (FD_ISSET(clientSocket, &writeSet))
+		if (FD_ISSET(clientSocket.Socket(), &writeSet))
 		{
 			ErrorCode errorCode = SendClient(clientSession);
 			if (ErrorCode::SUCCESS != errorCode)
@@ -146,7 +113,7 @@ ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 		receivePos += clientSession.mRemainDataSize;
 	}
 
-	int length = recv(clientSession.mSocket, &clientSession.mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE, 0);
+	int length = clientSession.mSocket.Receive(&clientSession.mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE);
 	if (0 == length)
 	{
 		return ErrorCode::SOCKET_RECEIVE_ZERO;
@@ -238,7 +205,8 @@ ErrorCode NetworkCore::SendClient(ClientSession& clientSession)
 		return ErrorCode::SUCCESS;
 	}
 
-	int length = send(clientSession.mSocket, clientSession.mSendBuffer, clientSession.mSendSize, 0);
+	
+	int length = clientSession.mSocket.Send(clientSession.mSendBuffer, clientSession.mSendSize);
 	if (length <= 0)
 	{
 		return ErrorCode::SOCKET_SEND_SIZE_ZERO;
@@ -266,17 +234,17 @@ void NetworkCore::PushReceivePacket(const ReceivePacket receivePacket)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::CloseSession(const ErrorCode errorCode, const ClientSession& clientSession)
+void NetworkCore::CloseSession(const ErrorCode errorCode, ClientSession& clientSession)
 {
-	SOCKET clientSocket = clientSession.mSocket;
 	if (!clientSession.IsConnect())
 	{
 		return;
 	}
 
-	closesocket(clientSocket);
-	FD_CLR(clientSocket, &mReadSet);
-	FD_CLR(clientSocket, &mWriteSet);
+	FD_CLR(clientSession.mSocket.Socket(), &mReadSet);
+	FD_CLR(clientSession.mSocket.Socket(), &mWriteSet);
+	clientSession.mSocket.Close();
+	
 
 	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
 	{
@@ -298,27 +266,21 @@ ErrorCode NetworkCore::Init(const int maxSessionSize)
 	}
 
 	// Client Accept Socket Init
-	mAcceptSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (INVALID_SOCKET == mAcceptSocket)
-	{
-		return ErrorCode::SOCKET_INIT_FAIL;
-	}
-
-	// Reuse Address
-	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
-	char reuseAddr = 1;
-	if (setsockopt(mAcceptSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) < 0)
-	{
-		return ErrorCode::SOCKET_INIT_REUSE_ADDR_FAIL;
-	}
-
-	ErrorCode errorCode = Bind();
+	ErrorCode errorCode;
+	mAcceptSocket = new TCPSocket{INVALID_SOCKET};
+	errorCode = mAcceptSocket->Create();
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;
 	}
 
-	errorCode = Listen();
+	errorCode = mAcceptSocket->Bind(L"127.0.0.1", 32452);
+	if (ErrorCode::SUCCESS != errorCode)
+	{
+		return errorCode;
+	}
+
+	errorCode = mAcceptSocket->Listen();
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;
@@ -335,7 +297,7 @@ ErrorCode NetworkCore::Run()
 {
 	FD_ZERO(&mReadSet);
 	FD_ZERO(&mWriteSet);
-	FD_SET(mAcceptSocket, &mReadSet);
+	FD_SET(mAcceptSocket->Socket(), &mReadSet);
 
 	// Start Thread
 	mIsRunning = true;
@@ -348,12 +310,7 @@ ErrorCode NetworkCore::Run()
 ErrorCode NetworkCore::Stop()
 {
 	// Stop Accept Socket
-	if (mAcceptSocket == INVALID_SOCKET)
-	{
-		return ErrorCode::SUCCESS;
-	}
-	shutdown(mAcceptSocket, SD_BOTH);
-	closesocket(mAcceptSocket);
+	mAcceptSocket->Close();
 
 	if (mIsRunning)
 	{

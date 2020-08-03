@@ -12,6 +12,7 @@
 #include "ErrorCode.h"
 
 
+class TCPSocket;
 class ClientSessionManager;
 class ClientSession;
 
@@ -25,13 +26,12 @@ protected:
 protected:
 	ClientSessionManager* mClientSessionManager = nullptr;
 	UniquePtrThread mSelectThread = nullptr;
+	TCPSocket* mAcceptSocket = nullptr;
 
 	std::mutex mPacketMutex;
 	std::mutex mSessionMutex;
 
 	std::queue<Core::ReceivePacket> mReceivePacketQueue;
-
-	SOCKET mAcceptSocket = INVALID_SOCKET;
 
 	fd_set mReadSet{};
 	fd_set mWriteSet{};
@@ -49,8 +49,6 @@ public:
 
 
 protected:
-	Core::ErrorCode Bind();
-	Core::ErrorCode Listen();
 	Core::ErrorCode CheckSelectResult(int selectResult);
 	Core::ErrorCode AcceptClient();
 	Core::ErrorCode ReceiveClient(ClientSession& clientSession);
@@ -60,7 +58,7 @@ protected:
 	void PushReceivePacket(const Core::ReceivePacket receivePacket);
 	void SelectProcess();
 	void SelectClient(const fd_set& readSet, const fd_set& writeSet);
-	void CloseSession(const Core::ErrorCode errorCode, const ClientSession& clientSession);
+	void CloseSession(const Core::ErrorCode errorCode, ClientSession& clientSession);
 
 
 public:

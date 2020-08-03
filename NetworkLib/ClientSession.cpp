@@ -30,5 +30,5 @@ void ClientSession::Clear()
 
 	mIndex = -1;
 	mUniqueId = 0;
-	mSocket = INVALID_SOCKET;
+	mSocket.Clear();
 }

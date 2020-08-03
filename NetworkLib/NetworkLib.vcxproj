@@ -26,12 +26,14 @@
     <ClInclude Include="NetworkCore.h" />
     <ClInclude Include="PrimitiveTypes.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="TCPSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientSession.cpp" />
     <ClCompile Include="ClientSessionManager.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="NetworkCore.cpp" />
+    <ClCompile Include="TCPSocket.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

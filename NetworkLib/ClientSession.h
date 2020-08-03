@@ -1,5 +1,6 @@
 #pragma once
 
+#include "TCPSocket.h"
 #include "PrimitiveTypes.h"
 
 
@@ -26,11 +27,11 @@ public:
 
 	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = 0;
-	SOCKET mSocket = INVALID_SOCKET;
+	TCPSocket mSocket;
 
 
 public:
-	inline bool IsConnect() const { return mSocket != INVALID_SOCKET; };
+	inline bool IsConnect() const { return mSocket.Socket() != INVALID_SOCKET; };
 
 	void Clear();
 };
