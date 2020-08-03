@@ -139,6 +139,7 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 {
+	//TODO 최흥배: mReceiveBuffer의 크기를 ClientSession::BUFFER_SIZE 2배로 잡아서 남은 데이터를 앞으로 복사하지 않고 남은 부분 다음에 받도록 합니다. 복사를 줄이기 위해서 입니다.
 	int receivePos = 0;
 	if (clientSession.mRemainDataSize > 0)
 	{
