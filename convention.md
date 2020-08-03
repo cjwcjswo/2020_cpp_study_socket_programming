@@ -1,104 +1,104 @@
-# ¸í¸í ±ÔÄ¢
+# ëª…ëª… ê·œì¹™
 
-## ÆÄÀÏ ÀÌ¸§
-Çì´õ ÆÄÀÏ°ú Å¬·¡½º ÆÄÀÏÀÇ ÀÌ¸§Àº Pascal Case·Î ÅëÀÏÇÑ´Ù.
+## íŒŒì¼ ì´ë¦„
+í—¤ë” íŒŒì¼ê³¼ í´ëž˜ìŠ¤ íŒŒì¼ì˜ ì´ë¦„ì€ Pascal Caseë¡œ í†µì¼í•œë‹¤.
 ```cpp
 Main.cpp, Main.h, ...
 ```
 
-## »ó¼ö
-¸ðµç ÄÄÆÄÀÏ Å¸ÀÓ »ó¼ö´Â ´ë¹®ÀÚ·Î ÀÛ¼ºÇÏ¸ç _·Î ´Ü¾î¸¦ ±¸ºÐÇÑ´Ù.
+## ìƒìˆ˜
+ëª¨ë“  ì»´íŒŒì¼ íƒ€ìž„ ìƒìˆ˜ëŠ” ëŒ€ë¬¸ìžë¡œ ìž‘ì„±í•˜ë©° _ë¡œ ë‹¨ì–´ë¥¼ êµ¬ë¶„í•œë‹¤.
 ```cpp
 const int MAX_USER_COUNT = 100;
 ```
 
-## Àü¿ª º¯¼ö
-Àü¿ª º¯¼ö ¾Õ¿¡´Â Á¢µÎ»ç G¸¦ ºÙÀÎ´Ù.
+## ì „ì—­ ë³€ìˆ˜
+ì „ì—­ ë³€ìˆ˜ ì•žì—ëŠ” ì ‘ë‘ì‚¬ Gë¥¼ ë¶™ì¸ë‹¤.
 ```cpp
-int Gvalue = 100;
+int GValue = 100;
 ```
 
-## ¸â¹ö º¯¼ö
-¸ðµç ¸â¹ö º¯¼ö ¾Õ Á¢µÎ»ç¿¡´Â mÀ» ºÙÀÌ°í ÀÌÈÄ PascalCase·Î ÅëÀÏÇÑ´Ù.
+## ë©¤ë²„ ë³€ìˆ˜
+ëª¨ë“  ë©¤ë²„ ë³€ìˆ˜ ì•ž ì ‘ë‘ì‚¬ì—ëŠ” mì„ ë¶™ì´ê³  ì´í›„ PascalCaseë¡œ í†µì¼í•œë‹¤.
 ```cpp
 public:
 int mAge = 0;
 bool mIsMale = false;
 ```
 
-## ÇÔ¼ö ÀÌ¸§
-ÇÔ¼ö ÀÌ¸§Àº Pascal Case·Î ÅëÀÏÇÑ´Ù.
+## í•¨ìˆ˜ ì´ë¦„
+í•¨ìˆ˜ ì´ë¦„ì€ Pascal Caseë¡œ í†µì¼í•œë‹¤.
 ```cpp
 void TestFunction()
 {
 }
 ```
 
-## ±¸Á¶Ã¼
-±¸Á¶Ã¼ ¸í¸í ±ÔÄ¢ ¿ª½Ã Å¬·¡½º¿Í µ¿ÀÏÇÏ°Ô µû¸¥´Ù.
+## êµ¬ì¡°ì²´
+êµ¬ì¡°ì²´ ëª…ëª… ê·œì¹™ ì—­ì‹œ í´ëž˜ìŠ¤ì™€ ë™ì¼í•˜ê²Œ ë”°ë¥¸ë‹¤.
 
-# Çì´õÆÄÀÏ ÀÛ¼º ±ÔÄ¢
+# í—¤ë”íŒŒì¼ ìž‘ì„± ê·œì¹™
 
-## Å¬·¡½º ¼±¾ð ¼ø¼­
+## í´ëž˜ìŠ¤ ì„ ì–¸ ìˆœì„œ
 
 ```cpp
-// ÅÛÇÃ¸´ ¼±¾ð½Ã ±ÔÄ¢
-// template Å°¿öµå¿Í <> »çÀÌ¿£ °ø¹é 1Ä­
-// class Å°¿öµå ´ë½Å typename Å°¿öµå·Î ÅëÀÏÇÒ °Í
+// í…œí”Œë¦¿ ì„ ì–¸ì‹œ ê·œì¹™
+// template í‚¤ì›Œë“œì™€ <> ì‚¬ì´ì—” ê³µë°± 1ì¹¸
+// class í‚¤ì›Œë“œ ëŒ€ì‹  typename í‚¤ì›Œë“œë¡œ í†µì¼í•  ê²ƒ
 template <typename T>
 class TypeName : public ParentTypeName
 {
-// 1. ÇÊ¿ä½Ã static_assert
+// 1. í•„ìš”ì‹œ static_assert
 
-// 2. ¸ÅÅ©·Î Áý´Ü
+// 2. ë§¤í¬ë¡œ ì§‘ë‹¨
     UE4_MACROS
     OTHER_MACROS
     
-// 3. friend Å¬·¡½º°¡ ÀÖ´Ù¸é ¼±¾ð
-    friend class ¼±¾ð
+// 3. friend í´ëž˜ìŠ¤ê°€ ìžˆë‹¤ë©´ ì„ ì–¸
+    friend class ì„ ì–¸
     
-// 4. ÇØ´ç class¿¡ Á¾¼ÓÀûÀÎ Å¸ÀÔº°ÄªÀÌ ÇÊ¿äÇÏ´Ù¸é, º¯¼ö ¼±¾ð¿¡ ¾Õ¼­ ¹Ì¸® Á¤ÀÇ
+// 4. í•´ë‹¹ classì— ì¢…ì†ì ì¸ íƒ€ìž…ë³„ì¹­ì´ í•„ìš”í•˜ë‹¤ë©´, ë³€ìˆ˜ ì„ ì–¸ì— ì•žì„œ ë¯¸ë¦¬ ì •ì˜
 private:
-    using Å¸ÀÔ º°Äª Á¤ÀÇ  
+    using íƒ€ìž… ë³„ì¹­ ì •ì˜  
     enum, const
     
-// 5. ¸â¹öº¯¼ö ¼±¾ð
+// 5. ë©¤ë²„ë³€ìˆ˜ ì„ ì–¸
 private:
     _memberVariableList; ...
     
-// 6. »ý¼ºÀÚ/¼Ò¸êÀÚ ¼±¾ð
+// 6. ìƒì„±ìž/ì†Œë©¸ìž ì„ ì–¸
 public:
     TypeName();
     ~TypeName();
     
-// 7. Á¤Àû ¸â¹öÇÔ¼öµé ¼±¾ð
+// 7. ì •ì  ë©¤ë²„í•¨ìˆ˜ë“¤ ì„ ì–¸
 public:
     static MemberFunctions(); ...
     
-// 8. °¡»ó ¸â¹öÇÔ¼öµé ¼±¾ð
+// 8. ê°€ìƒ ë©¤ë²„í•¨ìˆ˜ë“¤ ì„ ì–¸
 public:
     virtual MemberFunctions(); ...
     
-// 9. ÀÏ¹Ý ¸ã¹öÇÔ¼öµé ¼±¾ð
+// 9. ì¼ë°˜ ë©¥ë²„í•¨ìˆ˜ë“¤ ì„ ì–¸
 public:
     Logical public Functions(); ...
     
-// 10. getter/setter ¸â¹öÇÔ¼öµé ¼±¾ð
+// 10. getter/setter ë©¤ë²„í•¨ìˆ˜ë“¤ ì„ ì–¸
 public:
     Getter/Setter Functions(); ...
 };
 
-// 11. ±Û·Î¹ú ½ºÆäÀÌ½º º¯¼ö, ÇÔ¼öµé ¼±¾ð
+// 11. ê¸€ë¡œë²Œ ìŠ¤íŽ˜ì´ìŠ¤ ë³€ìˆ˜, í•¨ìˆ˜ë“¤ ì„ ì–¸
 ```
 
-## Çì´õ ÆÄÀÏ¿¡¼­ÀÇ ´Ù¸¥ Çì´õÆÄÀÏ Æ÷ÇÔÀº ÃÖ´ëÇÑ Áö¾çÇØ¾ß ÇÑ´Ù
+## í—¤ë” íŒŒì¼ì—ì„œì˜ ë‹¤ë¥¸ í—¤ë”íŒŒì¼ í¬í•¨ì€ ìµœëŒ€í•œ ì§€ì–‘í•´ì•¼ í•œë‹¤
 
-ÀÎÅÍÆäÀÌ½º ±¸¼º»ó ½Ã±×³ÊÃÄ¿¡ ÇÊ¿äÇÑ Å¸ÀÔ Á¤º¸ Àü´ÞÀº ÃÖ´ëÇÑ Àü¹æ¼±¾ð(forward declaration)À» È°¿ëÇÑ´Ù.
+ì¸í„°íŽ˜ì´ìŠ¤ êµ¬ì„±ìƒ ì‹œê·¸ë„ˆì³ì— í•„ìš”í•œ íƒ€ìž… ì •ë³´ ì „ë‹¬ì€ ìµœëŒ€í•œ ì „ë°©ì„ ì–¸(forward declaration)ì„ í™œìš©í•œë‹¤.
 
-Àü¹æ¼±¾ðÀ» Çì´õÀÇ ±Û·Î¹ú ½ºÆäÀÌ½º¿¡ ÇÒ °ÍÀÎÁö, ÇØ´ç Å¸ÀÔ ¾Õ¿¡ ºÙÀÌ´Â ¹æ½ÄÀ» ¾µ °ÍÀÎÁö´Â »óÈ²¿¡ ¸Â°Ô ÀÚÀ¯·Ó°Ô ¼±ÅÃÇÑ´Ù.
+ì „ë°©ì„ ì–¸ì„ í—¤ë”ì˜ ê¸€ë¡œë²Œ ìŠ¤íŽ˜ì´ìŠ¤ì— í•  ê²ƒì¸ì§€, í•´ë‹¹ íƒ€ìž… ì•žì— ë¶™ì´ëŠ” ë°©ì‹ì„ ì“¸ ê²ƒì¸ì§€ëŠ” ìƒí™©ì— ë§žê²Œ ìžìœ ë¡­ê²Œ ì„ íƒí•œë‹¤.
 
 ```cpp
-// 1) ´ÙÀ½°ú °°ÀÌ ±Û·Î¹ú ½ºÆäÀÌ½º¿¡¼­ Àü¹æ¼±¾ðÀ» ÇÏ´Â °Í OK
+// 1) ë‹¤ìŒê³¼ ê°™ì´ ê¸€ë¡œë²Œ ìŠ¤íŽ˜ì´ìŠ¤ì—ì„œ ì „ë°©ì„ ì–¸ì„ í•˜ëŠ” ê²ƒ OK
 class UButton;
   
 class TestProject: public UGsUIWindow
@@ -107,16 +107,16 @@ class TestProject: public UGsUIWindow
     
 protected:
     UPROPERTY()
-    class UButton* BtnOk;   // 2) Å¸ÀÔ ¾Õ¿¡ Àü¹æ¼±¾ð Çü½ÄÀ¸·Î »ç¿ëÇØµµ OK
+    class UButton* BtnOk;   // 2) íƒ€ìž… ì•žì— ì „ë°©ì„ ì–¸ í˜•ì‹ìœ¼ë¡œ ì‚¬ìš©í•´ë„ OK
 ```
 
-# ±âÅ¸ ±ÔÄ¢
+# ê¸°íƒ€ ê·œì¹™
 
-## NULLÀº ÀÌÁ¦ ±×¸¸, 'nullptr'·Î¸¸ Ç¥ÇöÇÒ °Í
+## NULLì€ ì´ì œ ê·¸ë§Œ, 'nullptr'ë¡œë§Œ í‘œí˜„í•  ê²ƒ
 
-¾ð¸®¾ó ¿£ÁøÀÇ ÄÚµå¿¡¼­µµ ¿©ÀüÈ÷ NULLÀÌ °üÂûµÇ±ä ÇÏÁö¸¸, °è¼ÓÇØ¼­ nullptr·Î º¯°æÇÏ´Â Áß
+ì–¸ë¦¬ì–¼ ì—”ì§„ì˜ ì½”ë“œì—ì„œë„ ì—¬ì „ížˆ NULLì´ ê´€ì°°ë˜ê¸´ í•˜ì§€ë§Œ, ê³„ì†í•´ì„œ nullptrë¡œ ë³€ê²½í•˜ëŠ” ì¤‘
 
-## ¸â¹ö º¯¼ö´Â '¼±¾ð Áï½Ã ÃÊ±âÈ­'ÇÏ´Â ½À°üÀ» µéÀÌÀÚ
+## ë©¤ë²„ ë³€ìˆ˜ëŠ” 'ì„ ì–¸ ì¦‰ì‹œ ì´ˆê¸°í™”'í•˜ëŠ” ìŠµê´€ì„ ë“¤ì´ìž
 ```cpp
 UCLASS()
 class TestProject : public UGsGameFlowBase
@@ -129,12 +129,12 @@ class TestProject : public UGsGameFlowBase
     class GsStageManagerGame*      mStageManager        = nullptr;
     class GsContentsManagerGame*    mContentsGameManager = nullptr;
 ```
-Lazy initializationÀÌ ÇÊ¼öÀûÀÎ ³à¼®µéÀÌ ¾Æ´Ï¶ó¸é, ÀÌ°Ç ±×³É ½À°üÀ» µéÀÌÀÚ.
+Lazy initializationì´ í•„ìˆ˜ì ì¸ ë…€ì„ë“¤ì´ ì•„ë‹ˆë¼ë©´, ì´ê±´ ê·¸ëƒ¥ ìŠµê´€ì„ ë“¤ì´ìž.
 
-## Primitive typeÀº ÂüÁ¶Çü ÀÎÀÚ(ÇÔ¼ö, ÅÛÇÃ¸´ ¸ðµÎ)·Î »ç¿ëÇÏÁö ¸»ÀÚ
-(ÇÔ¼öÀÇ OUT ÆÄ¶ó¹ÌÅÍ´Â ´ç¿¬È÷ ÀÌ ÀÌ¾ß±â¿¡ Æ÷ÇÔµÇÁö ¾ÊÀ½À» ¹Ì¸® ¹àÇôµÐ´Ù)
+## Primitive typeì€ ì°¸ì¡°í˜• ì¸ìž(í•¨ìˆ˜, í…œí”Œë¦¿ ëª¨ë‘)ë¡œ ì‚¬ìš©í•˜ì§€ ë§ìž
+(í•¨ìˆ˜ì˜ OUT íŒŒë¼ë¯¸í„°ëŠ” ë‹¹ì—°ížˆ ì´ ì´ì•¼ê¸°ì— í¬í•¨ë˜ì§€ ì•ŠìŒì„ ë¯¸ë¦¬ ë°í˜€ë‘”ë‹¤)
 
-C++ÀÇ Primitive typeÀ¸·Î´Â ´ÙÀ½ÀÇ °ÍµéÀÌ ÀÖ´Ù.
+C++ì˜ Primitive typeìœ¼ë¡œëŠ” ë‹¤ìŒì˜ ê²ƒë“¤ì´ ìžˆë‹¤.
 
 * Integral types
 * Floating-point types
@@ -142,75 +142,75 @@ C++ÀÇ Primitive typeÀ¸·Î´Â ´ÙÀ½ÀÇ °ÍµéÀÌ ÀÖ´Ù.
 * char / wchar_t
 * void
  
-ÈçÈ÷ º¸ÀÌ´Â ÄÚµå ½Ç¼ö Áß ÇÏ³ª°¡ "º¹»ç¸¦ ÇÇÇÏ·Á¸é (»ó¼ö)ÂüÁ¶·Î¡¦"¶ó´Â ÀÏ¹Ý·ÐÀÌ´Ù (ÀÌ´Â ÀÌÈÄÀÇ SharedPtr¿¡¼­µµ µ¿ÀÏÇÏ°Ô ¹Ýº¹µÇ´Âµ¥)
+í”ížˆ ë³´ì´ëŠ” ì½”ë“œ ì‹¤ìˆ˜ ì¤‘ í•˜ë‚˜ê°€ "ë³µì‚¬ë¥¼ í”¼í•˜ë ¤ë©´ (ìƒìˆ˜)ì°¸ì¡°ë¡œâ€¦"ë¼ëŠ” ì¼ë°˜ë¡ ì´ë‹¤ (ì´ëŠ” ì´í›„ì˜ SharedPtrì—ì„œë„ ë™ì¼í•˜ê²Œ ë°˜ë³µë˜ëŠ”ë°)
 
-ÀÏ´Ü Àú ÀÏ¹Ý·ÐÀº Å©±â Ãø¸é¿¡¼­ Primitive typeµé¿¡ ´ëÇØ¼± ¾Æ¹«·± È¿°úµµ ¾ø´Ù.
+ì¼ë‹¨ ì € ì¼ë°˜ë¡ ì€ í¬ê¸° ì¸¡ë©´ì—ì„œ Primitive typeë“¤ì— ëŒ€í•´ì„  ì•„ë¬´ëŸ° íš¨ê³¼ë„ ì—†ë‹¤.
 
-Primitive typeµéÀº ¸ðµÎ 8¹ÙÀÌÆ® ÀÌ³»ÀÇ Å©±â¸¦ °¡Áö¸ç, Byte-padding¿¡ ÀÇÇØ ·¹Áö½ºÅÍ ÀÔÀå¿¡¼± ±×³É ´Ù 8¹ÙÀÌÆ®  (64ºñÆ® È¯°æ¿¡¼­)
+Primitive typeë“¤ì€ ëª¨ë‘ 8ë°”ì´íŠ¸ ì´ë‚´ì˜ í¬ê¸°ë¥¼ ê°€ì§€ë©°, Byte-paddingì— ì˜í•´ ë ˆì§€ìŠ¤í„° ìž…ìž¥ì—ì„  ê·¸ëƒ¥ ë‹¤ 8ë°”ì´íŠ¸  (64ë¹„íŠ¸ í™˜ê²½ì—ì„œ)
 
-±×·±µ¥ ÂüÁ¶ ¿ª½Ã ÁÖ¼Ò°ªÀ» ÃëÇÏ±â¿¡ 8¹ÙÀÌÆ® Å©±â¸¦ °¡Áø´Ù.
+ê·¸ëŸ°ë° ì°¸ì¡° ì—­ì‹œ ì£¼ì†Œê°’ì„ ì·¨í•˜ê¸°ì— 8ë°”ì´íŠ¸ í¬ê¸°ë¥¼ ê°€ì§„ë‹¤.
 
-°í·Î, Å©±â Ãø¸é¿¡¼­´Â ¾Æ¹«·± ÀÇ¹Ì°¡ ¾ø°í¡¦
+ê³ ë¡œ, í¬ê¸° ì¸¡ë©´ì—ì„œëŠ” ì•„ë¬´ëŸ° ì˜ë¯¸ê°€ ì—†ê³ â€¦
 
-µÇ·Á ÂüÁ¶´Â ´ÙÀ½°ú °°Àº ´ÜÁ¡À» °¡Áø´Ù.
+ë˜ë ¤ ì°¸ì¡°ëŠ” ë‹¤ìŒê³¼ ê°™ì€ ë‹¨ì ì„ ê°€ì§„ë‹¤.
 
-ºÐ¸í call by valueÀÌ¸é ÃæºÐÇÑ °ÍÀ» call by reference·Î ³Ñ°Ü º¯°æµÉ ¿©Áö°¡ ³²°ÔµÈ´Ù.
-ÂüÁ¶·Î ³Ñ¾î°¬À» ¶§ »ç¿ëÃ³¿¡¼­ ¶Ç ´Ù¸¥ °£Á¢ ÂüÁ¶¸¦ ¸¸µé¾î ³¾ ¼ö ÀÖ´Ù.
-ºÐ¸í ÇÑ±ºµ¥¸¸ ³Ñ°å´Âµ¥, ¸¶±¸¸¶±¸ ÂüÁ¶°¡ »ý¼ºµÇ¾î ¼öÁ¤µÉ ¼ö ÀÖ°Ô µÇ´Â °ÍÀÌ´Ù.
+ë¶„ëª… call by valueì´ë©´ ì¶©ë¶„í•œ ê²ƒì„ call by referenceë¡œ ë„˜ê²¨ ë³€ê²½ë  ì—¬ì§€ê°€ ë‚¨ê²Œëœë‹¤.
+ì°¸ì¡°ë¡œ ë„˜ì–´ê°”ì„ ë•Œ ì‚¬ìš©ì²˜ì—ì„œ ë˜ ë‹¤ë¥¸ ê°„ì ‘ ì°¸ì¡°ë¥¼ ë§Œë“¤ì–´ ë‚¼ ìˆ˜ ìžˆë‹¤.
+ë¶„ëª… í•œêµ°ë°ë§Œ ë„˜ê²¼ëŠ”ë°, ë§ˆêµ¬ë§ˆêµ¬ ì°¸ì¡°ê°€ ìƒì„±ë˜ì–´ ìˆ˜ì •ë  ìˆ˜ ìžˆê²Œ ë˜ëŠ” ê²ƒì´ë‹¤.
  
 
-ÀÌ´Â ¾ð¾î·ÐÀû °üÁ¡¿¡¼­ Ä¸½¶È­ ºØ±«¸¦ ÀÇ¹ÌÇÏ±âµµ ÇÑ´Ù.
+ì´ëŠ” ì–¸ì–´ë¡ ì  ê´€ì ì—ì„œ ìº¡ìŠí™” ë¶•ê´´ë¥¼ ì˜ë¯¸í•˜ê¸°ë„ í•œë‹¤.
 
-## 'Á¤È®ÇÑ »ó¼ö¼º ºÎ¿©'´Â »ó»ó ÀÌ»óÀ¸·Î Áß¿äÇÏ´Ù
-> Âü°í : https://docs.unrealengine.com/ko/Programming/Development/CodingStandard/#const%EC%A0%95%ED%99%95%EB%8F%84
+## 'ì •í™•í•œ ìƒìˆ˜ì„± ë¶€ì—¬'ëŠ” ìƒìƒ ì´ìƒìœ¼ë¡œ ì¤‘ìš”í•˜ë‹¤
+> ì°¸ê³  : https://docs.unrealengine.com/ko/Programming/Development/CodingStandard/#const%EC%A0%95%ED%99%95%EB%8F%84
 
-À§ ÆäÀÌÁö¿¡ °ü·Ã ¿¹Á¦ÄÚµåµéÀÌ Àß Á¤¸®µÇ¾î ÀÖ±â¿¡, ¿¹Á¦ ÄÚµåµéÀº ¸µÅ©·Î ´ëÃ¼
+ìœ„ íŽ˜ì´ì§€ì— ê´€ë ¨ ì˜ˆì œì½”ë“œë“¤ì´ ìž˜ ì •ë¦¬ë˜ì–´ ìžˆê¸°ì—, ì˜ˆì œ ì½”ë“œë“¤ì€ ë§í¬ë¡œ ëŒ€ì²´
 
-Áß¿äÇÑ °ÍÀº "Context ¿¡¼­ »óÅÂ°¡ º¯ÇÏÁö ¾Ê´Â °Íµé¿¡ ´ëÇØ constness¸¦ ºÎ¿©"ÇÏ°Ú´Ù´Â ÀÇÁö¿Í ÀÌ¸¦ ÅëÇÑ ½À°üÀ» ¸¸µé¾î ³ª°¡´Â °Í!
+ì¤‘ìš”í•œ ê²ƒì€ "Context ì—ì„œ ìƒíƒœê°€ ë³€í•˜ì§€ ì•ŠëŠ” ê²ƒë“¤ì— ëŒ€í•´ constnessë¥¼ ë¶€ì—¬"í•˜ê² ë‹¤ëŠ” ì˜ì§€ì™€ ì´ë¥¼ í†µí•œ ìŠµê´€ì„ ë§Œë“¤ì–´ ë‚˜ê°€ëŠ” ê²ƒ!
 
-1) ÄÚµåÀÇ ¾ÈÁ¤¼º Áõ´ë »Ó ¾Æ´Ï¶ó
+1) ì½”ë“œì˜ ì•ˆì •ì„± ì¦ëŒ€ ë¿ ì•„ë‹ˆë¼
 
-2) ÄÄÆÄÀÏ·¯°¡ constness°¡ º¸ÀåµÈ ³à¼®µé¿¡ ´ëÇØ ÃÖÀûÈ­ÇØÁÖ´Â ºÎºÐÀº »ý°¢º¸´Ù Å©´Ù.
+2) ì»´íŒŒì¼ëŸ¬ê°€ constnessê°€ ë³´ìž¥ëœ ë…€ì„ë“¤ì— ëŒ€í•´ ìµœì í™”í•´ì£¼ëŠ” ë¶€ë¶„ì€ ìƒê°ë³´ë‹¤ í¬ë‹¤.
 
-## ÀÎÀÚ¸¦ °¡Áö´Â »ý¼ºÀÚ ÇÔ¼ö´Â 'ÃÖ´ëÇÑ explicit' Å°¿öµå¿Í ÇÔ²²~
+## ì¸ìžë¥¼ ê°€ì§€ëŠ” ìƒì„±ìž í•¨ìˆ˜ëŠ” 'ìµœëŒ€í•œ explicit' í‚¤ì›Œë“œì™€ í•¨ê»˜~
 
-explicitÀº ¸í½ÃÀû »ý¼ºÀÚ È£ÃâÀ» À§ÇÑ C++ language keywordÀÌ´Ù.
+explicitì€ ëª…ì‹œì  ìƒì„±ìž í˜¸ì¶œì„ ìœ„í•œ C++ language keywordì´ë‹¤.
 
-ÀÌ ¸»À» µÚÁýÀ¸¸é explicit Å°¿öµå ¾ø´Â »ý¼ºÀÚ´Â ¾Ï½ÃÀû(implicit)À¸·Î È£ÃâµÈ´Ù´Â ÀÌ¾ß±âÀÌ´Ù.
+ì´ ë§ì„ ë’¤ì§‘ìœ¼ë©´ explicit í‚¤ì›Œë“œ ì—†ëŠ” ìƒì„±ìžëŠ” ì•”ì‹œì (implicit)ìœ¼ë¡œ í˜¸ì¶œëœë‹¤ëŠ” ì´ì•¼ê¸°ì´ë‹¤.
 
-## 'auto' Å°¿öµå´Â Æ¯¼öÇÑ ¸î¸î °æ¿ì°¡ ¾Æ´Ï¸é »ç¿ëÇÏÁö ¸» °Í
+## 'auto' í‚¤ì›Œë“œëŠ” íŠ¹ìˆ˜í•œ ëª‡ëª‡ ê²½ìš°ê°€ ì•„ë‹ˆë©´ ì‚¬ìš©í•˜ì§€ ë§ ê²ƒ
 
-1. ¶÷´ÙÇÔ¼ö¸¦ º¯¼ö¿¡ ÀúÀåÇÒ ¶§ Çã¿ë
+1. ëžŒë‹¤í•¨ìˆ˜ë¥¼ ë³€ìˆ˜ì— ì €ìž¥í•  ë•Œ í—ˆìš©
 
 ```cpp
 int a = 7, b = 3;
 
-// ¿ÜºÎ º¯¼ö a¿Í b¸¦ º¹»ç Ä¸ÃÄÇÏ°í, int x¸¦ ÆÄ¶ó¹ÌÅÍ·Î ¹Þ´Â lambda ÇÔ¼ö
-// a * x + b ÀÇ °á°ú¸¦ Ãâ·ÂÇÑ´Ù.
+// ì™¸ë¶€ ë³€ìˆ˜ aì™€ bë¥¼ ë³µì‚¬ ìº¡ì³í•˜ê³ , int xë¥¼ íŒŒë¼ë¯¸í„°ë¡œ ë°›ëŠ” lambda í•¨ìˆ˜
+// a * x + b ì˜ ê²°ê³¼ë¥¼ ì¶œë ¥í•œë‹¤.
 auto closureFunc = [a, b] (int x)
 {
     cout << a * x + b << endl;
 };
   
-closureFunc(5);  // 7 * 5  + 3 = 38 ¸¦ Ãâ·Â
+closureFunc(5);  // 7 * 5  + 3 = 38 ë¥¼ ì¶œë ¥
 ```
 
 
-2. ÀüÅëÀûÀÎ iterator ¸¦ ´Ù·ê ¶§ Çã¿ë
+2. ì „í†µì ì¸ iterator ë¥¼ ë‹¤ë£° ë•Œ í—ˆìš©
 ```cpp
-// iterator¸¦ ´Ù·ê ¶© OK
+// iteratorë¥¼ ë‹¤ë£° ë• OK
 for (auto ObjIt = Objects.CreateConstIterator(); ObjIt; ++ObjIt)
 {
     // ...
 }
 ```
 
-3. Ranged base For Loop¿¡¼­´Â ºÎºÐ Çã¿ë ([key, value] ÄÁÅ×ÀÌ³Ê¸¸ Çã¿ë)
+3. Ranged base For Loopì—ì„œëŠ” ë¶€ë¶„ í—ˆìš© ([key, value] ì»¨í…Œì´ë„ˆë§Œ í—ˆìš©)
 ```cpp
-// Ranged-For Loop´Â ±âº»ÀûÀ¸·Î NOT OK, »ç¿ëÇÏ¸é ¾Æ´Ï ´ï
+// Ranged-For LoopëŠ” ê¸°ë³¸ì ìœ¼ë¡œ NOT OK, ì‚¬ìš©í•˜ë©´ ì•„ë‹ˆ ëŒ
 // TArray<class UGsUIQuestSlotMain*> MainSlotList;
 for (auto slot : MainSlotList)
-// for (UGsUIQuestSlotMain* slot : MainSlotList)·Î º¯°æ ¿ä¸Á
+// for (UGsUIQuestSlotMain* slot : MainSlotList)ë¡œ ë³€ê²½ ìš”ë§
 {
     if (slot)
     {
@@ -218,7 +218,7 @@ for (auto slot : MainSlotList)
     }
 } 
 
-// ÇÏÁö¸¸, [key, value]¸¦ ´Ù·ç´Â °æ¿ì¿£ ºÎºÐÀû Çã¿ë
+// í•˜ì§€ë§Œ, [key, value]ë¥¼ ë‹¤ë£¨ëŠ” ê²½ìš°ì—” ë¶€ë¶„ì  í—ˆìš©
 // TMap<StatType, FGsStatInfo*> _statGroup;
 for (auto& iter : _statGroup)
 {
@@ -227,6 +227,6 @@ for (auto& iter : _statGroup)
 }
 ```
 
-À§ 3°¡Áö¸¸ ¿¹¿ÜÀÌÁö, ´Ù¸¥ ¸ðµç °æ¿ìµé¿£ auto ºÒÇã!
+ìœ„ 3ê°€ì§€ë§Œ ì˜ˆì™¸ì´ì§€, ë‹¤ë¥¸ ëª¨ë“  ê²½ìš°ë“¤ì—” auto ë¶ˆí—ˆ!
 
-auto´Â Á÷°ü¼ºµµ ¹®Á¦Áö¸¸, auto Å°¿öµå¿Í ÁÖ¼Ò ÂüÁ¶°¡ °áÇÕµÇ¸é ÄÚµåÀÇ Á¤È®µµ°¡ ¶³¾îÁö°í, ¹®Á¦¸¦ ÀÏÀ¸Å³ ¼öµµ ÀÖ°Ô µÈ´Ù.
+autoëŠ” ì§ê´€ì„±ë„ ë¬¸ì œì§€ë§Œ, auto í‚¤ì›Œë“œì™€ ì£¼ì†Œ ì°¸ì¡°ê°€ ê²°í•©ë˜ë©´ ì½”ë“œì˜ ì •í™•ë„ê°€ ë–¨ì–´ì§€ê³ , ë¬¸ì œë¥¼ ì¼ìœ¼í‚¬ ìˆ˜ë„ ìžˆê²Œ ëœë‹¤.
