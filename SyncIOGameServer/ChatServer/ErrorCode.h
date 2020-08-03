@@ -22,5 +22,6 @@ namespace CS
 		CHAT_SERVER_INVALID_API,
 
 		INVALID_USER,
+		LOGIN_AUTH_FAIL,
 	};
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "../../NetworkLib/PrimitiveTypes.h"
 #include "ErrorCode.h"
 
@@ -64,4 +66,13 @@ namespace CS
 		int16 mMessageLen = 0;
 		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
+}
+
+
+namespace CS
+{
+	inline const char* RedisLoginKey(uint64 uid)
+	{
+		return std::string("Login/" + std::to_string(uid)).c_str();
+	}
 }

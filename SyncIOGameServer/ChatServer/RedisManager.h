@@ -1,6 +1,13 @@
 #pragma once
 
-#include "Protocol.h"
+#include "ErrorCode.h"
+
+
+struct RedisResult
+{
+	const char* mResult = nullptr;
+	CS::ErrorCode mErrorCode = CS::ErrorCode::SUCCESS;
+};
 
 struct redisContext;
 
@@ -18,8 +25,8 @@ public:
 public:
 	CS::ErrorCode Connect();
 	void Disconnect();
-	CS::ErrorCode Set(const char* key, const char* value);
-	const char* Get(const char* key);
+	RedisResult Set(const char* key, const char* value);
+	RedisResult Get(const char* key);
 };
 
 

@@ -1,4 +1,4 @@
-#include "../../NetworkLib/NetworkCore.h"
+﻿#include "../../NetworkLib/NetworkCore.h"
 #include "../../NetworkLib/Logger.h"
 #include "ChatServer.h"
 #include "UserManager.h"

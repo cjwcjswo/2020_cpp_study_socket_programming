@@ -1,8 +1,10 @@
+ï»¿#include <cstring>
 #include <wchar.h>
 
 #include "../../NetworkLib/NetworkCore.h"
 #include "../../NetworkLib/Logger.h"
 #include "PacketHandler.h"
+#include "RedisManager.h"
 #include "UserManager.h"
 #include "User.h"
 
@@ -106,19 +108,32 @@ ErrorCode PacketHandler::Login(const Packet packet)
 	{
 		response.mErrorCode = ErrorCode::INVALID_USER;
 		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-		return ErrorCode::INVALID_USER;
+		return response.mErrorCode;
 	}
 
 	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
 
-	// TODO: Redis °ËÁõ Ãß°¡
+	RedisResult redisResult =  GRedisManager->Get(CS::RedisLoginKey(request->mUid));
+	if (ErrorCode::SUCCESS != redisResult.mErrorCode)
+	{
+		response.mErrorCode = redisResult.mErrorCode;
+		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		return response.mErrorCode;
+	}
+	if (0 != std::strncmp(request->mAuthKey, redisResult.mResult, AUTH_KEY_SIZE))
+	{
+		response.mErrorCode = ErrorCode::LOGIN_AUTH_FAIL;
+		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		return response.mErrorCode;
+	}
+
 	mUserManager->Login(packet.mSessionUniqueId, request->mUid);
 
 	mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
 	GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
 
-	return ErrorCode::SUCCESS;
+	return response.mErrorCode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

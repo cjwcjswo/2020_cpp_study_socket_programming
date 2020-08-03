@@ -1,3 +1,6 @@
+﻿//TODO: 비동기 처리 방식으로 변경한다
+#pragma comment(lib,"hiredis")
+
 #include "../../ThirdParty/hiredis/hiredis.h"
 #include "RedisManager.h"
 
@@ -35,20 +38,49 @@ void RedisManager::Disconnect()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode RedisManager::Set(const char* key, const char* value)
+RedisResult RedisManager::Set(const char* key, const char* value)
 {
+	RedisResult result;
+
 	redisReply* reply = (redisReply*)redisCommand(mConnection, "SET %s %s", key, value);
 	if (nullptr == reply)
 	{
-		return ErrorCode::REDIS_SET_FAIL;
+		result.mErrorCode = ErrorCode::REDIS_SET_FAIL;
+		return result;
 	}
 	if (REDIS_REPLY_ERROR == reply->type)
 	{
+		result.mErrorCode = ErrorCode::REDIS_SET_FAIL;
 		freeReplyObject(reply);
-		return ErrorCode::REDIS_SET_FAIL;
+		return result;
 	}
-
+	
+	result.mResult = reply->str;
 	freeReplyObject(reply);
 
-	return ErrorCode::SUCCESS;
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+RedisResult RedisManager::Get(const char* key)
+{
+	RedisResult result;
+
+	redisReply* reply = (redisReply*)redisCommand(mConnection, "GET %s", key);
+	if (nullptr == reply)
+	{
+		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+		return result;
+	}
+	if (REDIS_REPLY_ERROR == reply->type)
+	{
+		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+		freeReplyObject(reply);
+		return result;
+	}
+
+	result.mResult = reply->str;
+	freeReplyObject(reply);
+
+	return result;
 }
