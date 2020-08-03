@@ -23,6 +23,7 @@ int32 UserManager::AllocUserIndex()
 {
 	if (mUserIndexPool.empty())
 	{
+		//TODO: 올바른 상수를 정의한다.
 		return -1;
 	}
 

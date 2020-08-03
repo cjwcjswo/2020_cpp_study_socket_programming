@@ -113,6 +113,8 @@ ErrorCode PacketHandler::Login(const Packet packet)
 
 	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
 
+	//TODO 최흥배: Redis를 다룰 때는 Redis 전용 스레드를 만들어서 그쪽에서 해야 합니다. redis가 io 대기를 발생시켜서 서버 성능에 나쁜 영향을 줍니다.
+	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
 	RedisResult redisResult =  GRedisManager->Get(CS::RedisLoginKey(request->mUid));
 	if (ErrorCode::SUCCESS != redisResult.mErrorCode)
 	{

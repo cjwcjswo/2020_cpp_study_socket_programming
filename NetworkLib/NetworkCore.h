@@ -16,7 +16,8 @@ class TCPSocket;
 class ClientSessionManager;
 class ClientSession;
 
-
+//TODO 이 프로젝트의 namespace를 만들어서 사용하기 바랍니다. 예 namespace NetworkLib { class networkCore {} }
+// namespace를 사용하면 클래스 이름에 궂이 Core 라는 단어는 필요 없지 않을까 생각합니다
 class NetworkCore
 {
 protected:
