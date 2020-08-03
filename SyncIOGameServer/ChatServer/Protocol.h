@@ -48,11 +48,11 @@ namespace CS
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	constexpr static int MAX_CHAT_SIZE = 128;
+	constexpr static int16 MAX_CHAT_SIZE = 128;
 
 	struct ChatRequest
 	{
-		int16 mMessageLen = 0;
+		uint16 mMessageLen = 0;
 		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
 
@@ -63,7 +63,7 @@ namespace CS
 	struct ChatBroadcast
 	{
 		uint64 mUid = 0;
-		int16 mMessageLen = 0;
+		uint16 mMessageLen = 0;
 		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
 }

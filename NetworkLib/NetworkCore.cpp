@@ -27,7 +27,7 @@ ErrorCode NetworkCore::AcceptClient()
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
 
-	ClientSession clientSession(ClientSession::INVALID_INDEX, 0, INVALID_SOCKET);
+	ClientSession clientSession(ClientSession::INVALID_INDEX, ClientSession::INVALID_UNIQUE_ID, INVALID_SOCKET);
 	clientSession.mSocket = clientSocket;
 
 	clientSession.mIndex = mClientSessionManager->AllocClientSessionIndex();
@@ -37,15 +37,15 @@ ErrorCode NetworkCore::AcceptClient()
 		return ErrorCode::SOCKET_INDEX_POOL_IS_FULL;
 	}
 
-	mAcceptSocket->SetLingerMode();
+	clientSession.mSocket.SetLingerMode();
 
 	if (ErrorCode::SUCCESS != mAcceptSocket->SetNonBlockingMode())
 	{
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
 
-	FD_SET(mAcceptSocket->Socket(), &mReadSet);
-	FD_SET(mAcceptSocket->Socket(), &mWriteSet);
+	FD_SET(clientSession.mSocket.Socket(), &mReadSet);
+	FD_SET(clientSession.mSocket.Socket(), &mWriteSet);
 	
 	clientSession.mUniqueId = mClientSessionManager->GenerateUniqueId();
 
@@ -107,11 +107,13 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 {
 	//TODO 최흥배: mReceiveBuffer의 크기를 ClientSession::BUFFER_SIZE 2배로 잡아서 남은 데이터를 앞으로 복사하지 않고 남은 부분 다음에 받도록 합니다. 복사를 줄이기 위해서 입니다.
-	int receivePos = 0;
-	if (clientSession.mRemainDataSize > 0)
+	int receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
+
+	// 남은 데이터가 버퍼 사이즈보다 클 경우 앞으로 복사
+	if (receivePos > ClientSession::BUFFER_SIZE)
 	{
 		memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
-		receivePos += clientSession.mRemainDataSize;
+		receivePos = clientSession.mRemainDataSize;
 	}
 
 	int length = clientSession.mSocket.Receive(&clientSession.mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE);
@@ -132,7 +134,6 @@ ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 		}
 	}
 
-	memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
 	clientSession.mRemainDataSize += length;
 	int currentReceivePos = 0;
 	PacketHeader* header;
@@ -156,7 +157,12 @@ ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 			}
 		}
 
-		ReceivePacket receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, requireBodySize, &clientSession.mReceiveBuffer[currentReceivePos] };
+		ReceivePacket receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, 0, nullptr };
+		if (requireBodySize > 0)
+		{
+			receivePacket.mBodyDataSize = requireBodySize;
+			receivePacket.mBodyData = &clientSession.mReceiveBuffer[currentReceivePos];
+		}
 		PushReceivePacket(receivePacket);
 		currentReceivePos += requireBodySize;
 	}
@@ -185,7 +191,7 @@ void NetworkCore::SelectProcess()
 			continue;
 		}
 
-		if (FD_ISSET(mAcceptSocket, &readSet))
+		if (FD_ISSET(mAcceptSocket->Socket(), &readSet))
 		{
 			errorCode = AcceptClient();
 			if (ErrorCode::SUCCESS != errorCode)
@@ -347,9 +353,7 @@ ReceivePacket NetworkCore::GetReceivePacket()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkCore::Broadcast(const uint16 packetId, const char* bodyData, const int bodySize)
 {
-	std::lock_guard<std::mutex> lock(mSessionMutex);
-
-	for (ClientSession clientSession : mClientSessionManager->ClientVector())
+	for (auto& clientSession : mClientSessionManager->ClientVector())
 	{
 		if (!clientSession.IsConnect())
 		{

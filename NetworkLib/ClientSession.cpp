@@ -7,10 +7,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket) : mIndex(index), mUniqueId(uniqueId), mSocket(socket)
 {
-	mSendBuffer = new char[BUFFER_SIZE];
-	mReceiveBuffer = new char[BUFFER_SIZE];
-	ZeroMemory(mSendBuffer, BUFFER_SIZE);
-	ZeroMemory(mReceiveBuffer, BUFFER_SIZE);
+	mSendBuffer = new char[BUFFER_SIZE * 2];
+	mReceiveBuffer = new char[BUFFER_SIZE * 2];
+	ZeroMemory(mSendBuffer, BUFFER_SIZE * 2);
+	ZeroMemory(mReceiveBuffer, BUFFER_SIZE * 2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

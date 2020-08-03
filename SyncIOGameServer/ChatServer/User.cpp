@@ -4,10 +4,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void User::Clear()
 {
-	mSessionIndex = -1;
-	mSessionUniqueId = 0;
-	mIndex = -1;
-	mUid = 0;
+	mSessionIndex = ClientSession::INVALID_INDEX;
+	mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
+	mIndex = INVALID_USER_INDEX;
+	mUid = INVALID_UID;
 	mState = UserState::DISCONNECT;
 }
 

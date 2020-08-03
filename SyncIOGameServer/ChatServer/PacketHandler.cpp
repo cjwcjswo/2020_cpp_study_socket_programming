@@ -147,7 +147,7 @@ ErrorCode PacketHandler::Chat(const Packet packet)
 	broadcast.mUid = packet.mSessionUniqueId;
 	broadcast.mMessageLen = request->mMessageLen;
 	wmemcpy_s(broadcast.mMessage, request->mMessageLen, request->mMessage, request->mMessageLen);
-	mNetworkCore->Broadcast(static_cast<uint16>(PacketId::CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - (MAX_CHAT_SIZE - broadcast.mMessageLen));
+	mNetworkCore->Broadcast(static_cast<uint16>(PacketId::CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
 
 	GLogger->PrintConsole(Color::LGREEN, L"<Chat> [%lu]: %ls\n", 5, broadcast.mMessage);
 

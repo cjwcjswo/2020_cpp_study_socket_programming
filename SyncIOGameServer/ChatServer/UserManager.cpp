@@ -24,7 +24,7 @@ int32 UserManager::AllocUserIndex()
 	if (mUserIndexPool.empty())
 	{
 		//TODO: 올바른 상수를 정의한다.
-		return -1;
+		return User::INVALID_USER_INDEX;
 	}
 
 	int32 index = mUserIndexPool.front();
@@ -37,7 +37,7 @@ int32 UserManager::AllocUserIndex()
 ErrorCode UserManager::Connect(User& user)
 {
 	int32 userIndex = AllocUserIndex();
-	if (-1 == userIndex)
+	if (User::INVALID_USER_INDEX == userIndex)
 	{
 		return ErrorCode::USER_MANAGER_POOL_IS_FULL;
 	}

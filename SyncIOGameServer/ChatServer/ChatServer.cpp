@@ -59,6 +59,15 @@ ErrorCode ChatServer::Run()
 		{
 			continue;
 		}
+		
+
+		// TODO 최진우: 동시성 문제로 인해 버퍼 복사, 더 좋은 방법이 없을까?
+		char copyBodyBuffer[Core::MAX_PACKET_BODY_SIZE] = { 0, };
+		if (receivePacket.mBodyDataSize > 0)
+		{
+			memcpy_s(copyBodyBuffer, receivePacket.mBodyDataSize, receivePacket.mBodyData, receivePacket.mBodyDataSize);
+			receivePacket.mBodyData = copyBodyBuffer;
+		}
 
 		ErrorCode errorCode = mPacketHandler->Process(receivePacket);
 		if (ErrorCode::SUCCESS != errorCode)

@@ -30,10 +30,10 @@ namespace Core
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//TODO 최흥배: 학습을 위해서 사용한 것이라고 생각합니다. 다만 아래와 같은 상수는 특별한 이유가 없다면 const를 사용합니다.
-	constexpr static int PACKET_ID_START = 10;
-	constexpr static int PACKET_ID_END = 50;
+	const uint16 PACKET_ID_START = 10;
+	const uint16 PACKET_ID_END = 50;
 
-	enum class PacketId
+	enum class PacketId : uint16
 	{
 		PACKET_START = PACKET_ID_START,
 		//////////////////////////////////////////////////////////////

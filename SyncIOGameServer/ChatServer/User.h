@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../NetworkLib/PrimitiveTypes.h"
+#include "../../NetworkLib/ClientSession.h"
 
 
 enum class UserState : uint8
@@ -14,11 +15,16 @@ enum class UserState : uint8
 class User
 {
 public:
-	int32 mSessionIndex = -1;
-	uint64 mSessionUniqueId = 0;
+	constexpr static int32 INVALID_USER_INDEX = -1;
+	constexpr static uint64 INVALID_UID = 0;
 
-	int32 mIndex = -1;
-	uint64 mUid = 0;
+
+public:
+	int32 mSessionIndex = ClientSession::INVALID_INDEX;
+	uint64 mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
+
+	int32 mIndex = INVALID_USER_INDEX;
+	uint64 mUid = INVALID_UID;
 
 	UserState mState = UserState::DISCONNECT;
 

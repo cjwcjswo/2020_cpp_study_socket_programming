@@ -14,7 +14,8 @@ public:
 
 public:
 	constexpr static int BUFFER_SIZE = 1024;
-	constexpr static int INVALID_INDEX = -1;
+	constexpr static int32 INVALID_INDEX = -1;
+	constexpr static uint64 INVALID_UNIQUE_ID = 0;
 
 
 public:
