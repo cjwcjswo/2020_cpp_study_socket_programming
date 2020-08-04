@@ -32,8 +32,8 @@ ErrorCode ChatServer::Init()
 
 	mPacketHandler = new PacketHandler(mNetwork, mUserManager);
 
-	GRedisManager = new RedisManager();
-	ErrorCode errorCode = GRedisManager->Connect();
+	Redis::GRedisManager = new Redis::RedisManager();
+	ErrorCode errorCode = Redis::GRedisManager->Connect();
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;
@@ -60,7 +60,6 @@ ErrorCode ChatServer::Run()
 			continue;
 		}
 		
-
 		// TODO 최진우: 동시성 문제로 인해 버퍼 복사, 더 좋은 방법이 없을까?
 		char copyBodyBuffer[NetworkLib::MAX_PACKET_BODY_SIZE] = { 0, };
 		if (receivePacket.mBodyDataSize > 0)

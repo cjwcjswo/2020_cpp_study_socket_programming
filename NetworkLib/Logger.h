@@ -37,8 +37,13 @@ private:
     HANDLE mStdErrHandle;
 
 
+private:
+    void PrintCurrentTime();
+
+
 public:
     void PrintConsole(Color color, const wchar* str, ...);
+    void PrintConsole(Color color, const char* str, ...);
     void SetColor(bool isStdOut, Color color);
     void ResetColor(bool isStdOut);
 };

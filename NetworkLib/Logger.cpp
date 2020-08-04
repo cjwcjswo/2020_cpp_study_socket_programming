@@ -13,15 +13,8 @@ Logger::Logger() noexcept
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Logger::PrintConsole(Color color, const wchar* str, ...)
+void Logger::PrintCurrentTime()
 {
-	if (nullptr == str)
-	{
-		return;
-	}
-
-	SetColor(true, color);
-
 	time_t timer = time(NULL);
 
 	struct tm t;
@@ -31,10 +24,44 @@ void Logger::PrintConsole(Color color, const wchar* str, ...)
 		L"[%04u-%02u-%02u %02u:%02u:%02u] ",
 		t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec
 	);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Logger::PrintConsole(Color color, const wchar* str, ...)
+{
+	if (nullptr == str)
+	{
+		return;
+	}
+
+	SetColor(true, color);
+
+	PrintCurrentTime();
 
 	va_list ap;
 	va_start(ap, str);
 	vwprintf(str, ap);
+	va_end(ap);
+
+	fflush(stdout);
+
+	ResetColor(true);
+}
+
+void Logger::PrintConsole(Color color, const char* str, ...)
+{
+	if (nullptr == str)
+	{
+		return;
+	}
+
+	SetColor(true, color);
+
+	PrintCurrentTime();
+
+	va_list ap;
+	va_start(ap, str);
+	vprintf(str, ap);
 	va_end(ap);
 
 	fflush(stdout);

@@ -1,9 +1,14 @@
 ﻿//TODO: 비동기 처리 방식으로 변경한다
 #pragma comment(lib,"hiredis")
 
+#include <numeric>
+
 #include "../../ThirdParty/hiredis/hiredis.h"
+#include "../../NetworkLib/Logger.h"
 #include "RedisManager.h"
 
+
+using namespace Redis;
 
 using namespace CS;
 
@@ -17,6 +22,11 @@ RedisManager::~RedisManager()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode RedisManager::Connect()
 {
+	if (nullptr != mConnection)
+	{
+		return ErrorCode::REDIS_ALREADY_CONNECT_STATE;
+	}
+
 	mConnection = redisConnect("127.0.0.1", 6379);
 	if (nullptr == mConnection)
 	{
@@ -28,50 +38,39 @@ ErrorCode RedisManager::Connect()
 		return ErrorCode::REDIS_CONNECT_FAIL;
 	}
 
+	mThread = std::make_unique<std::thread>([&] {ExecuteCommandProcess(); });
+
 	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RedisManager::Disconnect()
 {
+	mThread->join();
 	redisFree(mConnection);
+	mConnection = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-RedisResult RedisManager::Set(const char* key, const char* value)
+void RedisManager::ExecuteCommand(const CommandRequest& commandRequest)
 {
-	RedisResult result;
-
-	redisReply* reply = (redisReply*)redisCommand(mConnection, "SET %s %s", key, value);
-	if (nullptr == reply)
-	{
-		result.mErrorCode = ErrorCode::REDIS_SET_FAIL;
-		return result;
-	}
-	if (REDIS_REPLY_ERROR == reply->type)
-	{
-		result.mErrorCode = ErrorCode::REDIS_SET_FAIL;
-		freeReplyObject(reply);
-		return result;
-	}
-	
-	result.mResult = reply->str;
-	freeReplyObject(reply);
-
-	return result;
+	std::lock_guard<std::mutex> lock(mMutex);
+	mRequestQueue.push(commandRequest);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-RedisResult RedisManager::Get(const char* key)
+CommandResult RedisManager::ExecuteCommandSync(const CommandRequest& commandRequest)
 {
-	RedisResult result;
+	redisReply* reply = (redisReply*)redisCommand(mConnection, commandRequest.mCommand);
+	CommandResult result;
 
-	redisReply* reply = (redisReply*)redisCommand(mConnection, "GET %s", key);
 	if (nullptr == reply)
 	{
 		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
 		return result;
 	}
+
+	result.mResult = reply->str;
 	if (REDIS_REPLY_ERROR == reply->type)
 	{
 		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
@@ -79,8 +78,46 @@ RedisResult RedisManager::Get(const char* key)
 		return result;
 	}
 
-	result.mResult = reply->str;
 	freeReplyObject(reply);
 
 	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RedisManager::ExecuteCommandProcess()
+{
+	while (nullptr != mConnection)
+	{
+		if (mRequestQueue.empty())
+		{
+			continue;
+		}
+		CommandRequest commandRequest = mRequestQueue.front();
+		mRequestQueue.pop();
+
+		redisReply* reply = (redisReply*)redisCommand(mConnection, commandRequest.mCommand);
+
+		CommandResult result;
+		if (nullptr == reply)
+		{
+			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+		}
+		else
+		{
+			result.mResult = reply->str;
+			if (REDIS_REPLY_ERROR == reply->type)
+			{
+				result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+			}
+		}
+
+		if (nullptr == commandRequest.mCallBackFunc)
+		{
+			freeReplyObject(reply);
+			return;
+		}
+
+		commandRequest.mCallBackFunc(result);
+		freeReplyObject(reply);
+	}
 }

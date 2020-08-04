@@ -309,7 +309,7 @@ ErrorCode Network::Run()
 
 	// Start Thread
 	mIsRunning = true;
-	mSelectThread = std::make_unique<std::thread>([&]() {SelectProcess(); });
+	mSelectThread = std::make_unique<std::thread>([&]() {SelectProcess();});
 
 	return ErrorCode::SUCCESS;
 }

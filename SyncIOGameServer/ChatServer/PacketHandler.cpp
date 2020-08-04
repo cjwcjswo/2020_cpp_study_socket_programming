@@ -1,4 +1,5 @@
 ﻿#include <cstring>
+#include <string>
 #include <wchar.h>
 
 #include "../../NetworkLib/Network.h"
@@ -115,25 +116,28 @@ ErrorCode PacketHandler::Login(const Packet packet)
 
 	//TODO 최흥배: Redis를 다룰 때는 Redis 전용 스레드를 만들어서 그쪽에서 해야 합니다. redis가 io 대기를 발생시켜서 서버 성능에 나쁜 영향을 줍니다.
 	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
-	RedisResult redisResult =  GRedisManager->Get(CS::RedisLoginKey(request->mUid));
-	if (ErrorCode::SUCCESS != redisResult.mErrorCode)
-	{
-		response.mErrorCode = redisResult.mErrorCode;
-		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-		return response.mErrorCode;
-	}
-	if (0 != std::strncmp(request->mAuthKey, redisResult.mResult, AUTH_KEY_SIZE))
-	{
-		response.mErrorCode = ErrorCode::LOGIN_AUTH_FAIL;
-		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-		return response.mErrorCode;
-	}
+	Redis::GRedisManager->ExecuteCommand(Redis::CommandRequest{ (std::string{ "GET " } + CS::RedisLoginKey(request->mUid)).c_str(), 
+		[&](const Redis::CommandResult& commandResult) 
+		{
+			if (ErrorCode::SUCCESS != commandResult.mErrorCode)
+			{
+				response.mErrorCode = commandResult.mErrorCode;
+				mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+				return;
+			}
+			if (0 != std::strncmp(request->mAuthKey, commandResult.mResult, AUTH_KEY_SIZE))
+			{
+				response.mErrorCode = ErrorCode::LOGIN_AUTH_FAIL;
+				mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+				return;
+			}
+			mUserManager->Login(packet.mSessionUniqueId, request->mUid);
 
-	mUserManager->Login(packet.mSessionUniqueId, request->mUid);
+			mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
-	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-
-	GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
+			GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
+		} }
+	);
 
 	return response.mErrorCode;
 }
