@@ -1,7 +1,7 @@
 ﻿#include <cstring>
 #include <wchar.h>
 
-#include "../../NetworkLib/NetworkCore.h"
+#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
 #include "PacketHandler.h"
 #include "RedisManager.h"
@@ -13,9 +13,9 @@ using namespace CS;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PacketHandler::PacketHandler(NetworkCore* networkCore, UserManager* userManager)
+PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userManager)
 {
-	mNetworkCore = networkCore;
+	mNetwork = network;
 	mUserManager = userManager;
 
 	for (int i = 0; i < PACKET_ID_END - PACKET_ID_START + 1; ++i)
@@ -37,14 +37,14 @@ void PacketHandler::EnrollPacketFunc(PacketId packetId, PacketFunc packetFunc)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode PacketHandler::Process(const Packet packet)
 {
-	if (packet.mPacketId > Core::PACKET_ID_START && packet.mPacketId < Core::PACKET_ID_END)
+	if (packet.mPacketId > NetworkLib::PACKET_ID_START && packet.mPacketId < NetworkLib::PACKET_ID_END)
 	{
-		if (packet.mPacketId == static_cast<uint16>(Core::PacketId::CONNECT))
+		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::CONNECT))
 		{
 			return Connect(packet);
 		}
 
-		if (packet.mPacketId == static_cast<uint16>(Core::PacketId::DISCONNECT))
+		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::DISCONNECT))
 		{
 			return Disconnect(packet);
 		}
@@ -107,7 +107,7 @@ ErrorCode PacketHandler::Login(const Packet packet)
 	if (nullptr == user)
 	{
 		response.mErrorCode = ErrorCode::INVALID_USER;
-		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
 	}
 
@@ -119,19 +119,19 @@ ErrorCode PacketHandler::Login(const Packet packet)
 	if (ErrorCode::SUCCESS != redisResult.mErrorCode)
 	{
 		response.mErrorCode = redisResult.mErrorCode;
-		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
 	}
 	if (0 != std::strncmp(request->mAuthKey, redisResult.mResult, AUTH_KEY_SIZE))
 	{
 		response.mErrorCode = ErrorCode::LOGIN_AUTH_FAIL;
-		mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
 	}
 
 	mUserManager->Login(packet.mSessionUniqueId, request->mUid);
 
-	mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
 	GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
 
@@ -147,13 +147,13 @@ ErrorCode PacketHandler::Chat(const Packet packet)
 	broadcast.mUid = packet.mSessionUniqueId;
 	broadcast.mMessageLen = request->mMessageLen;
 	wmemcpy_s(broadcast.mMessage, request->mMessageLen, request->mMessage, request->mMessageLen);
-	mNetworkCore->Broadcast(static_cast<uint16>(PacketId::CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
+	mNetwork->Broadcast(static_cast<uint16>(PacketId::CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
 
 	GLogger->PrintConsole(Color::LGREEN, L"<Chat> [%lu]: %ls\n", 5, broadcast.mMessage);
 
 	ChatResponse response;
 	response.mErrorCode = ErrorCode::SUCCESS;
-	mNetworkCore->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
 	return ErrorCode::SUCCESS;
 }

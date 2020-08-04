@@ -3,7 +3,7 @@
 #include "PrimitiveTypes.h"
 
 
-namespace Core {
+namespace NetworkLib {
 	enum class ErrorCode : uint16
 	{
 		SUCCESS = 0,

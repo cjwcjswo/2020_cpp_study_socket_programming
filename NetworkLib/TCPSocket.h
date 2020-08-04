@@ -19,16 +19,16 @@ protected:
 	
 
 protected:
-	Core::ErrorCode ReuseAddr();
+	NetworkLib::ErrorCode ReuseAddr();
 
 
 public:
-	Core::ErrorCode SetLingerMode();
-	Core::ErrorCode SetNonBlockingMode();
+	NetworkLib::ErrorCode SetLingerMode();
+	NetworkLib::ErrorCode SetNonBlockingMode();
 
-	virtual Core::ErrorCode Create();
-	virtual Core::ErrorCode Bind(const wchar* address, const uint16 portNum);
-	virtual Core::ErrorCode Listen();
+	virtual NetworkLib::ErrorCode Create();
+	virtual NetworkLib::ErrorCode Bind(const wchar* address, const uint16 portNum);
+	virtual NetworkLib::ErrorCode Listen();
 	virtual TCPSocket Accept();
 
 	virtual int Send(char* sendBuffer, const int bufferSize);

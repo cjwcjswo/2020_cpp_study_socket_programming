@@ -1,25 +1,26 @@
-#include "NetworkCore.h"
+#include "Network.h"
 #include "TCPSocket.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
-using namespace Core;
+
+using namespace NetworkLib;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NetworkCore::~NetworkCore()
+Network::~Network()
 {
 	Stop();
 	delete mAcceptSocket;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::LoadConfig()
+void Network::LoadConfig()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::AcceptClient()
+ErrorCode Network::AcceptClient()
 {
 	TCPSocket clientSocket = mAcceptSocket->Accept();
 	if (INVALID_SOCKET == clientSocket.Socket())
@@ -57,7 +58,7 @@ ErrorCode NetworkCore::AcceptClient()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::CheckSelectResult(int selectResult)
+ErrorCode Network::CheckSelectResult(int selectResult)
 {
 	if (0 == selectResult)
 	{
@@ -73,7 +74,7 @@ ErrorCode NetworkCore::CheckSelectResult(int selectResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
+void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 {
 	for (ClientSession& clientSession : mClientSessionManager->ClientVector())
 	{
@@ -104,7 +105,7 @@ void NetworkCore::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
+ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 {
 	//TODO 최흥배: mReceiveBuffer의 크기를 ClientSession::BUFFER_SIZE 2배로 잡아서 남은 데이터를 앞으로 복사하지 않고 남은 부분 다음에 받도록 합니다. 복사를 줄이기 위해서 입니다.
 	int receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
@@ -174,7 +175,7 @@ ErrorCode NetworkCore::ReceiveClient(ClientSession& clientSession)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::SelectProcess()
+void Network::SelectProcess()
 {
 	ErrorCode errorCode;
 	while (mIsRunning)
@@ -205,7 +206,7 @@ void NetworkCore::SelectProcess()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::SendClient(ClientSession& clientSession)
+ErrorCode Network::SendClient(ClientSession& clientSession)
 {
 	if (clientSession.mSendSize <= 0)
 	{
@@ -234,14 +235,14 @@ ErrorCode NetworkCore::SendClient(ClientSession& clientSession)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::PushReceivePacket(const ReceivePacket receivePacket)
+void Network::PushReceivePacket(const ReceivePacket receivePacket)
 {
 	std::lock_guard<std::mutex> lock(mPacketMutex);
 	mReceivePacketQueue.push(receivePacket);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::CloseSession(const ErrorCode errorCode, ClientSession& clientSession)
+void Network::CloseSession(const ErrorCode errorCode, ClientSession& clientSession)
 {
 	if (!clientSession.IsConnect())
 	{
@@ -263,7 +264,7 @@ void NetworkCore::CloseSession(const ErrorCode errorCode, ClientSession& clientS
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Init(const int maxSessionSize)
+ErrorCode Network::Init(const int maxSessionSize)
 {
 	WSADATA wsaData;
 
@@ -300,7 +301,7 @@ ErrorCode NetworkCore::Init(const int maxSessionSize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Run()
+ErrorCode Network::Run()
 {
 	FD_ZERO(&mReadSet);
 	FD_ZERO(&mWriteSet);
@@ -314,7 +315,7 @@ ErrorCode NetworkCore::Run()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode NetworkCore::Stop()
+ErrorCode Network::Stop()
 {
 	// Stop Accept Socket
 	mAcceptSocket->Close();
@@ -337,7 +338,7 @@ ErrorCode NetworkCore::Stop()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ReceivePacket NetworkCore::GetReceivePacket()
+ReceivePacket Network::GetReceivePacket()
 {
 	std::lock_guard<std::mutex> lock(mPacketMutex);
 	if (mReceivePacketQueue.empty())
@@ -351,7 +352,7 @@ ReceivePacket NetworkCore::GetReceivePacket()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkCore::Broadcast(const uint16 packetId, const char* bodyData, const int bodySize)
+void Network::Broadcast(const uint16 packetId, const char* bodyData, const int bodySize)
 {
 	for (auto& clientSession : mClientSessionManager->ClientVector())
 	{
@@ -365,7 +366,7 @@ void NetworkCore::Broadcast(const uint16 packetId, const char* bodyData, const i
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Core::ErrorCode NetworkCore::Send(int32 sessionIndex, const uint16 packetId, const char* bodyData, const int bodySize)
+NetworkLib::ErrorCode Network::Send(int32 sessionIndex, const uint16 packetId, const char* bodyData, const int bodySize)
 {
 	std::lock_guard<std::mutex> lock(mSessionMutex);
 
@@ -378,7 +379,7 @@ Core::ErrorCode NetworkCore::Send(int32 sessionIndex, const uint16 packetId, con
 	return SendProcess(*session, packetId, bodyData, bodySize);
 }
 
-Core::ErrorCode NetworkCore::Send(uint64 sessionUniqueId, const uint16 packetId, const char* bodyData, const int bodySize)
+NetworkLib::ErrorCode Network::Send(uint64 sessionUniqueId, const uint16 packetId, const char* bodyData, const int bodySize)
 {
 	std::lock_guard<std::mutex> lock(mSessionMutex);
 
@@ -392,7 +393,7 @@ Core::ErrorCode NetworkCore::Send(uint64 sessionUniqueId, const uint16 packetId,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Core::ErrorCode NetworkCore::SendProcess(ClientSession& clientSession, const uint16 packetId, const char* bodyData, const int bodySize)
+NetworkLib::ErrorCode Network::SendProcess(ClientSession& clientSession, const uint16 packetId, const char* bodyData, const int bodySize)
 {
 	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
 	if (clientSession.mSendSize + totalSize > ClientSession::BUFFER_SIZE)

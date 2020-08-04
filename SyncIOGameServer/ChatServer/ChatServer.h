@@ -3,7 +3,10 @@
 #include "ErrorCode.h"
 
 
-class NetworkCore;
+namespace NetworkLib 
+{
+	class Network;
+}
 class UserManager;
 class PacketHandler;
 
@@ -11,7 +14,7 @@ class PacketHandler;
 class ChatServer
 {
 private:
-	NetworkCore* mNetworkCore = nullptr;
+	NetworkLib::Network* mNetwork = nullptr;
 	UserManager* mUserManager = nullptr;
 	PacketHandler* mPacketHandler = nullptr;
 	

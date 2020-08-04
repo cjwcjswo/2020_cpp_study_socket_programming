@@ -5,19 +5,19 @@
 #include "Protocol.h"
 
 
-class NetworkCore;
+class NetworkLib::Network;
 class UserManager;
 
 
 class PacketHandler
 {
 private:
-	using Packet = Core::ReceivePacket;
+	using Packet = NetworkLib::ReceivePacket;
 	using PacketFunc = CS::ErrorCode (PacketHandler::*)(const Packet);
 
 
 private:
-	NetworkCore* mNetworkCore = nullptr;
+	NetworkLib::Network* mNetwork = nullptr;
 	UserManager* mUserManager = nullptr;
 
 	PacketFunc mPacketFuncArray[CS::PACKET_ID_END - CS::PACKET_ID_START + 1];
@@ -26,7 +26,7 @@ private:
 
 
 public:
-	explicit PacketHandler(NetworkCore* networkCore, UserManager* userManager);
+	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager);
 
 
 private:

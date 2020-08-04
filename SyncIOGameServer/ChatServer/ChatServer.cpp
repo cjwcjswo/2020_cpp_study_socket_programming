@@ -1,4 +1,4 @@
-﻿#include "../../NetworkLib/NetworkCore.h"
+﻿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
 #include "ChatServer.h"
 #include "UserManager.h"
@@ -13,7 +13,7 @@ using namespace CS;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ChatServer::~ChatServer()
 {
-	delete mNetworkCore;
+	delete mNetwork;
 	delete mUserManager;
 	delete mPacketHandler;
 }
@@ -21,8 +21,8 @@ ChatServer::~ChatServer()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ChatServer::Init()
 {
-	mNetworkCore = new NetworkCore;
-	if (Core::ErrorCode::SUCCESS != mNetworkCore->Init(150))
+	mNetwork = new NetworkLib::Network();
+	if (NetworkLib::ErrorCode::SUCCESS != mNetwork->Init(150))
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
@@ -30,7 +30,7 @@ ErrorCode ChatServer::Init()
 	mUserManager = new UserManager;
 	mUserManager->Init(100);
 
-	mPacketHandler = new PacketHandler(mNetworkCore, mUserManager);
+	mPacketHandler = new PacketHandler(mNetwork, mUserManager);
 
 	GRedisManager = new RedisManager();
 	ErrorCode errorCode = GRedisManager->Connect();
@@ -48,13 +48,13 @@ ErrorCode ChatServer::Init()
 ErrorCode ChatServer::Run()
 {
 	mIsRunning = true;
-	mNetworkCore->Run(); // Async
+	mNetwork->Run(); // Async
 
 	GLogger->PrintConsole(Color::GREEN, L"ChatServer Start\n");
 
 	while (mIsRunning)
 	{
-		Core::ReceivePacket receivePacket = mNetworkCore->GetReceivePacket();
+		NetworkLib::ReceivePacket receivePacket = mNetwork->GetReceivePacket();
 		if (0 == receivePacket.mPacketId)
 		{
 			continue;
@@ -62,7 +62,7 @@ ErrorCode ChatServer::Run()
 		
 
 		// TODO 최진우: 동시성 문제로 인해 버퍼 복사, 더 좋은 방법이 없을까?
-		char copyBodyBuffer[Core::MAX_PACKET_BODY_SIZE] = { 0, };
+		char copyBodyBuffer[NetworkLib::MAX_PACKET_BODY_SIZE] = { 0, };
 		if (receivePacket.mBodyDataSize > 0)
 		{
 			memcpy_s(copyBodyBuffer, receivePacket.mBodyDataSize, receivePacket.mBodyData, receivePacket.mBodyDataSize);
