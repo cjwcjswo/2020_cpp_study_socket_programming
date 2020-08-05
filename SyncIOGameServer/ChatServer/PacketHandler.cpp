@@ -24,6 +24,7 @@ PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userMana
 		mPacketFuncArray[i] = nullptr;
 	}
 
+	EnrollPacketFunc(PacketId::LOGIN_REQUEST, &PacketHandler::Login);
 	EnrollPacketFunc(PacketId::CHAT_REQUEST, &PacketHandler::Chat);
 }
 
@@ -40,12 +41,12 @@ ErrorCode PacketHandler::Process(const Packet packet)
 {
 	if (packet.mPacketId > NetworkLib::PACKET_ID_START && packet.mPacketId < NetworkLib::PACKET_ID_END)
 	{
-		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::CONNECT))
+		if (static_cast<uint16>(NetworkLib::PacketId::CONNECT) == packet.mPacketId)
 		{
 			return Connect(packet);
 		}
 
-		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::DISCONNECT))
+		if (static_cast<uint16>(NetworkLib::PacketId::DISCONNECT) == packet.mPacketId)
 		{
 			return Disconnect(packet);
 		}
@@ -56,6 +57,11 @@ ErrorCode PacketHandler::Process(const Packet packet)
 	if (packet.mPacketId < PACKET_ID_START || packet.mPacketId > PACKET_ID_END)
 	{
 		return ErrorCode::CHAT_SERVER_INVALID_API;
+	}
+
+	if (static_cast<uint16>(PacketId::LOGIN_REQUEST) != packet.mPacketId)
+	{
+		return ErrorCode::USER_NOT_LOGIN_STATE;
 	}
 
 	int packetIndex = static_cast<int>(packet.mPacketId) - (PACKET_ID_START + 1);
@@ -101,12 +107,10 @@ ErrorCode PacketHandler::Disconnect(const Packet packet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode PacketHandler::Login(const Packet packet)
 {
-	LoginResponse response;
-	response.mErrorCode = ErrorCode::SUCCESS;
-
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
 	if (nullptr == user)
 	{
+		LoginResponse response;
 		response.mErrorCode = ErrorCode::INVALID_USER;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
@@ -116,9 +120,11 @@ ErrorCode PacketHandler::Login(const Packet packet)
 
 	//TODO 최흥배: Redis를 다룰 때는 Redis 전용 스레드를 만들어서 그쪽에서 해야 합니다. redis가 io 대기를 발생시켜서 서버 성능에 나쁜 영향을 줍니다.
 	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
-	Redis::GRedisManager->ExecuteCommand(Redis::CommandRequest{ (std::string{ "GET " } + CS::RedisLoginKey(request->mUid)).c_str(), 
-		[&](const Redis::CommandResult& commandResult) 
+	Redis::GRedisManager->ExecuteCommand(Redis::CommandRequest{ (std::string{ "GET " } + CS::RedisLoginKey(request->mUserId)).c_str(), 
+		[packet, &request, this](const Redis::CommandResult& commandResult) 
 		{
+			LoginResponse response;
+
 			if (ErrorCode::SUCCESS != commandResult.mErrorCode)
 			{
 				response.mErrorCode = commandResult.mErrorCode;
@@ -131,7 +137,7 @@ ErrorCode PacketHandler::Login(const Packet packet)
 				mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 				return;
 			}
-			mUserManager->Login(packet.mSessionUniqueId, request->mUid);
+			mUserManager->Login(packet.mSessionUniqueId, request->mUserId);
 
 			mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
@@ -139,7 +145,7 @@ ErrorCode PacketHandler::Login(const Packet packet)
 		} }
 	);
 
-	return response.mErrorCode;
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

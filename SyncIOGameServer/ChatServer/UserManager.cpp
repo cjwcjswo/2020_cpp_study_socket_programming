@@ -59,14 +59,14 @@ CS::ErrorCode UserManager::Disconnect(const int32 userIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const uint64 uid)
+CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const char* userId)
 {
 	User* user = FindUser(sessionUniqueId);
 	if (nullptr == user)
 	{
 		return ErrorCode::INVALID_USER;
 	}
-	user->Login(uid);
+	user->Login(userId);
 
 	return ErrorCode::SUCCESS;
 }
@@ -81,4 +81,16 @@ User* UserManager::FindUser(const uint64 sessionUniqueId)
 	}
 
 	return &(*userIter);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+UserState UserManager::UserState(const uint64 sessionUniqueId)
+{
+	User* user = FindUser(sessionUniqueId);
+	if (nullptr == user)
+	{
+		return UserState::DISCONNECT;
+	}
+
+	return user->mState;
 }

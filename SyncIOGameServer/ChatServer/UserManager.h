@@ -4,10 +4,8 @@
 #include <queue>
 
 #include "../../NetworkLib/PrimitiveTypes.h"
+#include "User.h"
 #include "ErrorCode.h"
-
-
-class User;
 
 
 class UserManager
@@ -33,9 +31,11 @@ public:
 
 	CS::ErrorCode Connect(User& user);
 
-	CS::ErrorCode Login(const uint64 sessionUniqueId, const uint64 uid);
+	CS::ErrorCode Login(const uint64 sessionUniqueId, const char* userId);
 
 	CS::ErrorCode Disconnect(const int32 userIndex);
+
+	UserState UserState(const uint64 sessionUniqueId);
 
 	User* FindUser(const uint64 sessionUniqueId);
 };

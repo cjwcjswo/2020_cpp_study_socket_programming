@@ -7,7 +7,7 @@ void User::Clear()
 	mSessionIndex = ClientSession::INVALID_INDEX;
 	mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
 	mIndex = INVALID_USER_INDEX;
-	mUid = INVALID_UID;
+	mUserId = nullptr;
 	mState = UserState::DISCONNECT;
 }
 
@@ -17,13 +17,12 @@ void User::Connect(const User& user)
 	mSessionIndex = user.mSessionIndex;
 	mSessionUniqueId = user.mSessionUniqueId;
 	mIndex = user.mIndex;
-	mUid = user.mUid;
 	mState = UserState::CONNECT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void User::Login(const uint64 uid)
+void User::Login(const char* userId)
 {
-	mUid = uid;
+	mUserId = userId;
 	mState = UserState::LOGIN;
 }

@@ -24,7 +24,7 @@ public:
 	uint64 mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
 
 	int32 mIndex = INVALID_USER_INDEX;
-	uint64 mUid = INVALID_UID;
+	const char* mUserId = nullptr;
 
 	UserState mState = UserState::DISCONNECT;
 
@@ -39,6 +39,6 @@ public:
 public:
 	void Clear();
 	void Connect(const User& User);
-	void Login(uint64 uid);
+	void Login(const char* mUserId);
 };
 

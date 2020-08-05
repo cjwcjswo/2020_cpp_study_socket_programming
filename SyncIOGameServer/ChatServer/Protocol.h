@@ -12,6 +12,7 @@ namespace CS
 	constexpr static int PACKET_ID_START = 100;
 	constexpr static int PACKET_ID_END = 10000;
 
+
 	enum class PacketId : uint16
 	{
 		PACKET_START = PACKET_ID_START,
@@ -28,6 +29,11 @@ namespace CS
 		PACKET_END = PACKET_ID_END,
 	};
 
+	inline PacketId ResponsePacketId(PacketId requestPacketId)
+	{
+		return PacketId(static_cast<uint16>(requestPacketId) + 1);
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	struct PacketBase
 	{
@@ -35,11 +41,12 @@ namespace CS
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	constexpr static int MAX_USER_ID_SIZE = 128;
 	constexpr static int AUTH_KEY_SIZE = 64;
-
+	
 	struct LoginRequest
 	{
-		uint64 mUid = 0;
+		char mUserId[MAX_USER_ID_SIZE] = { 0, };
 		char mAuthKey[AUTH_KEY_SIZE] = { 0, };
 	};
 
@@ -71,8 +78,8 @@ namespace CS
 
 namespace CS
 {
-	inline const char* RedisLoginKey(uint64 uid)
+	inline const char* RedisLoginKey(const char* userId)
 	{
-		return std::string("Login/" + std::to_string(uid)).c_str();
+		return std::string{ std::string{"Login/"} + userId }.c_str();
 	}
 }
