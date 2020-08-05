@@ -5,12 +5,12 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket) : mIndex(index), mUniqueId(uniqueId), mSocket(socket)
+ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket, const uint32 maxBufferSize) : mIndex(index), mUniqueId(uniqueId), mSocket(socket)
 {
-	mSendBuffer = new char[BUFFER_SIZE * 2];
-	mReceiveBuffer = new char[BUFFER_SIZE * 2];
-	ZeroMemory(mSendBuffer, BUFFER_SIZE * 2);
-	ZeroMemory(mReceiveBuffer, BUFFER_SIZE * 2);
+	mSendBuffer = new char[maxBufferSize * 2];
+	mReceiveBuffer = new char[maxBufferSize * 2];
+	ZeroMemory(mSendBuffer, maxBufferSize * 2);
+	ZeroMemory(mReceiveBuffer, maxBufferSize * 2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

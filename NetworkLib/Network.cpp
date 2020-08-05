@@ -2,6 +2,7 @@
 #include "TCPSocket.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
+#include "Config.h"
 
 
 using namespace NetworkLib;
@@ -11,12 +12,19 @@ using namespace NetworkLib;
 Network::~Network()
 {
 	Stop();
-	delete mAcceptSocket;
-}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Network::LoadConfig()
-{
+	if (nullptr != mConfig)
+	{
+		delete mConfig;
+	}
+	if (nullptr != mAcceptSocket)
+	{
+		delete mAcceptSocket;
+	}
+	if (nullptr != mClientSessionManager)
+	{
+		delete mClientSessionManager;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +36,7 @@ ErrorCode Network::AcceptClient()
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
 
-	ClientSession clientSession(ClientSession::INVALID_INDEX, ClientSession::INVALID_UNIQUE_ID, INVALID_SOCKET);
+	ClientSession clientSession(ClientSession::INVALID_INDEX, ClientSession::INVALID_UNIQUE_ID, INVALID_SOCKET, mConfig->mMaxSessionBufferSize);
 	clientSession.mSocket = clientSocket;
 
 	clientSession.mIndex = mClientSessionManager->AllocClientSessionIndex();
@@ -108,16 +116,16 @@ void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 {
 	//TODO 최흥배: mReceiveBuffer의 크기를 ClientSession::BUFFER_SIZE 2배로 잡아서 남은 데이터를 앞으로 복사하지 않고 남은 부분 다음에 받도록 합니다. 복사를 줄이기 위해서 입니다.
-	int receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
+	uint32 receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
 
 	// 남은 데이터가 버퍼 사이즈보다 클 경우 앞으로 복사
-	if (receivePos > ClientSession::BUFFER_SIZE)
+	if (receivePos > mConfig->mMaxSessionBufferSize)
 	{
 		memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
 		receivePos = clientSession.mRemainDataSize;
 	}
 
-	int length = clientSession.mSocket.Receive(&clientSession.mReceiveBuffer[receivePos], ClientSession::BUFFER_SIZE);
+	int length = clientSession.mSocket.Receive(&clientSession.mReceiveBuffer[receivePos], mConfig->mMaxSessionBufferSize);
 	if (0 == length)
 	{
 		return ErrorCode::SOCKET_RECEIVE_ZERO;
@@ -152,7 +160,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 				currentReceivePos -= PACKET_HEADER_SIZE;
 				break;
 			}
-			if (requireBodySize > MAX_PACKET_BODY_SIZE)
+			if (requireBodySize > mConfig->mMaxPacketBodySize)
 			{
 				return ErrorCode::SOCKET_RECEIVE_MAX_PACKET_SIZE;
 			}
@@ -264,8 +272,17 @@ void Network::CloseSession(const ErrorCode errorCode, ClientSession& clientSessi
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode Network::Init(const int maxSessionSize)
+ErrorCode Network::Init()
 {
+	ErrorCode errorCode;
+
+	mConfig = new Config();
+	errorCode = mConfig->Load();
+	if (ErrorCode::SUCCESS != errorCode)
+	{
+		return errorCode;
+	}
+
 	WSADATA wsaData;
 
 	if (SOCKET_ERROR == WSAStartup(MAKEWORD(2, 2), &wsaData))
@@ -274,7 +291,6 @@ ErrorCode Network::Init(const int maxSessionSize)
 	}
 
 	// Client Accept Socket Init
-	ErrorCode errorCode;
 	mAcceptSocket = new TCPSocket{INVALID_SOCKET};
 	errorCode = mAcceptSocket->Create();
 	if (ErrorCode::SUCCESS != errorCode)
@@ -282,7 +298,7 @@ ErrorCode Network::Init(const int maxSessionSize)
 		return errorCode;
 	}
 
-	errorCode = mAcceptSocket->Bind(L"127.0.0.1", 32452);
+	errorCode = mAcceptSocket->Bind(mConfig->mIPAddress, mConfig->mPortNum);
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;
@@ -295,7 +311,7 @@ ErrorCode Network::Init(const int maxSessionSize)
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	mClientSessionManager->Init(maxSessionSize); // TODO: Load Config
+	mClientSessionManager->Init(mConfig->mMaxSessionNum, mConfig->mMaxSessionBufferSize);
 
 	return ErrorCode::SUCCESS;
 }
@@ -318,7 +334,10 @@ ErrorCode Network::Run()
 ErrorCode Network::Stop()
 {
 	// Stop Accept Socket
-	mAcceptSocket->Close();
+	if (nullptr != mAcceptSocket)
+	{
+		mAcceptSocket->Close();
+	}
 
 	if (mIsRunning)
 	{
@@ -396,7 +415,7 @@ NetworkLib::ErrorCode Network::Send(uint64 sessionUniqueId, const uint16 packetI
 NetworkLib::ErrorCode Network::SendProcess(ClientSession& clientSession, const uint16 packetId, const char* bodyData, const int bodySize)
 {
 	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
-	if (clientSession.mSendSize + totalSize > ClientSession::BUFFER_SIZE)
+	if (static_cast<uint32>(clientSession.mSendSize + totalSize) > mConfig->mMaxSessionBufferSize)
 	{
 		return ErrorCode::CLIENT_SESSION_SEND_BUFFER_IS_FULL;
 	}

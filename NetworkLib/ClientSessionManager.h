@@ -15,7 +15,8 @@ private:
 	std::vector<ClientSession> mClientVector;
 	std::queue<int32> mClientIndexPool;
 
-	int mMaxSessionSize = 0;
+	uint32 mMaxSessionSize = 0;
+	uint32 mMaxSessionBufferSize = 0;
 
 
 private:
@@ -28,7 +29,7 @@ public:
 
 
 public:
-	void Init(const int maxClientSessionNum) noexcept;
+	void Init(const uint32 maxClientSessionNum, const  uint32 maxSessionBufferSize) noexcept;
 
 	inline std::vector<ClientSession>& ClientVector() noexcept { return mClientVector; };
 

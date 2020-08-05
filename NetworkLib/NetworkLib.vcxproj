@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="ClientSessionManager.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Network.h" />
@@ -31,6 +32,7 @@
   <ItemGroup>
     <ClCompile Include="ClientSession.cpp" />
     <ClCompile Include="ClientSessionManager.cpp" />
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="TCPSocket.cpp" />

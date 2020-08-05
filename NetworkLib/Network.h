@@ -16,8 +16,11 @@ class TCPSocket;
 class ClientSessionManager;
 class ClientSession;
 
+
 namespace NetworkLib
 {
+	class Config;
+
 	class Network
 	{
 	protected:
@@ -25,6 +28,8 @@ namespace NetworkLib
 
 
 	protected:
+		Config* mConfig;
+
 		ClientSessionManager* mClientSessionManager = nullptr;
 		UniquePtrThread mSelectThread = nullptr;
 		TCPSocket* mAcceptSocket = nullptr;
@@ -45,10 +50,6 @@ namespace NetworkLib
 		~Network();
 
 
-	public:
-		static void LoadConfig();
-
-
 	protected:
 		NetworkLib::ErrorCode CheckSelectResult(int selectResult);
 		NetworkLib::ErrorCode AcceptClient();
@@ -63,7 +64,7 @@ namespace NetworkLib
 
 
 	public:
-		NetworkLib::ErrorCode Init(const int maxSessionSize);
+		NetworkLib::ErrorCode Init();
 		NetworkLib::ErrorCode Run();
 		NetworkLib::ErrorCode Stop();
 

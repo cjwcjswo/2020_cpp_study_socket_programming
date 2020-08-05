@@ -15,7 +15,6 @@ namespace NetworkLib
 #pragma pack(pop)
 
 	//TODO 최흥배: 아래와 같이 상황에 따라서 변할 수 있는 것은 설정 파일을 Json으로 만들고, json을 읽어서 값을 사용하도록 합니다.	
-	constexpr uint16 MAX_PACKET_BODY_SIZE = 1024;
 	constexpr uint16 PACKET_HEADER_SIZE = sizeof(PacketHeader);
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

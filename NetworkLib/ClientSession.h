@@ -7,13 +7,16 @@
 class ClientSession
 {
 public:
-	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket);
+	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket, const uint32 maxBufferSize);
 
 	~ClientSession();
 
 
+private:
+	uint32 mMaxBufferSize = 0;
+
+
 public:
-	constexpr static int BUFFER_SIZE = 1024;
 	constexpr static int32 INVALID_INDEX = -1;
 	constexpr static uint64 INVALID_UNIQUE_ID = 0;
 

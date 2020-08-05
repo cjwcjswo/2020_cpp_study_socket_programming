@@ -5,15 +5,17 @@
 #include "ClientSession.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSessionManager::Init(const int maxClientSessionNum) noexcept
+void ClientSessionManager::Init(const uint32 maxClientSessionNum, const  uint32 maxSessionBufferSize) noexcept
 {
 	mMaxSessionSize = maxClientSessionNum;
+	mMaxSessionBufferSize = maxSessionBufferSize;
+
 	mClientVector.reserve(maxClientSessionNum);
 
-	for (int i = 0; i < maxClientSessionNum; ++i)
+	for (uint32 i = 0; i < maxClientSessionNum; ++i)
 	{
 		mClientIndexPool.push(i);
-		mClientVector.emplace_back(i, 0, INVALID_SOCKET);
+		mClientVector.emplace_back(i, 0, INVALID_SOCKET, maxSessionBufferSize);
 	}
 }
 
@@ -32,7 +34,7 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
 {
 	
-	for (int i = 0; i < mMaxSessionSize; i++)
+	for (uint32 i = 0; i < mMaxSessionSize; i++)
 	{
 		if (mClientVector[i].mUniqueId == uniqueId)
 		{

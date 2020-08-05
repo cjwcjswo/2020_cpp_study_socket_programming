@@ -22,7 +22,7 @@ ChatServer::~ChatServer()
 ErrorCode ChatServer::Init()
 {
 	mNetwork = new NetworkLib::Network();
-	if (NetworkLib::ErrorCode::SUCCESS != mNetwork->Init(150))
+	if (NetworkLib::ErrorCode::SUCCESS != mNetwork->Init())
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
@@ -61,7 +61,7 @@ ErrorCode ChatServer::Run()
 		}
 		
 		// TODO 최진우: 동시성 문제로 인해 버퍼 복사, 더 좋은 방법이 없을까?
-		char copyBodyBuffer[NetworkLib::MAX_PACKET_BODY_SIZE] = { 0, };
+		char copyBodyBuffer[1024] = { 0, };
 		if (receivePacket.mBodyDataSize > 0)
 		{
 			memcpy_s(copyBodyBuffer, receivePacket.mBodyDataSize, receivePacket.mBodyData, receivePacket.mBodyDataSize);
