@@ -1,5 +1,6 @@
 #include "Network.h"
 #include "TCPSocket.h"
+#include "Define.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 #include "Config.h"
@@ -36,11 +37,11 @@ ErrorCode Network::AcceptClient()
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
 
-	ClientSession clientSession(ClientSession::INVALID_INDEX, ClientSession::INVALID_UNIQUE_ID, INVALID_SOCKET, mConfig->mMaxSessionBufferSize);
+	ClientSession clientSession(INVALID_INDEX, INVALID_UNIQUE_ID, INVALID_SOCKET, mConfig->mMaxSessionBufferSize);
 	clientSession.mSocket = clientSocket;
 
 	clientSession.mIndex = mClientSessionManager->AllocClientSessionIndex();
-	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
+	if (INVALID_INDEX == clientSession.mIndex)
 	{
 		CloseSession(ErrorCode::SOCKET_INDEX_POOL_IS_FULL, clientSession);
 		return ErrorCode::SOCKET_INDEX_POOL_IS_FULL;
@@ -121,6 +122,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 	if (receivePos > mConfig->mMaxSessionBufferSize)
 	{
 		memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
+		clientSession.mPreviousReceiveBufferPos = 0;
 		receivePos = clientSession.mRemainDataSize;
 	}
 
@@ -146,7 +148,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 	int currentReceivePos = 0;
 	PacketHeader* header;
 
-	while ((clientSession.mRemainDataSize - currentReceivePos) >= PACKET_HEADER_SIZE)
+	while (clientSession.mRemainDataSize >= PACKET_HEADER_SIZE)
 	{
 		header = reinterpret_cast<PacketHeader*>(&clientSession.mReceiveBuffer[currentReceivePos]);
 		currentReceivePos += PACKET_HEADER_SIZE;
@@ -260,7 +262,7 @@ void Network::CloseSession(const ErrorCode errorCode, ClientSession& clientSessi
 
 	clientSession.mSocket.Close();
 
-	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
+	if (INVALID_INDEX == clientSession.mIndex)
 	{
 		return;
 	}
@@ -376,6 +378,31 @@ void Network::Broadcast(const uint16 packetId, const char* bodyData, const int b
 		if (!clientSession.IsConnect())
 		{
 			continue;
+		}
+
+		Send(clientSession.mIndex, packetId, bodyData, bodySize);
+	}
+}
+
+void Network::Broadcast(const uint16 packetId, const char* bodyData, const int bodySize, const int exceptUserCount, ...)
+{
+	va_list ap;
+	va_start(ap, exceptUserCount);
+
+	for (auto& clientSession : mClientSessionManager->ClientVector())
+	{
+		if (!clientSession.IsConnect())
+		{
+			continue;
+		}
+
+		for (int i = 0; i < exceptUserCount; ++i)
+		{
+			uint64 uniqueId = va_arg(ap, uint64);
+			if (clientSession.mUniqueId == uniqueId)
+			{
+				continue;
+			}
 		}
 
 		Send(clientSession.mIndex, packetId, bodyData, bodySize);

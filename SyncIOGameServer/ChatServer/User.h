@@ -2,6 +2,9 @@
 
 #include "../../NetworkLib/PrimitiveTypes.h"
 #include "../../NetworkLib/ClientSession.h"
+#include "../../NetworkLib/Define.h"
+
+#include "ErrorCode.h"
 
 
 enum class UserState : uint8
@@ -9,22 +12,20 @@ enum class UserState : uint8
 	DISCONNECT,
 	CONNECT,
 	LOGIN,
+	ROOM,
 };
 
 
 class User
 {
 public:
-	constexpr static int32 INVALID_USER_INDEX = -1;
-	constexpr static uint64 INVALID_UID = 0;
+	int32 mSessionIndex = INVALID_INDEX;
+	uint64 mSessionUniqueId = INVALID_UNIQUE_ID;
 
-
-public:
-	int32 mSessionIndex = ClientSession::INVALID_INDEX;
-	uint64 mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
-
-	int32 mIndex = INVALID_USER_INDEX;
+	int32 mIndex = INVALID_INDEX;
 	const char* mUserId = nullptr;
+
+	int mRoomIndex = INVALID_INDEX;
 
 	UserState mState = UserState::DISCONNECT;
 
@@ -38,7 +39,9 @@ public:
 
 public:
 	void Clear();
-	void Connect(const User& User);
-	void Login(const char* mUserId);
+	CS::ErrorCode Connect(const User& User);
+	CS::ErrorCode Login(const char* mUserId);
+	CS::ErrorCode EnterRoom(int32 roomIndex);
+	CS::ErrorCode LeaveRoom();
 };
 

@@ -7,18 +7,20 @@
 
 class NetworkLib::Network;
 class UserManager;
+class RoomManager;
 
 
 class PacketHandler
 {
 private:
 	using Packet = NetworkLib::ReceivePacket;
-	using PacketFunc = CS::ErrorCode (PacketHandler::*)(const Packet);
+	using PacketFunc = CS::ErrorCode (PacketHandler::*)(const Packet&);
 
 
 private:
 	NetworkLib::Network* mNetwork = nullptr;
 	UserManager* mUserManager = nullptr;
+	RoomManager* mRoomManager = nullptr;
 
 	PacketFunc mPacketFuncArray[CS::PACKET_ID_END - CS::PACKET_ID_START + 1];
 
@@ -26,17 +28,23 @@ private:
 
 
 public:
-	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager);
+	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager);
 
 
 private:
-	CS::ErrorCode Connect(const Packet packet);
-	CS::ErrorCode Disconnect(const Packet packet);
-	CS::ErrorCode Login(const Packet packet);
-	CS::ErrorCode Chat(const Packet packet);
+	// Packet Process
+	CS::ErrorCode Connect(const Packet& packet);
+	CS::ErrorCode Disconnect(const Packet& packet);
+	CS::ErrorCode Login(const Packet& packet);
+	CS::ErrorCode Chat(const Packet& packet);
 
+
+	// Packet Process Room
+	CS::ErrorCode RoomEnter(const Packet& packet);
+	CS::ErrorCode RoomLeave(const Packet& packet);
+	CS::ErrorCode RoomChat(const Packet& packet);
 	
 public:
-	CS::ErrorCode Process(const Packet packet);
+	CS::ErrorCode Process(const Packet& packet);
 };
 

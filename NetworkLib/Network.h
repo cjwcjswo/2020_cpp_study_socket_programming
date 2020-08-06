@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <queue>
+#include <vector>
 #include <thread>
 #include <mutex>
 #include <WinSock2.h>
@@ -71,6 +72,7 @@ namespace NetworkLib
 		NetworkLib::ReceivePacket GetReceivePacket();
 
 		void Broadcast(const uint16 packetId, const char* bodyData, const int bodySize);
+		void Broadcast(const uint16 packetId, const char* bodyData, const int bodySize, const int exceptUserCount, ...);
 
 		NetworkLib::ErrorCode Send(const int32 sessionIndex, const uint16 packetId, const char* bodyData, const int bodySize);
 		NetworkLib::ErrorCode Send(const uint64 sessionUniqueId, const uint16 packetId, const char* bodyData, const int bodySize);

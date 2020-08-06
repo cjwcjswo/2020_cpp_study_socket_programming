@@ -22,6 +22,7 @@
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="ClientSessionManager.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="Define.h" />
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Network.h" />

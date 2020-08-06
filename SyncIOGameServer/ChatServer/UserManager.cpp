@@ -24,7 +24,7 @@ int32 UserManager::AllocUserIndex()
 	if (mUserIndexPool.empty())
 	{
 		//TODO: 올바른 상수를 정의한다.
-		return User::INVALID_USER_INDEX;
+		return INVALID_INDEX;
 	}
 
 	int32 index = mUserIndexPool.front();
@@ -37,16 +37,14 @@ int32 UserManager::AllocUserIndex()
 ErrorCode UserManager::Connect(User& user)
 {
 	int32 userIndex = AllocUserIndex();
-	if (User::INVALID_USER_INDEX == userIndex)
+	if (INVALID_INDEX == userIndex)
 	{
 		return ErrorCode::USER_MANAGER_POOL_IS_FULL;
 	}
 	
 	user.mIndex = userIndex;
 
-	mUserPool[userIndex].Connect(user);
-
-	return ErrorCode::SUCCESS;
+	return mUserPool[userIndex].Connect(user);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,11 +62,10 @@ CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const char* userI
 	User* user = FindUser(sessionUniqueId);
 	if (nullptr == user)
 	{
-		return ErrorCode::INVALID_USER;
+		return ErrorCode::USER_IS_INVALID;
 	}
-	user->Login(userId);
 
-	return ErrorCode::SUCCESS;
+	return user->Login(userId);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

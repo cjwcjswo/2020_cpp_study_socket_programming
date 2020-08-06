@@ -1,6 +1,8 @@
 #pragma comment(lib,"ws2_32")
 
 #include <WinSock2.h>
+
+#include "Define.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
@@ -56,7 +58,7 @@ int32 ClientSessionManager::AllocClientSessionIndex()
 {
 	if (mClientIndexPool.empty())
 	{
-		return ClientSession::INVALID_INDEX;
+		return INVALID_INDEX;
 	}
 	int32 index = mClientIndexPool.front();
 	mClientIndexPool.pop();

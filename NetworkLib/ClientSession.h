@@ -2,6 +2,7 @@
 
 #include "TCPSocket.h"
 #include "PrimitiveTypes.h"
+#include "Define.h"
 
 
 class ClientSession
@@ -17,11 +18,6 @@ private:
 
 
 public:
-	constexpr static int32 INVALID_INDEX = -1;
-	constexpr static uint64 INVALID_UNIQUE_ID = 0;
-
-
-public:
 	int mRemainDataSize = 0;
 	int mPreviousReceiveBufferPos = 0;
 	int mSendSize = 0;
@@ -30,7 +26,7 @@ public:
 	char* mSendBuffer = nullptr;
 
 	int32 mIndex = INVALID_INDEX;
-	uint64 mUniqueId = 0;
+	uint64 mUniqueId = INVALID_UNIQUE_ID;
 	TCPSocket mSocket;
 
 

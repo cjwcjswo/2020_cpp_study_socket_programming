@@ -1,28 +1,83 @@
 #include "User.h"
 
 
+using namespace CS;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void User::Clear()
 {
-	mSessionIndex = ClientSession::INVALID_INDEX;
-	mSessionUniqueId = ClientSession::INVALID_UNIQUE_ID;
-	mIndex = INVALID_USER_INDEX;
+	mSessionIndex = INVALID_INDEX;
+	mSessionUniqueId = INVALID_UNIQUE_ID;
+	mIndex = INVALID_INDEX;
 	mUserId = nullptr;
 	mState = UserState::DISCONNECT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void User::Connect(const User& user)
+ErrorCode User::Connect(const User& user)
 {
+	if (UserState::DISCONNECT != mState)
+	{
+		return ErrorCode::USER_ALREADY_CONNECTED_STATE;
+	}
+
 	mSessionIndex = user.mSessionIndex;
 	mSessionUniqueId = user.mSessionUniqueId;
 	mIndex = user.mIndex;
 	mState = UserState::CONNECT;
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void User::Login(const char* userId)
+ErrorCode User::Login(const char* userId)
 {
+	if (UserState::DISCONNECT == mState)
+	{
+		return ErrorCode::USER_NOT_CONNECTED_STATE;
+	}
+
+	if (UserState::LOGIN == mState || UserState::ROOM == mState)
+	{
+		return ErrorCode::USER_ALREADY_LOGIN_STATE;
+	}
+
 	mUserId = userId;
 	mState = UserState::LOGIN;
+
+	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ErrorCode User::EnterRoom(int32 roomIndex)
+{
+	if (UserState::DISCONNECT == mState || UserState::CONNECT == mState)
+	{
+		return ErrorCode::USER_NOT_LOGIN_STATE;
+	}
+
+	if (UserState::ROOM == mState)
+	{
+		return ErrorCode::USER_ALREADY_IN_THE_ROOM;
+	}
+
+	mRoomIndex = roomIndex;
+	mState = UserState::ROOM;
+
+	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ErrorCode User::LeaveRoom()
+{
+	if (UserState::ROOM != mState)
+	{
+		return ErrorCode::USER_NOT_ROOM_ENTER_STATE;
+	}
+
+	mRoomIndex = INVALID_INDEX;
+	mState = UserState::LOGIN;
+
+	return ErrorCode::SUCCESS;
 }

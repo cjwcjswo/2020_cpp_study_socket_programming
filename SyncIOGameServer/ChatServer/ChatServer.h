@@ -8,6 +8,7 @@ namespace NetworkLib
 	class Network;
 }
 class UserManager;
+class RoomManager;
 class PacketHandler;
 
 
@@ -16,6 +17,7 @@ class ChatServer
 private:
 	NetworkLib::Network* mNetwork = nullptr;
 	UserManager* mUserManager = nullptr;
+	RoomManager* mRoomManager = nullptr;
 	PacketHandler* mPacketHandler = nullptr;
 	
 	bool mIsRunning = false;

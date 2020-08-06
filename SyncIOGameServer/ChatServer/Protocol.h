@@ -3,14 +3,15 @@
 #include <string>
 
 #include "../../NetworkLib/PrimitiveTypes.h"
+#include "../../NetworkLib/Define.h"
 #include "ErrorCode.h"
 
 
 namespace CS 
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	constexpr static int PACKET_ID_START = 100;
-	constexpr static int PACKET_ID_END = 10000;
+	const int PACKET_ID_START = 100;
+	const int PACKET_ID_END = 10000;
 
 
 	enum class PacketId : uint16
@@ -20,6 +21,20 @@ namespace CS
 		LOGIN_REQUEST,
 		LOGIN_RESPONSE,
 
+		//////////////////////////////////////////////////////////////
+		ROOM_PACKET_START,
+
+		ROOM_ENTER_REQUEST,
+		ROOM_ENTER_RESPONSE,
+		ROOM_NEW_USER_BROADCAST,
+		ROOM_USER_LIST_NOTIFY,
+
+		ROOM_LEAVE_REQUEST,
+		ROOM_LEAVE_RESPONSE,
+		ROOM_LEAVE_USER_BROADCAST,
+
+		ROOM_PACKET_END,
+		//////////////////////////////////////////////////////////////
 		CHAT_REQUEST,
 		CHAT_RESPONSE,
 		CHAT_BROADCAST,
@@ -29,11 +44,6 @@ namespace CS
 		PACKET_END = PACKET_ID_END,
 	};
 
-	inline PacketId ResponsePacketId(PacketId requestPacketId)
-	{
-		return PacketId(static_cast<uint16>(requestPacketId) + 1);
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	struct PacketBase
 	{
@@ -41,8 +51,8 @@ namespace CS
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	constexpr static int MAX_USER_ID_SIZE = 128;
-	constexpr static int AUTH_KEY_SIZE = 64;
+	const int MAX_USER_ID_SIZE = 16;
+	const int AUTH_KEY_SIZE = 64;
 	
 	struct LoginRequest
 	{
@@ -55,7 +65,7 @@ namespace CS
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	constexpr static int16 MAX_CHAT_SIZE = 128;
+	const int16 MAX_CHAT_SIZE = 128;
 
 	struct ChatRequest
 	{
@@ -72,6 +82,49 @@ namespace CS
 		uint64 mUid = 0;
 		uint16 mMessageLen = 0;
 		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	struct RoomEnterRequest
+	{
+		int32 mRoomIndex = INVALID_INDEX;
+	};
+	
+	struct RoomEnterResponse : PacketBase
+	{
+		uint64 mUserUniqueId = INVALID_UNIQUE_ID;
+	};
+
+	struct RoomUserListNotify
+	{
+		uint16 mUserCount = 0;
+		uint64* mUserUniqueIdList = nullptr;
+		char** mUserIdList = nullptr;
+
+
+		int Size()
+		{
+			return sizeof(uint16) + (mUserCount * sizeof(uint64)) + (mUserCount * sizeof(char) * MAX_USER_ID_SIZE);
+		}
+	};
+
+	struct RoomNewUserBroadcast
+	{
+		uint64 mUserUniueId = INVALID_UNIQUE_ID;
+		char mUserId[MAX_USER_ID_SIZE] = { 0, };
+	};
+
+	struct RoomLeaveRequest
+	{
+	};
+
+	struct RoomLeaveResponse : PacketBase
+	{
+	};
+
+	struct RoomLeaveUserBroadcast
+	{
+		uint64 mUserUniqueId = INVALID_UNIQUE_ID;
 	};
 }
 

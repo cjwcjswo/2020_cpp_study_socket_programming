@@ -3,6 +3,7 @@
 #include "ChatServer.h"
 #include "UserManager.h"
 #include "User.h"
+#include "RoomManager.h"
 #include "PacketHandler.h"
 #include "RedisManager.h"
 
@@ -13,9 +14,22 @@ using namespace CS;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ChatServer::~ChatServer()
 {
-	delete mNetwork;
-	delete mUserManager;
-	delete mPacketHandler;
+	if (nullptr != mNetwork)
+	{
+		delete mNetwork;
+	}
+	if (nullptr != mUserManager)
+	{
+		delete mUserManager;
+	}
+	if (nullptr != mRoomManager)
+	{
+		delete mRoomManager;
+	}
+	if (nullptr != mPacketHandler)
+	{
+		delete mPacketHandler;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +44,10 @@ ErrorCode ChatServer::Init()
 	mUserManager = new UserManager;
 	mUserManager->Init(100);
 
-	mPacketHandler = new PacketHandler(mNetwork, mUserManager);
+	mRoomManager = new RoomManager;
+	mRoomManager->Init(20);
+
+	mPacketHandler = new PacketHandler(mNetwork, mUserManager, mRoomManager);
 
 	Redis::GRedisManager = new Redis::RedisManager();
 	ErrorCode errorCode = Redis::GRedisManager->Connect();
