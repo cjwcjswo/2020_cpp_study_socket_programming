@@ -431,5 +431,5 @@ NetworkLib::ErrorCode Network::SendProcess(ClientSession& clientSession, const u
 
 	clientSession.mSendSize += bodySize;
 
-	return SendClient(clientSession);
+	return ErrorCode::SUCCESS;
 }
