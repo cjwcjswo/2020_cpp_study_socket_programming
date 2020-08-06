@@ -54,7 +54,6 @@ ErrorCode Network::AcceptClient()
 	}
 
 	FD_SET(clientSession.mSocket.Socket(), &mReadSet);
-	FD_SET(clientSession.mSocket.Socket(), &mWriteSet);
 	
 	clientSession.mUniqueId = mClientSessionManager->GenerateUniqueId();
 
@@ -258,9 +257,8 @@ void Network::CloseSession(const ErrorCode errorCode, ClientSession& clientSessi
 	}
 
 	FD_CLR(clientSession.mSocket.Socket(), &mReadSet);
-	FD_CLR(clientSession.mSocket.Socket(), &mWriteSet);
+
 	clientSession.mSocket.Close();
-	
 
 	if (ClientSession::INVALID_INDEX == clientSession.mIndex)
 	{
@@ -431,5 +429,5 @@ NetworkLib::ErrorCode Network::SendProcess(ClientSession& clientSession, const u
 
 	clientSession.mSendSize += bodySize;
 
-	return ErrorCode::SUCCESS;
+	return SendClient(clientSession);
 }
