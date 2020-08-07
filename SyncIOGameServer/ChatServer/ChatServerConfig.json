@@ -1,0 +1,7 @@
+{
+	"RedisIPAddress": "127.0.0.1",
+	"RedisPortNum": 6379,
+	"MaxUserNum": 500,
+	"MaxRoomNum": 50,
+	"MaxRoomUserNum": 20
+}

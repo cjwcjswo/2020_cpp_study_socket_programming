@@ -86,7 +86,7 @@ ErrorCode Network::CheckSelectResult(int selectResult)
 //람다를 사용하여 아래 함수의 내용을 mClientSessionManager에 람다로 전달해보자
 //가능하면 Network 클래스는 mClientSessionManager의 클라이언트 객체를 순회하지 않도록 하자.
 // 지금의 경우 ClientVector() 구현 방법이 바뀌면 SelectClient도 같이 바뀌어야 한다.
-void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
+void Network::SelectClient(const fd_set& readSet)
 {
 	for (ClientSession& clientSession : mClientSessionManager->ClientVector())
 	{
@@ -103,14 +103,6 @@ void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 			{
 				CloseSession(errorCode, clientSession);
 				continue;
-			}
-		}
-		if (FD_ISSET(clientSocket.Socket(), &writeSet))
-		{
-			ErrorCode errorCode = SendClient(clientSession);
-			if (ErrorCode::SUCCESS != errorCode)
-			{
-				CloseSession(errorCode, clientSession);
 			}
 		}
 	}
@@ -200,10 +192,10 @@ void Network::SelectProcess()
 
 		//TODO 최흥배.
 		//write 이벤트는 조사하지 않는다. write는 send용 스레드를 만들어서 이 스레드에서 주기적으로 send 한다
-		fd_set writeSet = mWriteSet;
+		// 적용 완료
 
 		// Block
-		int selectResult = select(NULL, &readSet, &writeSet, nullptr, nullptr);
+		int selectResult = select(NULL, &readSet, nullptr, nullptr, nullptr);
 
 		errorCode = CheckSelectResult(selectResult);
 		if (ErrorCode::SUCCESS != errorCode)
@@ -220,7 +212,7 @@ void Network::SelectProcess()
 			}
 		}
 
-		SelectClient(readSet, writeSet);
+		SelectClient(readSet);
 	}
 }
 
@@ -308,7 +300,9 @@ ErrorCode Network::Init()
 		return errorCode;
 	}
 
-	errorCode = mAcceptSocket->Bind(mConfig->mIPAddress, mConfig->mPortNum);
+	std::wstring wideIPAddress;
+	wideIPAddress.assign(mConfig->mIPAddress.begin(), mConfig->mIPAddress.end());
+	errorCode = mAcceptSocket->Bind(wideIPAddress.c_str(), mConfig->mPortNum);
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;

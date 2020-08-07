@@ -10,6 +10,7 @@ namespace NetworkLib
 class UserManager;
 class RoomManager;
 class PacketHandler;
+class Config;
 
 
 class ChatServer
@@ -19,7 +20,8 @@ private:
 	UserManager* mUserManager = nullptr;
 	RoomManager* mRoomManager = nullptr;
 	PacketHandler* mPacketHandler = nullptr;
-	
+	Config* mConfig = nullptr;
+
 	bool mIsRunning = false;
 
 

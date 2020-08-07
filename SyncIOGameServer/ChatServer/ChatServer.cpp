@@ -1,5 +1,6 @@
 ﻿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
+#include "Config.h"
 #include "ChatServer.h"
 #include "UserManager.h"
 #include "User.h"
@@ -30,6 +31,10 @@ ChatServer::~ChatServer()
 	{
 		delete mPacketHandler;
 	}
+	if (nullptr != mConfig)
+	{
+		delete mConfig;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +45,9 @@ ErrorCode ChatServer::Init()
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
+
+	mConfig = new Config();
+	mConfig->Load();
 
 	mUserManager = new UserManager;
 	mUserManager->Init(100);

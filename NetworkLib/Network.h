@@ -60,7 +60,7 @@ namespace NetworkLib
 
 		void PushReceivePacket(const NetworkLib::ReceivePacket receivePacket);
 		void SelectProcess();
-		void SelectClient(const fd_set& readSet, const fd_set& writeSet);
+		void SelectClient(const fd_set& readSet);
 		void CloseSession(const NetworkLib::ErrorCode errorCode, ClientSession& clientSession);
 
 

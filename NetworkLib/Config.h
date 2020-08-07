@@ -1,9 +1,14 @@
 #pragma once
 
-#include "../ThirdParty/rapidjson/document.h"
+#include <string>
+
 #include "ErrorCode.h"
 #include "PrimitiveTypes.h"
 
+namespace staticjson 
+{
+	class ObjectHandler;
+}
 
 namespace NetworkLib
 {
@@ -14,27 +19,22 @@ namespace NetworkLib
 		~Config() = default;
 
 
-	private:
-		inline static const char* CONFIG_FILE_NAME = "NetworkConfig.json";
-
-
-	private:
-		ErrorCode LoadFromMemberIter(const rapidjson::Value::ConstMemberIterator& iter);
-
-
 	public:
-		const wchar* mIPAddress = nullptr;
-		uint16 mPortNum = 0;
+		const char* mConfigFileName = "NetworkConfig.json";
+
+		std::string mIPAddress;
+		uint32 mPortNum = 0;
 
 		uint32 mMaxSessionNum = 0;
 		uint32 mMaxSessionBufferSize = 0;
 
-		uint16 mMaxPacketBodySize = 0;
+		uint32 mMaxPacketBodySize = 0;
 
 
 	public:
-		ErrorCode Load();
+		virtual ErrorCode Load();
 
+		virtual void staticjson_init(staticjson::ObjectHandler* handler);
 	};
 }
 

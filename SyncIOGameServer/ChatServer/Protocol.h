@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 
@@ -53,7 +53,8 @@ namespace CS
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	const int MAX_USER_ID_SIZE = 16;
 	const int AUTH_KEY_SIZE = 64;
-	
+
+#pragma pack(push, 1)
 	struct LoginRequest
 	{
 		char mUserId[MAX_USER_ID_SIZE] = { 0, };
@@ -109,7 +110,8 @@ namespace CS
 		}
 	};
 
-	//TODO �����. ����ü �״�� ����Ʈ�迭�� ����ȯ �ϰ� �ִµ� �̷� ��� 1����Ʈ ���� ��Ű�� ������ ����ü �е��� �߻��մϴ�. ����ü ũ�⸦ �״�� sizeof�� ����ؼ� ��Ŷ ������ ũ�⸦ ����ϴ� ���� ��� �����ϼ���
+	//TODO 최흥배. 구조체 그대로 바이트배열로 형변환 하고 있는데 이럴 경우 1바이트 정렬 시키지 않으면 구조체 패딩이 발생합니다. 구조체 크기를 그대로 sizeof로 계산해서 패킷 데이터 크기를 계산하는 경우는 모두 조심하세요
+	// 적용 완료
 	struct RoomNewUserBroadcast
 	{
 		uint64 mUserUniueId = INVALID_UNIQUE_ID;
@@ -128,6 +130,7 @@ namespace CS
 	{
 		uint64 mUserUniqueId = INVALID_UNIQUE_ID;
 	};
+#pragma pack(pop)
 }
 
 
