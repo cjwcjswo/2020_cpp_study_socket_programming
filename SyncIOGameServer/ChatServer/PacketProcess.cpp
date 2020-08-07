@@ -74,11 +74,10 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 				return;
 			}
 #endif
-			mUserManager->Login(packet.mSessionUniqueId, request->mUserId);
-
+			response.mErrorCode = mUserManager->Login(packet.mSessionUniqueId, request->mUserId);
 			mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
-			GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu\n", packet.mSessionUniqueId);
+			GLogger->PrintConsole(Color::LGREEN, L"<Login> User: %lu ErrorCode: %d\n", packet.mSessionUniqueId, static_cast<int>(response.mErrorCode));
 		} }
 	);
 

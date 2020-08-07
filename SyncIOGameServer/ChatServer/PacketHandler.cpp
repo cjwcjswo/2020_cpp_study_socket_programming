@@ -64,7 +64,15 @@ ErrorCode PacketHandler::Process(const Packet& packet)
 
 	if (static_cast<uint16>(PacketId::LOGIN_REQUEST) != packet.mPacketId)
 	{
-		return ErrorCode::USER_NOT_LOGIN_STATE;
+		User* user = mUserManager->FindUser(packet.mSessionUniqueId);
+		if (nullptr == user)
+		{
+			return ErrorCode::USER_NOT_CONNECTED_STATE;
+		}
+		if (UserState::DISCONNECT == user->mState || UserState::CONNECT == user->mState)
+		{
+			return ErrorCode::USER_NOT_LOGIN_STATE;
+		}
 	}
 
 	int packetIndex = static_cast<int>(packet.mPacketId) - (PACKET_ID_START + 1);

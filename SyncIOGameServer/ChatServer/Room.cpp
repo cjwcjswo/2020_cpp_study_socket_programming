@@ -20,7 +20,7 @@ User* Room::FindUser(uint64 sessionUniqueId)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Room::Enter(User& user)
 {
-	if (mMaxUserNum > mUserDeque.size())
+	if (mMaxUserNum <= mUserDeque.size())
 	{
 		return ErrorCode::ROOM_IS_FULL;
 	}
