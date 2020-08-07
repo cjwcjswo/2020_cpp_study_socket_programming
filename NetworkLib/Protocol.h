@@ -14,7 +14,6 @@ namespace NetworkLib
 	};
 #pragma pack(pop)
 
-	//TODO 최흥배: 아래와 같이 상황에 따라서 변할 수 있는 것은 설정 파일을 Json으로 만들고, json을 읽어서 값을 사용하도록 합니다.	
 	constexpr uint16 PACKET_HEADER_SIZE = sizeof(PacketHeader);
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,11 +26,12 @@ namespace NetworkLib
 		char* mBodyData = nullptr;
 	};
 
+	//TODO 최흥배 아래 처럼 ///////////////////////////////////// 이런 주석을 다는 이유가 특별한 이유가 없다면 삭제하는 것이 좋습니다
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//TODO 최흥배: 학습을 위해서 사용한 것이라고 생각합니다. 다만 아래와 같은 상수는 특별한 이유가 없다면 const를 사용합니다.
 	const uint16 PACKET_ID_START = 10;
 	const uint16 PACKET_ID_END = 50;
 
+	//TODO 최흥배. enum의 요소 마다 숫자를 다 지정하세요. 지금처럼 하면 개수가 늘어나면 한번에 어떤 숫자 번호가 지정되었는지 알수 없습니다.
 	enum class PacketId : uint16
 	{
 		PACKET_START = PACKET_ID_START,

@@ -56,6 +56,6 @@ namespace Redis
 		CommandResult ExecuteCommandSync(const CommandRequest& commandRequest);
 	};
 
-
+	//TODO: 최흥배 이 클래스를 사용하는 곳은 많지 않습니다. std::function 등을 사용해서 글로벌 변수로 생성하지 않도록 하는 것을 추천합니다.
 	inline RedisManager* GRedisManager = new RedisManager();
 }

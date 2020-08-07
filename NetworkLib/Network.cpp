@@ -82,6 +82,10 @@ ErrorCode Network::CheckSelectResult(int selectResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO 최흥배
+//람다를 사용하여 아래 함수의 내용을 mClientSessionManager에 람다로 전달해보자
+//가능하면 Network 클래스는 mClientSessionManager의 클라이언트 객체를 순회하지 않도록 하자.
+// 지금의 경우 ClientVector() 구현 방법이 바뀌면 SelectClient도 같이 바뀌어야 한다.
 void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 {
 	for (ClientSession& clientSession : mClientSessionManager->ClientVector())
@@ -115,7 +119,6 @@ void Network::SelectClient(const fd_set& readSet, const fd_set& writeSet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 {
-	//TODO 최흥배: mReceiveBuffer의 크기를 ClientSession::BUFFER_SIZE 2배로 잡아서 남은 데이터를 앞으로 복사하지 않고 남은 부분 다음에 받도록 합니다. 복사를 줄이기 위해서 입니다.
 	uint32 receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
 
 	// 남은 데이터가 버퍼 사이즈보다 클 경우 앞으로 복사
@@ -166,6 +169,9 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 			}
 		}
 
+		//TODO 최흥배. TODO 중에 가장 뒤에 구현하는 것으로 하죠. 작업 시간이 좀 걸릴 수 있으니
+		//받은 데이터를 패킷처리 스레드로 메모리 주소만 넘기고 있음.
+		//받기 버퍼가 작아서 패킷처리에서 조금이라도 느려지면 덮어 쓸수 있을 것 같음. 더 좋은 방법을 생각해보자
 		ReceivePacket receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, 0, nullptr };
 		if (requireBodySize > 0)
 		{
@@ -187,8 +193,13 @@ void Network::SelectProcess()
 {
 	ErrorCode errorCode;
 	while (mIsRunning)
-	{
+	{		
+		//TODO 최흥배.
+		//mReadSet 공간의 사이에 빈 공간이 없게 해서 현재 연결된 클라이언트만 조사하도록 한다.
 		fd_set readSet = mReadSet;
+
+		//TODO 최흥배.
+		//write 이벤트는 조사하지 않는다. write는 send용 스레드를 만들어서 이 스레드에서 주기적으로 send 한다
 		fd_set writeSet = mWriteSet;
 
 		// Block
