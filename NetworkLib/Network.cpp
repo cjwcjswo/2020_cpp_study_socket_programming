@@ -145,20 +145,19 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 	}
 
 	clientSession.mRemainDataSize += length;
-	int currentReceivePos = 0;
 	PacketHeader* header;
 
 	while (clientSession.mRemainDataSize >= PACKET_HEADER_SIZE)
 	{
-		header = reinterpret_cast<PacketHeader*>(&clientSession.mReceiveBuffer[currentReceivePos]);
-		currentReceivePos += PACKET_HEADER_SIZE;
+		header = reinterpret_cast<PacketHeader*>(&clientSession.mReceiveBuffer[receivePos]);
+		receivePos += PACKET_HEADER_SIZE;
 		uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
 
 		if (requireBodySize > 0)
 		{
-			if (requireBodySize > clientSession.mRemainDataSize - currentReceivePos)
+			if (requireBodySize > clientSession.mRemainDataSize)
 			{
-				currentReceivePos -= PACKET_HEADER_SIZE;
+				receivePos -= PACKET_HEADER_SIZE;
 				break;
 			}
 			if (requireBodySize > mConfig->mMaxPacketBodySize)
@@ -171,14 +170,14 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		if (requireBodySize > 0)
 		{
 			receivePacket.mBodyDataSize = requireBodySize;
-			receivePacket.mBodyData = &clientSession.mReceiveBuffer[currentReceivePos];
+			receivePacket.mBodyData = &clientSession.mReceiveBuffer[receivePos];
 		}
 		PushReceivePacket(receivePacket);
-		currentReceivePos += requireBodySize;
+		receivePos += requireBodySize;
 	}
 
-	clientSession.mRemainDataSize -= currentReceivePos;
-	clientSession.mPreviousReceiveBufferPos = currentReceivePos;
+	clientSession.mRemainDataSize -= (receivePos - clientSession.mPreviousReceiveBufferPos);
+	clientSession.mPreviousReceiveBufferPos = receivePos;
 
 	return ErrorCode::SUCCESS;
 }
