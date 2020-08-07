@@ -174,9 +174,9 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		}
 		PushReceivePacket(receivePacket);
 		receivePos += requireBodySize;
+		clientSession.mRemainDataSize -= header->mPacketSize;
 	}
 
-	clientSession.mRemainDataSize -= (receivePos - clientSession.mPreviousReceiveBufferPos);
 	clientSession.mPreviousReceiveBufferPos = receivePos;
 
 	return ErrorCode::SUCCESS;
