@@ -53,7 +53,7 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 
 	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
 
-	//TODO 최흥배: Redis를 다룰 때는 Redis 전용 스레드를 만들어서 그쪽에서 해야 합니다. redis가 io 대기를 발생시켜서 서버 성능에 나쁜 영향을 줍니다.
+	//TODO 최흥배: Redis로 요청하고 답변 받으면서 주고 받는 것을 패킷 데이터처럼 구성하시면 범용적으로 데이터를 주고 받을 수 있습니다. 지금처럼 std::function을 매번 대입하는 것은 성능적으로 나빠집니다.
 	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
 	Redis::GRedisManager->ExecuteCommand(Redis::CommandRequest{ (std::string{ "GET " } + CS::RedisLoginKey(request->mUserId)).c_str(),
 		[packet, &request, this](const Redis::CommandResult& commandResult)

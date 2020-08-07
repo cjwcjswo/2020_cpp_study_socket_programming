@@ -27,6 +27,7 @@ ErrorCode RedisManager::Connect()
 		return ErrorCode::REDIS_ALREADY_CONNECT_STATE;
 	}
 
+	//TODO 최흥배: 하드코딩을 하지말고 설정 값을 받을 수 있도록 합니다~
 	mConnection = redisConnect("127.0.0.1", 6379);
 	if (nullptr == mConnection)
 	{
@@ -88,6 +89,8 @@ void RedisManager::ExecuteCommandProcess()
 {
 	while (nullptr != mConnection)
 	{
+		//TODO 최흥배. 스레드세이프 하지 않습니다.
+		//TODO 최흥배. 큐에 데이터가 없다면 잠시 쉬어야 합니다. 지금처럼하면 불필요하게 CPU를 공회전 시켜서 CPU를 과도하게 사용합니다.
 		if (mRequestQueue.empty())
 		{
 			continue;
