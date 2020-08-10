@@ -50,19 +50,19 @@ ErrorCode ChatServer::Init()
 	mConfig->Load();
 
 	mUserManager = new UserManager;
-	mUserManager->Init(100);
+	mUserManager->Init(mConfig->mMaxUserNum);
 
 	mRoomManager = new RoomManager;
-	mRoomManager->Init(20);
+	mRoomManager->Init(mConfig->mMaxRoomUserNum);
 
-	mPacketHandler = new PacketHandler(mNetwork, mUserManager, mRoomManager);
-
-	Redis::GRedisManager = new Redis::RedisManager();
-	ErrorCode errorCode = Redis::GRedisManager->Connect();
+	mRedisManager = new Redis::RedisManager();
+	ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
 	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return errorCode;
 	}
+
+	mPacketHandler = new PacketHandler(mNetwork, mUserManager, mRoomManager, mRedisManager);
 
 	GLogger->PrintConsole(Color::GREEN, L"ChatServer Init Success\n");
 	
@@ -79,7 +79,7 @@ ErrorCode ChatServer::Run()
 
 	while (mIsRunning)
 	{
-		NetworkLib::ReceivePacket receivePacket = mNetwork->GetReceivePacket();
+		NetworkLib::Packet receivePacket = mNetwork->GetReceivePacket();
 		if (0 == receivePacket.mPacketId)
 		{
 			continue;

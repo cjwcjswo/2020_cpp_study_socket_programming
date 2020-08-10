@@ -16,12 +16,14 @@ namespace NetworkLib
 	{
 	public:
 		Config() = default;
-		~Config() = default;
+		virtual ~Config() = default;
+
+
+	protected:
+		const char* mConfigFileName = "NetworkConfig.json";
 
 
 	public:
-		const char* mConfigFileName = "NetworkConfig.json";
-
 		std::string mIPAddress;
 		uint32 mPortNum = 0;
 
@@ -29,6 +31,8 @@ namespace NetworkLib
 		uint32 mMaxSessionBufferSize = 0;
 
 		uint32 mMaxPacketBodySize = 0;
+
+		uint32 mSendPacketCheckTick = 0;
 
 
 	public:

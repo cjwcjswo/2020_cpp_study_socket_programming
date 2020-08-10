@@ -5,20 +5,29 @@
 #include "Protocol.h"
 
 
-class NetworkLib::Network;
+namespace NetworkLib
+{
+	class Network;
+}
+namespace Redis
+{
+	class RedisManager;
+}
 class UserManager;
 class RoomManager;
+class RedisManager;
 
 
 class PacketHandler
 {
 private:
-	using Packet = NetworkLib::ReceivePacket;
+	using Packet = NetworkLib::Packet;
 	using PacketFunc = CS::ErrorCode (PacketHandler::*)(const Packet&);
 
 
 private:
 	NetworkLib::Network* mNetwork = nullptr;
+	Redis::RedisManager* mRedisManager = nullptr;
 	UserManager* mUserManager = nullptr;
 	RoomManager* mRoomManager = nullptr;
 
@@ -28,7 +37,7 @@ private:
 
 
 public:
-	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager);
+	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, Redis::RedisManager* redisManager);
 
 
 private:

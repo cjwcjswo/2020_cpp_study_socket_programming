@@ -3,5 +3,7 @@
 	"PortNum": 32452,
 	"MaxSessionNum": 500,
 	"MaxSessionBufferSize": 2048,
-	"MaxPacketBodySize": 1024
+	"MaxPacketBodySize": 1024,
+	
+	"SendPacketCheckTick": 50
 }

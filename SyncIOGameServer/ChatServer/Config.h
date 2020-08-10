@@ -6,8 +6,11 @@
 class Config : public NetworkLib::Config
 {
 public:
-	const char* mConfigFileName = "ChatServerConfig.json";
+	Config() { mConfigFileName = "ChatServerConfig.json"; };
+	virtual ~Config() = default;
 
+
+public:
 	std::string mRedisAddress;
 	uint32 mRedisPortNum = 0;
 	uint32 mMaxUserNum = 0;
@@ -16,7 +19,5 @@ public:
 
 
 public:
-	NetworkLib::ErrorCode Load() override;
-
-	void staticjson_init(staticjson::ObjectHandler* handler);
+	void staticjson_init(staticjson::ObjectHandler* handler) override;
 };

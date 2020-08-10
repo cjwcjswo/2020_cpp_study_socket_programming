@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PrimitiveTypes.h"
-
+#include "Define.h"
 
 namespace NetworkLib
 {
@@ -16,10 +16,10 @@ namespace NetworkLib
 
 	constexpr uint16 PACKET_HEADER_SIZE = sizeof(PacketHeader);
 
-	struct ReceivePacket
+	struct Packet
 	{
-		int32 mSessionIndex = -1;
-		uint64 mSessionUniqueId = 0;
+		int32 mSessionIndex = INVALID_INDEX;
+		uint64 mSessionUniqueId = INVALID_UNIQUE_ID;
 		uint16 mPacketId = 0;
 		uint16 mBodyDataSize = 0;
 		char* mBodyData = nullptr;

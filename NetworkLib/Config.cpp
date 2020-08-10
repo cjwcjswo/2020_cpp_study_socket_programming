@@ -47,5 +47,6 @@ void Config::staticjson_init(staticjson::ObjectHandler* handler)
 	handler->add_property("MaxSessionNum", &mMaxSessionNum);
 	handler->add_property("MaxSessionBufferSize", &mMaxSessionBufferSize);
 	handler->add_property("MaxPacketBodySize", &mMaxPacketBodySize);
+	handler->add_property("SendPacketCheckTick", &mSendPacketCheckTick);
 	handler->set_flags(staticjson::Flags::DisallowUnknownKey);
 }

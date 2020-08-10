@@ -33,12 +33,15 @@ namespace NetworkLib
 
 		ClientSessionManager* mClientSessionManager = nullptr;
 		UniquePtrThread mSelectThread = nullptr;
+		UniquePtrThread mSendThread = nullptr;
 		TCPSocket* mAcceptSocket = nullptr;
 
-		std::mutex mPacketMutex;
+		std::mutex mReceivePacketMutex;
+		std::mutex mSendPacketMutex;
 		std::mutex mSessionMutex;
 
-		std::queue<NetworkLib::ReceivePacket> mReceivePacketQueue;
+		std::queue<NetworkLib::Packet> mReceivePacketQueue;
+		std::queue<NetworkLib::Packet> mSendPacketQueue;
 
 		fd_set mReadSet{};
 		fd_set mWriteSet{};
@@ -56,9 +59,10 @@ namespace NetworkLib
 		NetworkLib::ErrorCode AcceptClient();
 		NetworkLib::ErrorCode ReceiveClient(ClientSession& clientSession);
 		NetworkLib::ErrorCode SendClient(ClientSession& clientSession);
-		NetworkLib::ErrorCode SendProcess(ClientSession& clientSession, const uint16 packetId, const char* bodyData, const int bodySize);
 
-		void PushReceivePacket(const NetworkLib::ReceivePacket receivePacket);
+		void SendProcess();
+
+		void PushReceivePacket(const NetworkLib::Packet receivePacket);
 		void SelectProcess();
 		void SelectClient(const fd_set& readSet);
 		void CloseSession(const NetworkLib::ErrorCode errorCode, ClientSession& clientSession);
@@ -69,12 +73,12 @@ namespace NetworkLib
 		NetworkLib::ErrorCode Run();
 		NetworkLib::ErrorCode Stop();
 
-		NetworkLib::ReceivePacket GetReceivePacket();
+		NetworkLib::Packet GetReceivePacket();
 
-		void Broadcast(const uint16 packetId, const char* bodyData, const int bodySize);
-		void Broadcast(const uint16 packetId, const char* bodyData, const int bodySize, const int exceptUserCount, ...);
+		void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize);
+		void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, const int exceptUserCount, ...);
 
-		NetworkLib::ErrorCode Send(const int32 sessionIndex, const uint16 packetId, const char* bodyData, const int bodySize);
-		NetworkLib::ErrorCode Send(const uint64 sessionUniqueId, const uint16 packetId, const char* bodyData, const int bodySize);
+		void Send(const int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize);
+		void Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize);
 	};
 }

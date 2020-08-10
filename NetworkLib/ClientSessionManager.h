@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <queue>
+#include <functional>
 
 #include "PrimitiveTypes.h"
 
@@ -31,8 +32,6 @@ public:
 public:
 	void Init(const uint32 maxClientSessionNum, const  uint32 maxSessionBufferSize) noexcept;
 
-	inline std::vector<ClientSession>& ClientVector() noexcept { return mClientVector; };
-
 	uint64 GenerateUniqueId() const;
 	int32 AllocClientSessionIndex();
 
@@ -43,5 +42,11 @@ public:
 
 	void DisconnectClientSession(const int32 index);
 	void DisconnectClientSession(const uint64 uniqueId);
+
+	void Select(std::function<void(ClientSession&)> selectFunctor);
+
+	void CloseAll(std::function<void(ClientSession&)> closeFunctor);
+
+	void SendAll(std::function<void(ClientSession&)> sendFunctor);
 };
 

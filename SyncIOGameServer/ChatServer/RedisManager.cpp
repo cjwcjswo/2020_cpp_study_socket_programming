@@ -20,7 +20,7 @@ RedisManager::~RedisManager()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode RedisManager::Connect()
+ErrorCode RedisManager::Connect(const char* ipAddress, const int portNum)
 {
 	if (nullptr != mConnection)
 	{
@@ -28,7 +28,8 @@ ErrorCode RedisManager::Connect()
 	}
 
 	//TODO 최흥배: 하드코딩을 하지말고 설정 값을 받을 수 있도록 합니다~
-	mConnection = redisConnect("127.0.0.1", 6379);
+	// 작업 완료
+	mConnection = redisConnect(ipAddress, portNum);
 	if (nullptr == mConnection)
 	{
 		return ErrorCode::REDIS_CONNECT_FAIL;
@@ -48,7 +49,10 @@ ErrorCode RedisManager::Connect()
 void RedisManager::Disconnect()
 {
 	mThread->join();
-	redisFree(mConnection);
+	if (nullptr != mConnection)
+	{
+		redisFree(mConnection);
+	}
 	mConnection = nullptr;
 }
 

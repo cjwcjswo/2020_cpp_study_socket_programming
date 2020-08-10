@@ -92,3 +92,27 @@ void ClientSessionManager::DisconnectClientSession(const uint64 uniqueId)
 	mClientIndexPool.push(session->mIndex);
 	session->Clear();
 }
+
+void ClientSessionManager::Select(std::function<void(ClientSession&)> selectFunctor)
+{
+	for (auto& clientSession : mClientVector)
+	{
+		selectFunctor(clientSession);
+	}
+}
+
+void ClientSessionManager::CloseAll(std::function<void(ClientSession&)> closeFunctor)
+{
+	for (auto& clientSession : mClientVector)
+	{
+		closeFunctor(clientSession);
+	}
+}
+
+void ClientSessionManager::SendAll(std::function<void(ClientSession&)> sendFunctor)
+{
+	for (auto& clientSession : mClientVector)
+	{
+		sendFunctor(clientSession);
+	}
+}

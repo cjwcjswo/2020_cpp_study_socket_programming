@@ -14,9 +14,10 @@ using namespace CS;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager)
+PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, Redis::RedisManager* redisManager)
 {
 	mNetwork = network;
+	mRedisManager = redisManager;
 	mUserManager = userManager;
 	mRoomManager = roomManager;
 
