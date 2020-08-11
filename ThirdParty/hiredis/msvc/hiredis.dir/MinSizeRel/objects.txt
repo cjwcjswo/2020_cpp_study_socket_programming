@@ -1,0 +1,8 @@
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/alloc.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/async.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/dict.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/hiredis.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/net.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/read.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/sds.obj
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/hiredis.dir/MinSizeRel/sockcompat.obj

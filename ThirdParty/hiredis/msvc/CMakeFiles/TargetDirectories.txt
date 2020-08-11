@@ -1,0 +1,6 @@
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/hiredis.dir
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/INSTALL.dir
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/RUN_TESTS.dir
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/hiredis-test.dir
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/ALL_BUILD.dir
+E:/CPP/CPPStudy/Network/ThirdParty/hiredis/msvc/CMakeFiles/ZERO_CHECK.dir

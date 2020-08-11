@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\CPP\CPPStudy\Network\ThirdParty\hiredis\test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\CPP\CPPStudy\Network\ThirdParty\hiredis\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F9B17E6C-8D39-3F88-99FA-FC431FD69989}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
