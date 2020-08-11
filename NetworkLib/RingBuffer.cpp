@@ -85,7 +85,7 @@ bool RingBuffer::Pop(const size_t size)
 	{
 		return true;
 	}
-	
+
 	if (size > mDataSize)
 	{
 		return false;
