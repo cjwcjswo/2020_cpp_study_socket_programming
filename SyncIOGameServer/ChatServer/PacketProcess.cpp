@@ -58,7 +58,7 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
 	// 적용완료
 	//TODO 최진우: 여러개의 스레드에서 GetCommandResult 호출 시 받아가는 결과 값이 꼬일 수 있다 -> 추후 개선
-//#ifndef _DEBUG
+#ifndef _DEBUG
 	NetworkLib::Redis::CommandRequest commandRequest;
 	commandRequest.mCommandType = NetworkLib::Redis::CommandType::GET;
 	NetworkLib::Redis::Get get;
@@ -80,7 +80,7 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
 }
-//#endif
+#endif
 
 	response.mErrorCode = mUserManager->Login(packet.mSessionUniqueId, request->mUserId);
 	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
