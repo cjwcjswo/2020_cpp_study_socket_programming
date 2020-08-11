@@ -90,6 +90,8 @@ CommandResponse Manager::GetCommandResult()
 CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 {
 	CommandResponse result;
+	result.mErrorCode = ErrorCode::SUCCESS;
+
 	std::string commandString = CommandRequestToString(request);
 	if ("" == commandString)
 	{
@@ -104,6 +106,13 @@ CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 		return result;
 	}
 
+	if (nullptr == reply->str)
+	{
+		result.mResult = "";
+		mResponseQueue.push(result);
+		freeReplyObject(reply);
+		return result;
+	}
 	result.mResult = reply->str;
 	if (REDIS_REPLY_ERROR == reply->type)
 	{
@@ -136,6 +145,7 @@ void Manager::ExecuteCommandProcess()
 		mRequestQueue.pop();
 
 		CommandResponse result;
+		result.mErrorCode = ErrorCode::SUCCESS;
 
 		std::string commandString = CommandRequestToString(request);
 		if ("" == commandString)
@@ -150,6 +160,14 @@ void Manager::ExecuteCommandProcess()
 		{
 			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
+			freeReplyObject(reply);
+			continue;
+		}
+		if (nullptr == reply->str)
+		{
+			result.mResult = "";
+			mResponseQueue.push(result);
+			freeReplyObject(reply);
 			continue;
 		}
 		result.mResult = reply->str;
@@ -157,6 +175,7 @@ void Manager::ExecuteCommandProcess()
 		{
 			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
+			freeReplyObject(reply);
 			continue;
 		}
 

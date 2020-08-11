@@ -136,8 +136,8 @@ namespace CS
 
 namespace CS
 {
-	inline const char* RedisLoginKey(const char* userId)
+	inline std::string RedisLoginKey(const char* userId)
 	{
-		return std::string{ std::string{"Login/"} + userId }.c_str();
+		return std::string{ std::string{"Login/"} + userId };
 	}
 }

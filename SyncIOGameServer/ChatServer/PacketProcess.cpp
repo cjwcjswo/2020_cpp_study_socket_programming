@@ -1,4 +1,4 @@
-#include "../../NetworkLib/Network.h"
+ï»¿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
 #include "../../NetworkLib/RedisManager.h"
 #include "PacketHandler.h"
@@ -54,14 +54,15 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
 	LoginResponse response;
 
-	//TODO ÃÖÈï¹è: Redis·Î ¿äÃ»ÇÏ°í ´äº¯ ¹ÞÀ¸¸é¼­ ÁÖ°í ¹Þ´Â °ÍÀ» ÆÐÅ¶ µ¥ÀÌÅÍÃ³·³ ±¸¼ºÇÏ½Ã¸é ¹ü¿ëÀûÀ¸·Î µ¥ÀÌÅÍ¸¦ ÁÖ°í ¹ÞÀ» ¼ö ÀÖ½À´Ï´Ù. Áö±ÝÃ³·³ std::functionÀ» ¸Å¹ø ´ëÀÔÇÏ´Â °ÍÀº ¼º´ÉÀûÀ¸·Î ³ªºüÁý´Ï´Ù.
-	// Âü°í: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
-	// Àû¿ë¿Ï·á
+	//TODO ìµœí¥ë°°: Redisë¡œ ìš”ì²­í•˜ê³  ë‹µë³€ ë°›ìœ¼ë©´ì„œ ì£¼ê³  ë°›ëŠ” ê²ƒì„ íŒ¨í‚· ë°ì´í„°ì²˜ëŸ¼ êµ¬ì„±í•˜ì‹œë©´ ë²”ìš©ì ìœ¼ë¡œ ë°ì´í„°ë¥¼ ì£¼ê³  ë°›ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ì§€ê¸ˆì²˜ëŸ¼ std::functionì„ ë§¤ë²ˆ ëŒ€ìž…í•˜ëŠ” ê²ƒì€ ì„±ëŠ¥ì ìœ¼ë¡œ ë‚˜ë¹ ì§‘ë‹ˆë‹¤.
+	// ì°¸ê³ : https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
+	// ì ìš©ì™„ë£Œ
+	//TODO ìµœì§„ìš°: ì—¬ëŸ¬ê°œì˜ ìŠ¤ë ˆë“œì—ì„œ GetCommandResult í˜¸ì¶œ ì‹œ ë°›ì•„ê°€ëŠ” ê²°ê³¼ ê°’ì´ ê¼¬ì¼ ìˆ˜ ìžˆë‹¤ -> ì¶”í›„ ê°œì„ 
 #ifndef _DEBUG
 	NetworkLib::Redis::CommandRequest commandRequest;
 	commandRequest.mCommandType = NetworkLib::Redis::CommandType::GET;
 	NetworkLib::Redis::Get get;
-	strcpy_s(get.mKey, CS::RedisLoginKey(request->mUserId));
+	strcpy_s(get.mKey, CS::RedisLoginKey(request->mUserId).c_str());
 	commandRequest.mCommandBody = reinterpret_cast<char*>(&get);
 	commandRequest.mCommandBodySize = sizeof(get);
 	mRedisManager->ExecuteCommandAsync(commandRequest);

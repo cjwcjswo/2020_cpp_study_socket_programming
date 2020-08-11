@@ -49,7 +49,7 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 	RoomUserListNotify roomUserListNotify;
 	roomUserListNotify.mUserCount = roomUserCount;
 
-	// TODO 최진우: 나중에 delete하는게 너무 번거롭고 위험한 것 같다는 생각이 듦. 동적 할당 외에 좀 더 효율적인 방법이 없을까?
+	// TODO 최진우: 피드백 받은 내용대로 테스트 필요.
 	roomUserListNotify.mUserUniqueIdList = new uint64[roomUserCount];
 	roomUserListNotify.mUserIdList = new char*[roomUserCount];
 	for (int i = 0; i < roomUserCount; ++i)
