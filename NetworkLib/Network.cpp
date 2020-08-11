@@ -111,17 +111,7 @@ void Network::SelectClient(const fd_set& readSet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 {
-	uint32 receivePos = clientSession.mPreviousReceiveBufferPos + clientSession.mRemainDataSize;
-
-	// 남은 데이터가 버퍼 사이즈보다 클 경우 앞으로 복사
-	if (receivePos > mConfig->mMaxSessionBufferSize)
-	{
-		memcpy_s(clientSession.mReceiveBuffer, clientSession.mRemainDataSize, &clientSession.mReceiveBuffer[clientSession.mPreviousReceiveBufferPos], clientSession.mRemainDataSize);
-		clientSession.mPreviousReceiveBufferPos = 0;
-		receivePos = clientSession.mRemainDataSize;
-	}
-
-	int length = clientSession.mSocket.Receive(&clientSession.mReceiveBuffer[receivePos], mConfig->mMaxSessionBufferSize);
+	int length = clientSession.mSocket.Receive(clientSession.mReceiveBuffer, mConfig->mMaxSessionBufferSize);
 	if (0 == length)
 	{
 		return ErrorCode::SOCKET_RECEIVE_ZERO;
@@ -139,20 +129,21 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		}
 	}
 
-	clientSession.mRemainDataSize += length;
-	PacketHeader* header;
-
-	while (clientSession.mRemainDataSize >= PACKET_HEADER_SIZE)
+	if (false == clientSession.mMessageBuffer.Push(clientSession.mReceiveBuffer, static_cast<size_t>(length)))
 	{
-		header = reinterpret_cast<PacketHeader*>(&clientSession.mReceiveBuffer[receivePos]);
-		receivePos += PACKET_HEADER_SIZE;
+		return ErrorCode::CLIENT_SESSION_MESSAGE_BUFFER_IS_FULL;
+	}
+
+	PacketHeader* header;
+	while (clientSession.mMessageBuffer.DataSize() >= PACKET_HEADER_SIZE)
+	{
+		header = reinterpret_cast<PacketHeader*>(clientSession.mMessageBuffer.FrontData());
 		uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
 
 		if (requireBodySize > 0)
 		{
-			if (requireBodySize > clientSession.mRemainDataSize)
+			if (requireBodySize > clientSession.mMessageBuffer.DataSize())
 			{
-				receivePos -= PACKET_HEADER_SIZE;
 				break;
 			}
 			if (requireBodySize > mConfig->mMaxPacketBodySize)
@@ -164,19 +155,17 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		//TODO 최흥배. TODO 중에 가장 뒤에 구현하는 것으로 하죠. 작업 시간이 좀 걸릴 수 있으니
 		//받은 데이터를 패킷처리 스레드로 메모리 주소만 넘기고 있음.
 		//받기 버퍼가 작아서 패킷처리에서 조금이라도 느려지면 덮어 쓸수 있을 것 같음. 더 좋은 방법을 생각해보자
-		// 아직 미완료(링버퍼 적용 예정)
+		// 적용 완료(링버퍼)
 		Packet receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, 0, nullptr };
 		if (requireBodySize > 0)
 		{
 			receivePacket.mBodyDataSize = requireBodySize;
-			receivePacket.mBodyData = &clientSession.mReceiveBuffer[receivePos];
+			receivePacket.mBodyData = clientSession.mMessageBuffer.FrontData();
 		}
-		PushReceivePacket(receivePacket);
-		receivePos += requireBodySize;
-		clientSession.mRemainDataSize -= header->mPacketSize;
-	}
 
-	clientSession.mPreviousReceiveBufferPos = receivePos;
+		clientSession.mMessageBuffer.Pop(header->mPacketSize);
+		PushReceivePacket(receivePacket);
+	}
 
 	return ErrorCode::SUCCESS;
 }

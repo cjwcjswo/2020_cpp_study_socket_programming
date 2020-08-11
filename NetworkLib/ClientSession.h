@@ -3,12 +3,13 @@
 #include "TCPSocket.h"
 #include "PrimitiveTypes.h"
 #include "Define.h"
+#include "RingBuffer.h"
 
 
 class ClientSession
 {
 public:
-	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket, const uint32 maxBufferSize);
+	explicit ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket, const uint32 bufferSize);
 
 	~ClientSession();
 
@@ -18,12 +19,11 @@ private:
 
 
 public:
-	int mRemainDataSize = 0;
-	int mPreviousReceiveBufferPos = 0;
 	int mSendSize = 0;
 
-	char* mReceiveBuffer = nullptr;
-	char* mSendBuffer = nullptr;
+	char* mReceiveBuffer;
+	RingBuffer mMessageBuffer;
+	char* mSendBuffer; // TODO 최진우: SendBuffer도 링버퍼로 교체
 
 	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = INVALID_UNIQUE_ID;

@@ -57,7 +57,7 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	//TODO 최흥배: Redis로 요청하고 답변 받으면서 주고 받는 것을 패킷 데이터처럼 구성하시면 범용적으로 데이터를 주고 받을 수 있습니다. 지금처럼 std::function을 매번 대입하는 것은 성능적으로 나빠집니다.
 	// 참고: https://docs.google.com/presentation/d/16DgIURxfR9jgHjLX7fCwruHT-vwm90BG1OkQVdE0j9A/edit?usp=sharing
 	// 적용완료
-	//TODO 최진우: 여러개의 스레드에서 GetCommandResult 호출 시 받아가는 결과 값이 꼬일 수 있다 -> 추후 개선
+	//TODO 최진우: 여러개의 스레드에서 GetCommandResult 호출 시 받아가는 결과 값이 꼬일 수 있다 -> 추후 개선, 좀 더 편리하게 명령어 셋 구성하기...
 #ifndef _DEBUG
 	NetworkLib::Redis::CommandRequest commandRequest;
 	commandRequest.mCommandType = NetworkLib::Redis::CommandType::GET;
