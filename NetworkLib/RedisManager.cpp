@@ -69,9 +69,10 @@ CommandResponse Manager::GetCommandResult()
 	uint32 waitTick = 0;
 	while (waitTick < mReceiveCheckTimeOut)
 	{
-		std::lock_guard<std::mutex> lock(mMutex);
+		std::unique_lock<std::mutex> lock(mMutex);
 		if (mResponseQueue.empty())
 		{
+			lock.unlock();
 			std::this_thread::sleep_for(std::chrono::milliseconds(mSendCheckTick));
 			waitTick += mSendCheckTick;
 			continue;
@@ -134,9 +135,10 @@ void Manager::ExecuteCommandProcess()
 		//TODO 최흥배. 스레드세이프 하지 않습니다.
 		//TODO 최흥배. 큐에 데이터가 없다면 잠시 쉬어야 합니다. 지금처럼하면 불필요하게 CPU를 공회전 시켜서 CPU를 과도하게 사용합니다.
 		// 적용 완료
-		std::lock_guard<std::mutex> lock(mMutex);
+		std::unique_lock<std::mutex> lock(mMutex);
 		if (mRequestQueue.empty())
 		{
+			lock.unlock();
 			std::this_thread::sleep_for(std::chrono::milliseconds(mSendCheckTick));
 			continue;
 		}
