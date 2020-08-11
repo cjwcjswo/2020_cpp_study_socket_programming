@@ -110,8 +110,6 @@ namespace CS
 		}
 	};
 
-	//TODO 최흥배. 구조체 그대로 바이트배열로 형변환 하고 있는데 이럴 경우 1바이트 정렬 시키지 않으면 구조체 패딩이 발생합니다. 구조체 크기를 그대로 sizeof로 계산해서 패킷 데이터 크기를 계산하는 경우는 모두 조심하세요
-	// 적용 완료
 	struct RoomNewUserBroadcast
 	{
 		uint64 mUserUniueId = INVALID_UNIQUE_ID;

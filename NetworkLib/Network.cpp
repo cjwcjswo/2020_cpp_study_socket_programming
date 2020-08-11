@@ -82,11 +82,6 @@ ErrorCode Network::CheckSelectResult(int selectResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//TODO 최흥배
-//람다를 사용하여 아래 함수의 내용을 mClientSessionManager에 람다로 전달해보자
-//가능하면 Network 클래스는 mClientSessionManager의 클라이언트 객체를 순회하지 않도록 하자.
-// 지금의 경우 ClientVector() 구현 방법이 바뀌면 SelectClient도 같이 바뀌어야 한다.
-// 적용 완료
 void Network::SelectClient(const fd_set& readSet)
 {
 	mClientSessionManager->Select([&](ClientSession& session) {
@@ -176,15 +171,8 @@ void Network::SelectProcess()
 	ErrorCode errorCode;
 	while (mIsRunning)
 	{
-		//TODO 최흥배.
-		//mReadSet 공간의 사이에 빈 공간이 없게 해서 현재 연결된 클라이언트만 조사하도록 한다.
-		// 미완료, 어떤 내용인지 질문 드리기
 		fd_set readSet = mReadSet;
-
-		//TODO 최흥배.
-		//write 이벤트는 조사하지 않는다. write는 send용 스레드를 만들어서 이 스레드에서 주기적으로 send 한다
-		// 적용 완료
-
+				
 		// Block
 		int selectResult = select(NULL, &readSet, nullptr, nullptr, nullptr);
 
@@ -383,6 +371,7 @@ void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 body
 	);
 }
 
+//TODO: 최흥배 const int exceptUserCount, ... 대신 안전하게  initializer_list를 사용하도록 하죠
 void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, const int exceptUserCount, ...)
 {
 	// TODO 최진우: 브로드캐스트는 패킷 전송에 한번에 처리 할 수 있도록 수정
@@ -416,6 +405,7 @@ void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 body
 	);
 }
 
+//TODO 최흥배: 버그 아닌가요? bodyData는 스택에 있는 데이터라서 scope를 벗어나면 날라갑니다.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Network::Send(int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize)
 {
