@@ -2,8 +2,8 @@
 
 #include <numeric>
 #include <sstream>
+#include <hiredis.h>
 
-#include "../ThirdParty/hiredis/hiredis.h"
 #include "Logger.h"
 #include "RedisManager.h"
 
