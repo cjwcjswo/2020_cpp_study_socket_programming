@@ -4,7 +4,9 @@
 #include <mutex>
 #include <thread>
 #include <functional>
+#include <string>
 
+#include "RedisProtocol.h"
 #include "ErrorCode.h"
 
 
@@ -13,47 +15,46 @@ struct redisContext;
 
 namespace NetworkLib
 {
-	struct CommandResult
+	namespace Redis
 	{
-		const char* mResult = "";
-		ErrorCode mErrorCode = ErrorCode::SUCCESS;
-	};
+		class Manager
+		{
+		private:
+			redisContext* mConnection = nullptr;
 
-	struct CommandRequest
-	{
-		const char* mCommand = nullptr; // TODO 최진우: 더 필요한 타입이 있을까? -> 추후, command랑 arguments를 분리시키는 작업
-		std::function<void(const CommandResult&)> mCallBackFunc = nullptr;
-	};
+			std::unique_ptr<std::thread> mThread = nullptr;
+			std::mutex mMutex;;
 
+			std::queue<CommandRequest> mRequestQueue;
+			std::queue<CommandResponse> mResponseQueue;
 
-	class RedisManager
-	{
-	private:
-		redisContext* mConnection = nullptr;
-
-		std::unique_ptr<std::thread> mThread = nullptr;
-		std::mutex mMutex;;
-
-		std::queue<CommandRequest> mRequestQueue;
+			uint32 mSendCheckTick = 0;
+			uint32 mReceiveCheckTick = 0;
+			uint32 mReceiveCheckTimeOut = 0;
 
 
-	public:
-		RedisManager() = default;
-		~RedisManager();
+		public:
+			explicit Manager(uint32 sendCheckTick, uint32 receiveCheckTick, uint32 receiveCheckTimeOut) 
+				: mSendCheckTick(sendCheckTick), mReceiveCheckTick(receiveCheckTick), mReceiveCheckTimeOut(receiveCheckTimeOut) {};
+			~Manager();
 
 
-	private:
-		void ExecuteCommandProcess();
+		private:
+			void ExecuteCommandProcess();
+			std::string CommandRequestToString(const CommandRequest& request);
 
 
-	public:
-		ErrorCode Connect(const char* ipAddress, const int portNum);
-		void Disconnect();
+		public:
+			ErrorCode Connect(const char* ipAddress, const int portNum);
+			void Disconnect();
 
-		void ExecuteCommand(const CommandRequest& commandRequest);
-		CommandResult ExecuteCommandSync(const CommandRequest& commandRequest);
-	};
+			void ExecuteCommandAsync(const CommandRequest& request);
+			CommandResponse GetCommandResult();
 
-	//TODO: 최흥배 이 클래스를 사용하는 곳은 많지 않습니다. std::function 등을 사용해서 글로벌 변수로 생성하지 않도록 하는 것을 추천합니다.
-	// 적용 완료
+			CommandResponse ExecuteCommand(const CommandRequest& request);
+		};
+
+		//TODO: 최흥배 이 클래스를 사용하는 곳은 많지 않습니다. std::function 등을 사용해서 글로벌 변수로 생성하지 않도록 하는 것을 추천합니다.
+		// 적용 완료
+	}
 }

@@ -4,8 +4,8 @@
 
 #include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
+#include "../../NetworkLib/RedisManager.h"
 #include "PacketHandler.h"
-#include "RedisManager.h"
 #include "UserManager.h"
 #include "User.h"
 
@@ -14,7 +14,7 @@ using namespace CS;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, Redis::RedisManager* redisManager)
+PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, NetworkLib::Redis::Manager* redisManager)
 {
 	mNetwork = network;
 	mRedisManager = redisManager;

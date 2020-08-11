@@ -18,26 +18,26 @@ namespace CS
 	{
 		PACKET_START = PACKET_ID_START,
 		//////////////////////////////////////////////////////////////
-		LOGIN_REQUEST,
-		LOGIN_RESPONSE,
+		LOGIN_REQUEST = 101,
+		LOGIN_RESPONSE = 102,
 
 		//////////////////////////////////////////////////////////////
-		ROOM_PACKET_START,
+		ROOM_PACKET_START = 110,
 
-		ROOM_ENTER_REQUEST,
-		ROOM_ENTER_RESPONSE,
-		ROOM_NEW_USER_BROADCAST,
-		ROOM_USER_LIST_NOTIFY,
+		ROOM_ENTER_REQUEST = 111,
+		ROOM_ENTER_RESPONSE = 112,
+		ROOM_NEW_USER_BROADCAST = 113,
+		ROOM_USER_LIST_NOTIFY = 114,
 
-		ROOM_LEAVE_REQUEST,
-		ROOM_LEAVE_RESPONSE,
-		ROOM_LEAVE_USER_BROADCAST,
+		ROOM_LEAVE_REQUEST = 115,
+		ROOM_LEAVE_RESPONSE = 116,
+		ROOM_LEAVE_USER_BROADCAST= 117,
 
-		ROOM_PACKET_END,
+		ROOM_PACKET_END = 200,
 		//////////////////////////////////////////////////////////////
-		CHAT_REQUEST,
-		CHAT_RESPONSE,
-		CHAT_BROADCAST,
+		CHAT_REQUEST = 201,
+		CHAT_RESPONSE = 202,
+		CHAT_BROADCAST = 203,
 
 
 		//////////////////////////////////////////////////////////////

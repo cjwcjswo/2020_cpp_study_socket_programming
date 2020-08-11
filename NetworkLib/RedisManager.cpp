@@ -1,6 +1,7 @@
 #pragma comment(lib,"hiredis")
 
 #include <numeric>
+#include <sstream>
 
 #include "../ThirdParty/hiredis/hiredis.h"
 #include "Logger.h"
@@ -8,16 +9,17 @@
 
 
 using namespace NetworkLib;
+using namespace NetworkLib::Redis;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-RedisManager::~RedisManager()
+Manager::~Manager()
 {
 	Disconnect();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode RedisManager::Connect(const char* ipAddress, const int portNum)
+ErrorCode Manager::Connect(const char* ipAddress, const int portNum)
 {
 	if (nullptr != mConnection)
 	{
@@ -43,7 +45,7 @@ ErrorCode RedisManager::Connect(const char* ipAddress, const int portNum)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RedisManager::Disconnect()
+void Manager::Disconnect()
 {
 	mThread->join();
 	if (nullptr != mConnection)
@@ -54,18 +56,48 @@ void RedisManager::Disconnect()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RedisManager::ExecuteCommand(const CommandRequest& commandRequest)
+void Manager::ExecuteCommandAsync(const CommandRequest& request)
 {
 	std::lock_guard<std::mutex> lock(mMutex);
-	mRequestQueue.push(commandRequest);
+	mRequestQueue.push(request);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CommandResponse Manager::GetCommandResult()
+{
+	CommandResponse response;
+	uint32 waitTick = 0;
+	while (waitTick < mReceiveCheckTimeOut)
+	{
+		std::lock_guard<std::mutex> lock(mMutex);
+		if (mResponseQueue.empty())
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(mSendCheckTick));
+			waitTick += mSendCheckTick;
+			continue;
+		}
+		
+		response = mResponseQueue.front();
+		mResponseQueue.pop();
+		return response;
+	}
+
+	response.mErrorCode = ErrorCode::REDIS_RECEIVE_TIME_OUT;
+	return response;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CommandResult RedisManager::ExecuteCommandSync(const CommandRequest& commandRequest)
+CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 {
-	redisReply* reply = (redisReply*)redisCommand(mConnection, commandRequest.mCommand);
-	CommandResult result;
+	CommandResponse result;
+	std::string commandString = CommandRequestToString(request);
+	if ("" == commandString)
+	{
+		result.mErrorCode = ErrorCode::REDIS_COMMAND_FAIL;
+		return result;
+	}
 
+	redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
 	if (nullptr == reply)
 	{
 		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
@@ -85,43 +117,95 @@ CommandResult RedisManager::ExecuteCommandSync(const CommandRequest& commandRequ
 	return result;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RedisManager::ExecuteCommandProcess()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::ExecuteCommandProcess()
 {
 	while (nullptr != mConnection)
 	{
 		//TODO 최흥배. 스레드세이프 하지 않습니다.
 		//TODO 최흥배. 큐에 데이터가 없다면 잠시 쉬어야 합니다. 지금처럼하면 불필요하게 CPU를 공회전 시켜서 CPU를 과도하게 사용합니다.
+		// 적용 완료
+		std::lock_guard<std::mutex> lock(mMutex);
 		if (mRequestQueue.empty())
 		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(mSendCheckTick));
 			continue;
 		}
-		CommandRequest commandRequest = mRequestQueue.front();
+
+		CommandRequest request = mRequestQueue.front();
 		mRequestQueue.pop();
 
-		redisReply* reply = (redisReply*)redisCommand(mConnection, commandRequest.mCommand);
+		CommandResponse result;
 
-		CommandResult result;
+		std::string commandString = CommandRequestToString(request);
+		if ("" == commandString)
+		{
+			result.mErrorCode = ErrorCode::REDIS_COMMAND_FAIL;
+			mResponseQueue.push(result);
+			continue;
+		}
+
+		redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
 		if (nullptr == reply)
 		{
 			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+			mResponseQueue.push(result);
+			continue;
 		}
-		else
+		result.mResult = reply->str;
+		if (REDIS_REPLY_ERROR == reply->type)
 		{
-			result.mResult = reply->str;
-			if (REDIS_REPLY_ERROR == reply->type)
-			{
-				result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
-			}
+			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+			mResponseQueue.push(result);
+			continue;
 		}
 
-		if (nullptr == commandRequest.mCallBackFunc)
-		{
-			freeReplyObject(reply);
-			return;
-		}
-
-		commandRequest.mCallBackFunc(result);
+		mResponseQueue.push(result);
 		freeReplyObject(reply);
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::string Manager::CommandRequestToString(const CommandRequest& request)
+{
+	switch (request.mCommandType)
+	{
+	case CommandType::SET:
+	{
+		if (sizeof(Set) > request.mCommandBodySize)
+		{
+			return "";
+		}
+
+		std::ostringstream outputStream;
+		outputStream << "SET ";
+
+		Set* set = reinterpret_cast<Set*>(request.mCommandBody);
+		outputStream << set->mKey << " " << set->mValue;
+
+		if (set->mExpireTime != 0)
+		{
+			outputStream << " EX " << set->mExpireTime;
+		}
+
+		return outputStream.str();
+	}
+	case CommandType::GET:
+	{
+		if (sizeof(Get) > request.mCommandBodySize)
+		{
+			return "";
+		}
+
+		std::ostringstream outputStream;
+		outputStream << "GET ";
+
+		Get* get = reinterpret_cast<Get*>(request.mCommandBody);
+		outputStream << get->mKey;
+
+		return outputStream.str();
+	}
+	}
+
+	return "";
 }

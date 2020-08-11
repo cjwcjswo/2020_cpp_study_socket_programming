@@ -164,6 +164,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		//TODO 최흥배. TODO 중에 가장 뒤에 구현하는 것으로 하죠. 작업 시간이 좀 걸릴 수 있으니
 		//받은 데이터를 패킷처리 스레드로 메모리 주소만 넘기고 있음.
 		//받기 버퍼가 작아서 패킷처리에서 조금이라도 느려지면 덮어 쓸수 있을 것 같음. 더 좋은 방법을 생각해보자
+		// 아직 미완료(링버퍼 적용 예정)
 		Packet receivePacket = { clientSession.mIndex, clientSession.mUniqueId, header->mPacketId, 0, nullptr };
 		if (requireBodySize > 0)
 		{
@@ -188,6 +189,7 @@ void Network::SelectProcess()
 	{
 		//TODO 최흥배.
 		//mReadSet 공간의 사이에 빈 공간이 없게 해서 현재 연결된 클라이언트만 조사하도록 한다.
+		// 미완료, 어떤 내용인지 질문 드리기
 		fd_set readSet = mReadSet;
 
 		//TODO 최흥배.

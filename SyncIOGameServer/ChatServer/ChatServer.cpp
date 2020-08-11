@@ -1,12 +1,12 @@
 ﻿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
+#include "../../NetworkLib/RedisManager.h"
 #include "Config.h"
 #include "ChatServer.h"
 #include "UserManager.h"
 #include "User.h"
 #include "RoomManager.h"
 #include "PacketHandler.h"
-#include "RedisManager.h"
 
 
 using namespace CS;
@@ -55,11 +55,11 @@ ErrorCode ChatServer::Init()
 	mRoomManager = new RoomManager;
 	mRoomManager->Init(mConfig->mMaxRoomUserNum);
 
-	mRedisManager = new Redis::RedisManager();
-	ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
-	if (ErrorCode::SUCCESS != errorCode)
+	mRedisManager = new NetworkLib::Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
+	NetworkLib::ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
+	if (NetworkLib::ErrorCode::SUCCESS != errorCode)
 	{
-		return errorCode;
+		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
 
 	mPacketHandler = new PacketHandler(mNetwork, mUserManager, mRoomManager, mRedisManager);
