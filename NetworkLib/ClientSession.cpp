@@ -6,10 +6,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOCKET socket, const uint32 bufferSize) 
-	: mIndex(index), mUniqueId(uniqueId), mSocket(socket), mMessageBuffer(bufferSize)
+	: mIndex(index), mUniqueId(uniqueId), mSocket(socket), mMessageBuffer(bufferSize), mSendBuffer(bufferSize)
 {
 	mReceiveBuffer = new char[bufferSize];
-	mSendBuffer = new char[bufferSize];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,20 +18,15 @@ ClientSession::~ClientSession()
 	{
 		delete[] mReceiveBuffer;
 	}
-	if (nullptr != mSendBuffer)
-	{
-		delete[] mSendBuffer;
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::Clear()
 {
-	mSendSize = 0;
-
 	mIndex = -1;
 	mUniqueId = 0;
 
 	mSocket.Clear();
 	mMessageBuffer.Clear();
+	mSendBuffer.Clear();
 }

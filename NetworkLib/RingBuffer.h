@@ -21,13 +21,14 @@ private:
 
 private:
 	const size_t MaxBufferSize() const;
-	const size_t RemainBufferSize() const;
 	void Rearrange();
 
 public:
 	void Clear();
 	bool Push(const char* data, const size_t size);
 	bool Pop(const size_t size);
+
+	const size_t RemainBufferSize() const;
 
 	inline const size_t DataSize() const { return mDataSize; };
 	inline char* FrontData() { return mFrontMark; };

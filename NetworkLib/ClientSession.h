@@ -19,11 +19,9 @@ private:
 
 
 public:
-	int mSendSize = 0;
-
 	char* mReceiveBuffer;
 	RingBuffer mMessageBuffer;
-	char* mSendBuffer; // TODO 최진우: SendBuffer도 링버퍼로 교체
+	RingBuffer mSendBuffer;
 
 	int32 mIndex = INVALID_INDEX;
 	uint64 mUniqueId = INVALID_UNIQUE_ID;

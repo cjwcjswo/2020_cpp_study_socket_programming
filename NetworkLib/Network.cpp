@@ -155,7 +155,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		if (requireBodySize > 0)
 		{
 			receivePacket.mBodyDataSize = requireBodySize;
-			receivePacket.mBodyData = clientSession.mMessageBuffer.FrontData();
+			receivePacket.mBodyData = clientSession.mMessageBuffer.FrontData() + PACKET_HEADER_SIZE;
 		}
 
 		clientSession.mMessageBuffer.Pop(header->mPacketSize);
@@ -198,29 +198,19 @@ void Network::SelectProcess()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::SendClient(ClientSession& clientSession)
 {
-	if (clientSession.mSendSize <= 0)
+	size_t dataSize = clientSession.mSendBuffer.DataSize();
+	if (dataSize <= 0)
 	{
 		return ErrorCode::SUCCESS;
 	}
 
-
-	int length = clientSession.mSocket.Send(clientSession.mSendBuffer, clientSession.mSendSize);
+	int length = clientSession.mSocket.Send(clientSession.mSendBuffer.FrontData(), static_cast<int>(dataSize));
 	if (length <= 0)
 	{
 		return ErrorCode::SOCKET_SEND_SIZE_ZERO;
 	}
 
-	if (clientSession.mSendSize > length)
-	{
-		auto remain = clientSession.mSendSize - length;
-		memmove_s(clientSession.mSendBuffer, remain, &clientSession.mSendBuffer[length], remain);
-		clientSession.mSendSize -= length;
-	}
-	else
-	{
-		clientSession.mSendSize = 0;
-	}
-
+	clientSession.mSendBuffer.Pop(static_cast<size_t>(length));
 	return ErrorCode::SUCCESS;
 }
 
@@ -359,32 +349,22 @@ Packet Network::GetReceivePacket()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize)
 {
-	// TODO 최진우: 브로드캐스트는 패킷 전송에 한번에 처리 할 수 있도록 수정
 	mClientSessionManager->SendAll([&](ClientSession& session)
 		{
 			if (!session.IsConnect())
 			{
 				return;
 			}
+
 			Send(session.mIndex, packetId, bodyData, bodySize);
 		}
 	);
 }
 
 //TODO: 최흥배 const int exceptUserCount, ... 대신 안전하게  initializer_list를 사용하도록 하죠
-void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, const int exceptUserCount, ...)
+// 적용 완료
+void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, std::initializer_list<const uint64> exceptUserList)
 {
-	// TODO 최진우: 브로드캐스트는 패킷 전송에 한번에 처리 할 수 있도록 수정
-	va_list ap;
-	va_start(ap, exceptUserCount);
-	std::vector<uint64> exceptUniqueIdVector;
-
-	for (int i = 0; i < exceptUserCount; ++i)
-	{
-		uint64 uniqueId = va_arg(ap, uint64);
-		exceptUniqueIdVector.push_back(uniqueId);
-	}
-
 	mClientSessionManager->SendAll([&](ClientSession& session)
 		{
 			if (!session.IsConnect())
@@ -392,7 +372,7 @@ void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 body
 				return;
 			}
 
-			for (auto uniqueId : exceptUniqueIdVector)
+			for (auto uniqueId : exceptUserList)
 			{
 				if (session.mUniqueId == uniqueId)
 				{
@@ -406,17 +386,24 @@ void Network::Broadcast(const uint16 packetId, char* bodyData, const uint16 body
 }
 
 //TODO 최흥배: 버그 아닌가요? bodyData는 스택에 있는 데이터라서 scope를 벗어나면 날라갑니다.
+// 적용완료, 혹시 더 깔끔한 방법이 있는지..
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Network::Send(int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize)
+void Network::Send(const int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize)
 {
 	std::lock_guard<std::mutex> lock(mSendPacketMutex);
-	mSendPacketQueue.push(Packet{ sessionIndex, INVALID_UNIQUE_ID, packetId, bodySize, bodyData });
+	Packet sendPacket{sessionIndex, INVALID_UNIQUE_ID, packetId, bodySize, nullptr };
+	sendPacket.mBodyData = new char[bodySize];
+	memcpy_s(sendPacket.mBodyData, bodySize, bodyData, bodySize);
+	mSendPacketQueue.push(sendPacket);
 }
 
-void Network::Send(uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize)
+void Network::Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize)
 {
 	std::lock_guard<std::mutex> lock(mSendPacketMutex);
-	mSendPacketQueue.push(Packet{INVALID_INDEX, sessionUniqueId, packetId, bodySize, bodyData});
+	Packet sendPacket{ INVALID_INDEX, sessionUniqueId, packetId, bodySize, nullptr };
+	sendPacket.mBodyData = new char[bodySize];
+	memcpy_s(sendPacket.mBodyData, bodySize, bodyData, bodySize);
+	mSendPacketQueue.push(sendPacket);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -424,24 +411,25 @@ void Network::SendProcess()
 {
 	while (mIsRunning)
 	{
-		std::lock_guard<std::mutex> lock(mSendPacketMutex);
+		std::unique_lock<std::mutex> lock(mSendPacketMutex);
 		if (mSendPacketQueue.empty())
 		{
+			lock.unlock();
 			std::this_thread::sleep_for(std::chrono::milliseconds(mConfig->mSendPacketCheckTick));
 			continue;
 		}
 
-		Packet sendPacket = mSendPacketQueue.front();
+		Packet packet = mSendPacketQueue.front();
 		mSendPacketQueue.pop();
 
 		ClientSession* session = nullptr;
-		if (INVALID_INDEX != sendPacket.mSessionIndex)
+		if (INVALID_INDEX != packet.mSessionIndex)
 		{
-			session = mClientSessionManager->FindClientSession(sendPacket.mSessionIndex);
+			session = mClientSessionManager->FindClientSession(packet.mSessionIndex);
 		}
-		else if (INVALID_UNIQUE_ID != sendPacket.mSessionUniqueId)
+		else if (INVALID_UNIQUE_ID != packet.mSessionUniqueId)
 		{
-			session = mClientSessionManager->FindClientSession(sendPacket.mSessionUniqueId);
+			session = mClientSessionManager->FindClientSession(packet.mSessionUniqueId);
 		}
 
 		if (nullptr == session)
@@ -449,24 +437,22 @@ void Network::SendProcess()
 			continue;
 		}
 
-		uint16 totalSize = PACKET_HEADER_SIZE + sendPacket.mBodyDataSize;
-		if (static_cast<uint32>(session->mSendSize + totalSize) > mConfig->mMaxSessionBufferSize)
+		uint16 totalSize = PACKET_HEADER_SIZE + packet.mBodyDataSize;
+		if (static_cast<size_t>(totalSize) > session->mSendBuffer.RemainBufferSize())
 		{
 			// Client Session Send Buffer is full
 			continue;
 		}
 
-		PacketHeader header{ totalSize, sendPacket.mPacketId };
-		memcpy_s(&session->mSendBuffer[session->mSendSize], PACKET_HEADER_SIZE, reinterpret_cast<char*>(&header), PACKET_HEADER_SIZE);
-		session->mSendSize += PACKET_HEADER_SIZE;
-
-		if (sendPacket.mBodyDataSize > 0)
+		PacketHeader header{ totalSize, packet.mPacketId };
+		session->mSendBuffer.Push(reinterpret_cast<char*>(&header), PACKET_HEADER_SIZE);
+		if (packet.mBodyDataSize > 0)
 		{
-			memcpy_s(&session->mSendBuffer[session->mSendSize], sendPacket.mBodyDataSize, sendPacket.mBodyData, sendPacket.mBodyDataSize);
+			session->mSendBuffer.Push(packet.mBodyData, static_cast<size_t>(packet.mBodyDataSize));
 		}
 
-		session->mSendSize += sendPacket.mBodyDataSize;
-
 		SendClient(*session);
+
+		delete[] packet.mBodyData;
 	}
 }

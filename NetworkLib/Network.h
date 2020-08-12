@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <WinSock2.h>
+#include <initializer_list>
 
 #include "PrimitiveTypes.h"
 #include "Protocol.h"
@@ -76,7 +77,7 @@ namespace NetworkLib
 		NetworkLib::Packet GetReceivePacket();
 
 		void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize);
-		void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, const int exceptUserCount, ...);
+		void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize, std::initializer_list<const uint64> exceptUserList);
 
 		void Send(const int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize);
 		void Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize);

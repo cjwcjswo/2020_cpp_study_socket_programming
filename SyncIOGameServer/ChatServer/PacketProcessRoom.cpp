@@ -46,32 +46,26 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 
 	auto roomUserDeque = room->UserDeque();
 	uint16 roomUserCount = static_cast<uint16>(roomUserDeque.size());
-	RoomUserListNotify roomUserListNotify;
-	roomUserListNotify.mUserCount = roomUserCount;
 
-	// TODO 최진우: 피드백 받은 내용대로 테스트 필요.
-	roomUserListNotify.mUserUniqueIdList = new uint64[roomUserCount];
-	roomUserListNotify.mUserIdList = new char*[roomUserCount];
+
+	char* listNotifyBuffer = new char[RoomUserListNotify::Size(roomUserCount)];
+	RoomUserListNotify* roomUserListNotify = reinterpret_cast<RoomUserListNotify*>(listNotifyBuffer);
+	roomUserListNotify->mUserCount = roomUserCount;
+	
 	for (int i = 0; i < roomUserCount; ++i)
 	{
 		User& roomUser = roomUserDeque[i];
-		roomUserListNotify.mUserUniqueIdList[i] = roomUser.mSessionUniqueId;
-
-		roomUserListNotify.mUserIdList[i] = new char[MAX_USER_ID_SIZE];
-		memcpy_s(roomUserListNotify.mUserIdList, MAX_USER_ID_SIZE, roomUserDeque[i].mUserId, MAX_USER_ID_SIZE);
+		roomUserListNotify->mRoomUserList[i].mUserUniqueId = roomUser.mSessionUniqueId;
+		memcpy_s(roomUserListNotify->mRoomUserList[i].mUserIdList, MAX_USER_ID_SIZE, roomUserDeque[i].mUserId, MAX_USER_ID_SIZE);
 	}
-	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_USER_LIST_NOTIFY), reinterpret_cast<char*>(&roomUserListNotify), roomUserListNotify.Size());
+	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_USER_LIST_NOTIFY), reinterpret_cast<char*>(roomUserListNotify), RoomUserListNotify::Size(roomUserCount));
 
 	RoomNewUserBroadcast newUserBroadcast;
 	newUserBroadcast.mUserUniueId = user->mSessionUniqueId;
 	memcpy_s(newUserBroadcast.mUserId, MAX_USER_ID_SIZE, user->mUserId, MAX_USER_ID_SIZE);
-	mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&newUserBroadcast), sizeof(newUserBroadcast), 1, user->mSessionUniqueId);
+	mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&newUserBroadcast), sizeof(newUserBroadcast), { user->mSessionUniqueId });
 
-	for (int i = 0; i < roomUserCount; ++i)
-	{
-		delete[] roomUserListNotify.mUserIdList[i];
-	}
-	delete[] roomUserListNotify.mUserIdList;
+	delete[] listNotifyBuffer;
 
 	return response.mErrorCode;
 }
@@ -104,7 +98,7 @@ ErrorCode PacketHandler::RoomLeave(const Packet& packet)
 
 	RoomLeaveUserBroadcast leaveUserBroadcast;
 	leaveUserBroadcast.mUserUniqueId = user->mSessionUniqueId;
-	mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&leaveUserBroadcast), sizeof(leaveUserBroadcast), 1, user->mSessionUniqueId);
+	mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&leaveUserBroadcast), sizeof(leaveUserBroadcast), {user->mSessionUniqueId});
 
 	return response.mErrorCode;
 }

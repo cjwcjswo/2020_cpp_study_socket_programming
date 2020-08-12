@@ -99,14 +99,18 @@ namespace CS
 	
 	struct RoomUserListNotify
 	{
-		uint16 mUserCount = 0;
-		uint64* mUserUniqueIdList = nullptr;
-		char** mUserIdList = nullptr;
-
-
-		int Size()
+		struct RoomUserInfo
 		{
-			return sizeof(uint16) + (mUserCount * sizeof(uint64)) + (mUserCount * sizeof(char) * MAX_USER_ID_SIZE);
+			uint64 mUserUniqueId = INVALID_UNIQUE_ID;
+			char mUserIdList[MAX_USER_ID_SIZE] = { 0, };
+		};
+		uint16 mUserCount = 0;
+		RoomUserInfo mRoomUserList[1];
+
+
+		static int Size(uint16 userCount)
+		{
+			return sizeof(uint16) + (userCount * sizeof(uint64)) + (userCount * sizeof(char) * MAX_USER_ID_SIZE);
 		}
 	};
 
