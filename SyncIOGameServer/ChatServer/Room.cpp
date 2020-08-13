@@ -6,7 +6,7 @@ using namespace CS;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-User* Room::FindUser(uint64 sessionUniqueId)
+User* Room::FindUser(const uint64 sessionUniqueId)
 {
 	auto userIter = std::find_if(mUserDeque.begin(), mUserDeque.end(), [sessionUniqueId](User& user) {return user.mSessionUniqueId == sessionUniqueId; });
 	if (userIter == mUserDeque.end())

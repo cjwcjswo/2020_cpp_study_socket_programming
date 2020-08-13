@@ -41,7 +41,7 @@ public:
 	void Clear();
 	CS::ErrorCode Connect(const User& User);
 	CS::ErrorCode Login(const char* mUserId);
-	CS::ErrorCode EnterRoom(int32 roomIndex);
+	CS::ErrorCode EnterRoom(const int32 roomIndex);
 	CS::ErrorCode LeaveRoom();
 };
 

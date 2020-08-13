@@ -23,6 +23,6 @@ private:
 
 public:
 	void Init(const int32 maxRoomNum);
-	Room* FindRoom(int32 roomIndex);
+	Room* FindRoom(const int32 roomIndex);
 };
 

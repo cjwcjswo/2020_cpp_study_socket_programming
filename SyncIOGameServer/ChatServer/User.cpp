@@ -50,7 +50,7 @@ ErrorCode User::Login(const char* userId)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode User::EnterRoom(int32 roomIndex)
+ErrorCode User::EnterRoom(const int32 roomIndex)
 {
 	if (mState == UserState::DISCONNECT || mState == UserState::CONNECT)
 	{

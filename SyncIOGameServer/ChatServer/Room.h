@@ -21,7 +21,7 @@ private:
 
 
 private:
-	User* FindUser(uint64 sessionUniqueId);
+	User* FindUser(const uint64 sessionUniqueId);
 
 
 public:

@@ -33,7 +33,7 @@ private:
 
 	PacketFunc mPacketFuncArray[CS::PACKET_ID_END - CS::PACKET_ID_START + 1];
 
-	void EnrollPacketFunc(CS::PacketId packetId, PacketFunc);
+	void EnrollPacketFunc(const CS::PacketId packetId, PacketFunc);
 
 
 public:

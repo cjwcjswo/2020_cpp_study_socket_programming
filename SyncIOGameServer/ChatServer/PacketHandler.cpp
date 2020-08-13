@@ -33,7 +33,7 @@ PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userMana
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PacketHandler::EnrollPacketFunc(PacketId packetId, PacketFunc packetFunc)
+void PacketHandler::EnrollPacketFunc(const PacketId packetId, PacketFunc packetFunc)
 {
 	int index = static_cast<int>(packetId) - (PACKET_ID_START + 1);
 	mPacketFuncArray[index] = packetFunc;
