@@ -33,12 +33,11 @@ namespace CS
 		ROOM_LEAVE_RESPONSE = 116,
 		ROOM_LEAVE_USER_BROADCAST= 117,
 
-		ROOM_PACKET_END = 200,
-		//////////////////////////////////////////////////////////////
-		CHAT_REQUEST = 201,
-		CHAT_RESPONSE = 202,
-		CHAT_BROADCAST = 203,
+		ROOM_CHAT_REQUEST = 118,
+		ROOM_CHAT_RESPONSE = 119,
+		ROOM_CHAT_BROADCAST = 120,
 
+		ROOM_PACKET_END = 200,
 
 		//////////////////////////////////////////////////////////////
 		PACKET_END = PACKET_ID_END,
@@ -63,26 +62,6 @@ namespace CS
 
 	struct LoginResponse: PacketBase
 	{
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	const int16 MAX_CHAT_SIZE = 128;
-
-	struct ChatRequest
-	{
-		uint16 mMessageLen = 0;
-		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
-	};
-
-	struct ChatResponse : PacketBase
-	{
-	};
-
-	struct ChatBroadcast
-	{
-		uint64 mUid = 0;
-		uint16 mMessageLen = 0;
-		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,6 +110,25 @@ namespace CS
 	struct RoomLeaveUserBroadcast
 	{
 		uint64 mUserUniqueId = INVALID_UNIQUE_ID;
+	};
+
+	const int16 MAX_CHAT_SIZE = 128;
+
+	struct RoomChatRequest
+	{
+		uint16 mMessageLen = 0;
+		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
+	};
+
+	struct RoomChatResponse : PacketBase
+	{
+	};
+
+	struct RoomChatBroadcast
+	{
+		uint64 mUid = 0;
+		uint16 mMessageLen = 0;
+		wchar mMessage[MAX_CHAT_SIZE] = { 0, };
 	};
 #pragma pack(pop)
 }

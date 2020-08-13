@@ -89,23 +89,3 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 
 	return ErrorCode::SUCCESS;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode PacketHandler::Chat(const Packet& packet)
-{
-	ChatRequest* request = reinterpret_cast<ChatRequest*>(packet.mBodyData);
-
-	ChatBroadcast broadcast;
-	broadcast.mUid = packet.mSessionUniqueId;
-	broadcast.mMessageLen = request->mMessageLen;
-	wmemcpy_s(broadcast.mMessage, request->mMessageLen, request->mMessage, request->mMessageLen);
-	mNetwork->Broadcast(static_cast<uint16>(PacketId::CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
-
-	GLogger->PrintConsole(Color::LGREEN, L"<Chat> [%lu]: %ls\n", 5, broadcast.mMessage);
-
-	ChatResponse response;
-	response.mErrorCode = ErrorCode::SUCCESS;
-	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-
-	return ErrorCode::SUCCESS;
-}

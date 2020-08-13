@@ -45,14 +45,13 @@ private:
 	CS::ErrorCode Connect(const Packet& packet);
 	CS::ErrorCode Disconnect(const Packet& packet);
 	CS::ErrorCode Login(const Packet& packet);
-	CS::ErrorCode Chat(const Packet& packet);
-
 
 	// Packet Process Room
 	CS::ErrorCode RoomEnter(const Packet& packet);
 	CS::ErrorCode RoomLeave(const Packet& packet);
 	CS::ErrorCode RoomChat(const Packet& packet);
 	
+
 public:
 	CS::ErrorCode Process(const Packet& packet);
 };

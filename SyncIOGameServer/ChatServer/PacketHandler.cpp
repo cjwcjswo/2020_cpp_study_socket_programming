@@ -27,9 +27,9 @@ PacketHandler::PacketHandler(NetworkLib::Network* network, UserManager* userMana
 	}
 
 	EnrollPacketFunc(PacketId::LOGIN_REQUEST, &PacketHandler::Login);
-	EnrollPacketFunc(PacketId::CHAT_REQUEST, &PacketHandler::Chat);
 	EnrollPacketFunc(PacketId::ROOM_ENTER_REQUEST, &PacketHandler::RoomEnter);
 	EnrollPacketFunc(PacketId::ROOM_LEAVE_REQUEST, &PacketHandler::RoomLeave);
+	EnrollPacketFunc(PacketId::ROOM_CHAT_REQUEST, &PacketHandler::RoomChat);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

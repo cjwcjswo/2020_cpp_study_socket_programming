@@ -106,5 +106,39 @@ ErrorCode PacketHandler::RoomLeave(const Packet& packet)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode PacketHandler::RoomChat(const Packet& packet)
 {
+	RoomChatRequest* request = reinterpret_cast<RoomChatRequest*>(packet.mBodyData);
+	RoomChatResponse response;
+
+	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
+	if (nullptr == user)
+	{
+		response.mErrorCode = ErrorCode::USER_NOT_CONNECTED_STATE;
+		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		return response.mErrorCode;
+	}
+
+	Room* room = mRoomManager->FindRoom(user->mRoomIndex);
+	if (nullptr == room)
+	{
+		response.mErrorCode = ErrorCode::ROOM_NOT_EXIST;
+		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+		return response.mErrorCode;
+	}
+
+	RoomChatBroadcast broadcast;
+	broadcast.mUid = packet.mSessionUniqueId;
+	broadcast.mMessageLen = request->mMessageLen;
+	wmemcpy_s(broadcast.mMessage, request->mMessageLen, request->mMessage, request->mMessageLen);
+
+	for (auto& user : room->UserDeque())
+	{
+		mNetwork->Send(user.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
+	}
+
+	GLogger->PrintConsole(Color::LGREEN, L"<RoomChat> [%lu]: %ls\n", 5, broadcast.mMessage);
+
+	response.mErrorCode = ErrorCode::SUCCESS;
+	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+
 	return ErrorCode::SUCCESS;
 }
