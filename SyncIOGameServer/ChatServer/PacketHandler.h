@@ -8,10 +8,10 @@
 namespace NetworkLib
 {
 	class Network;
-	namespace Redis
-	{
-		class Manager;
-	}
+}
+namespace Redis
+{
+	class Manager;
 }
 class UserManager;
 class RoomManager;
@@ -27,7 +27,7 @@ private:
 
 private:
 	NetworkLib::Network* mNetwork = nullptr;
-	NetworkLib::Redis::Manager* mRedisManager = nullptr;
+	Redis::Manager* mRedisManager = nullptr;
 	UserManager* mUserManager = nullptr;
 	RoomManager* mRoomManager = nullptr;
 
@@ -37,7 +37,7 @@ private:
 
 
 public:
-	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, NetworkLib::Redis::Manager* redisManager);
+	explicit PacketHandler(NetworkLib::Network* network, UserManager* userManager, RoomManager* roomManager, Redis::Manager* redisManager);
 
 
 private:

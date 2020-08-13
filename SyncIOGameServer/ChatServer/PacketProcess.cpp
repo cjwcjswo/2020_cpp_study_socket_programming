@@ -1,6 +1,6 @@
 ﻿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
-#include "../../NetworkLib/RedisManager.h"
+#include "RedisManager.h"
 #include "PacketHandler.h"
 #include "UserManager.h"
 #include "User.h"
@@ -59,16 +59,16 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	// 적용완료
 	//TODO 최진우: 여러개의 스레드에서 GetCommandResult 호출 시 받아가는 결과 값이 꼬일 수 있다 -> 추후 개선, 좀 더 편리하게 명령어 셋 구성하기...
 #ifndef _DEBUG
-	NetworkLib::Redis::CommandRequest commandRequest;
-	commandRequest.mCommandType = NetworkLib::Redis::CommandType::GET;
-	NetworkLib::Redis::Get get;
+	Redis::CommandRequest commandRequest;
+	commandRequest.mCommandType = Redis::CommandType::GET;
+	Redis::Get get;
 	strcpy_s(get.mKey, CS::RedisLoginKey(request->mUserId).c_str());
 	commandRequest.mCommandBody = reinterpret_cast<char*>(&get);
 	commandRequest.mCommandBodySize = sizeof(get);
 	mRedisManager->ExecuteCommandAsync(commandRequest);
-	NetworkLib::Redis::CommandResponse commandResponse = mRedisManager->GetCommandResult();
+	Redis::CommandResponse commandResponse = mRedisManager->GetCommandResult();
 	
-	if (NetworkLib::ErrorCode::SUCCESS != commandResponse.mErrorCode)
+	if (ErrorCode::SUCCESS != commandResponse.mErrorCode)
 	{
 		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));

@@ -16,12 +16,6 @@
     <Filter Include="소스 파일\StaticJson">
       <UniqueIdentifier>{f68a59ae-f507-4c8f-b8b9-cce9b674e75d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\DB">
-      <UniqueIdentifier>{ff405cdf-d094-4a2b-ace4-d8cba3e3722d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="헤더 파일\DB">
-      <UniqueIdentifier>{acc8c3bb-ef12-4a90-bca3-882f84c34b3e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ErrorCode.h">
@@ -54,12 +48,6 @@
     <ClInclude Include="Define.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="RedisManager.h">
-      <Filter>헤더 파일\DB</Filter>
-    </ClInclude>
-    <ClInclude Include="RedisProtocol.h">
-      <Filter>헤더 파일\DB</Filter>
-    </ClInclude>
     <ClInclude Include="RingBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -85,9 +73,6 @@
     </ClCompile>
     <ClCompile Include="..\ThirdParty\staticjson\src\staticjson.cpp">
       <Filter>소스 파일\StaticJson</Filter>
-    </ClCompile>
-    <ClCompile Include="RedisManager.cpp">
-      <Filter>소스 파일\DB</Filter>
     </ClCompile>
     <ClCompile Include="RingBuffer.cpp">
       <Filter>소스 파일</Filter>

@@ -28,8 +28,6 @@ public:
 	CS::ErrorCode Enter(User& user);
 	CS::ErrorCode Leave(User& user);
 
-	void Broadcast(const uint16 packetId, char* bodyData, const uint16 bodySize);
-
 	inline std::deque<User>& UserDeque() { return mUserDeque; }
 };
 

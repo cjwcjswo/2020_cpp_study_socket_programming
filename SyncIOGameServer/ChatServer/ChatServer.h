@@ -6,10 +6,10 @@
 namespace NetworkLib 
 {
 	class Network;
-	namespace Redis
-	{
-		class Manager;
-	}
+}
+namespace Redis
+{
+	class Manager;
 }
 class UserManager;
 class RoomManager;
@@ -21,7 +21,7 @@ class ChatServer
 {
 private:
 	NetworkLib::Network* mNetwork = nullptr;
-	NetworkLib::Redis::Manager* mRedisManager = nullptr;
+	Redis::Manager* mRedisManager = nullptr;
 	UserManager* mUserManager = nullptr;
 	RoomManager* mRoomManager = nullptr;
 	

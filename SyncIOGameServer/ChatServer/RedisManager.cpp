@@ -4,12 +4,11 @@
 #include <sstream>
 #include <hiredis.h>
 
-#include "Logger.h"
+#include "../../NetworkLib/Logger.h"
 #include "RedisManager.h"
 
 
-using namespace NetworkLib;
-using namespace NetworkLib::Redis;
+using namespace Redis;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,27 +18,27 @@ Manager::~Manager()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode Manager::Connect(const char* ipAddress, const int portNum)
+CS::ErrorCode Manager::Connect(const char* ipAddress, const int portNum)
 {
 	if (nullptr != mConnection)
 	{
-		return ErrorCode::REDIS_ALREADY_CONNECT_STATE;
+		return CS::ErrorCode::REDIS_ALREADY_CONNECT_STATE;
 	}
 
 	mConnection = redisConnect(ipAddress, portNum);
 	if (nullptr == mConnection)
 	{
-		return ErrorCode::REDIS_CONNECT_FAIL;
+		return CS::ErrorCode::REDIS_CONNECT_FAIL;
 	}
 	if (mConnection->err)
 	{
 		Disconnect();
-		return ErrorCode::REDIS_CONNECT_FAIL;
+		return CS::ErrorCode::REDIS_CONNECT_FAIL;
 	}
 
 	mThread = std::make_unique<std::thread>([&] {ExecuteCommandProcess(); });
 
-	return ErrorCode::SUCCESS;
+	return CS::ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,13 +74,13 @@ CommandResponse Manager::GetCommandResult()
 			waitTick += mSendCheckTick;
 			continue;
 		}
-		
+
 		response = mResponseQueue.front();
 		mResponseQueue.pop();
 		return response;
 	}
 
-	response.mErrorCode = ErrorCode::REDIS_RECEIVE_TIME_OUT;
+	response.mErrorCode = CS::ErrorCode::REDIS_RECEIVE_TIME_OUT;
 	return response;
 }
 
@@ -89,19 +88,19 @@ CommandResponse Manager::GetCommandResult()
 CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 {
 	CommandResponse result;
-	result.mErrorCode = ErrorCode::SUCCESS;
+	result.mErrorCode = CS::ErrorCode::SUCCESS;
 
 	std::string commandString = CommandRequestToString(request);
 	if ("" == commandString)
 	{
-		result.mErrorCode = ErrorCode::REDIS_COMMAND_FAIL;
+		result.mErrorCode = CS::ErrorCode::REDIS_COMMAND_FAIL;
 		return result;
 	}
 
 	redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
 	if (nullptr == reply)
 	{
-		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+		result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 		return result;
 	}
 
@@ -115,7 +114,7 @@ CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 	result.mResult = reply->str;
 	if (REDIS_REPLY_ERROR == reply->type)
 	{
-		result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+		result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 		freeReplyObject(reply);
 		return result;
 	}
@@ -142,12 +141,12 @@ void Manager::ExecuteCommandProcess()
 		mRequestQueue.pop();
 
 		CommandResponse result;
-		result.mErrorCode = ErrorCode::SUCCESS;
+		result.mErrorCode = CS::ErrorCode::SUCCESS;
 
 		std::string commandString = CommandRequestToString(request);
 		if ("" == commandString)
 		{
-			result.mErrorCode = ErrorCode::REDIS_COMMAND_FAIL;
+			result.mErrorCode = CS::ErrorCode::REDIS_COMMAND_FAIL;
 			mResponseQueue.push(result);
 			continue;
 		}
@@ -155,7 +154,7 @@ void Manager::ExecuteCommandProcess()
 		redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
 		if (nullptr == reply)
 		{
-			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+			result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
 			freeReplyObject(reply);
 			continue;
@@ -170,7 +169,7 @@ void Manager::ExecuteCommandProcess()
 		result.mResult = reply->str;
 		if (REDIS_REPLY_ERROR == reply->type)
 		{
-			result.mErrorCode = ErrorCode::REDIS_GET_FAIL;
+			result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
 			freeReplyObject(reply);
 			continue;

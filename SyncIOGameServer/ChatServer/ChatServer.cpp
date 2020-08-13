@@ -1,6 +1,6 @@
 ﻿#include "../../NetworkLib/Network.h"
 #include "../../NetworkLib/Logger.h"
-#include "../../NetworkLib/RedisManager.h"
+#include "RedisManager.h"
 #include "Config.h"
 #include "ChatServer.h"
 #include "UserManager.h"
@@ -55,9 +55,9 @@ ErrorCode ChatServer::Init()
 	mRoomManager = new RoomManager;
 	mRoomManager->Init(mConfig->mMaxRoomUserNum);
 
-	mRedisManager = new NetworkLib::Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
-	NetworkLib::ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
-	if (NetworkLib::ErrorCode::SUCCESS != errorCode)
+	mRedisManager = new Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
+	ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
+	if (ErrorCode::SUCCESS != errorCode)
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
