@@ -17,7 +17,7 @@ void User::Clear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode User::Connect(const User& user)
 {
-	if (UserState::DISCONNECT != mState)
+	if (mState != UserState::DISCONNECT)
 	{
 		return ErrorCode::USER_ALREADY_CONNECTED_STATE;
 	}
@@ -33,12 +33,12 @@ ErrorCode User::Connect(const User& user)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode User::Login(const char* userId)
 {
-	if (UserState::DISCONNECT == mState)
+	if (mState == UserState::DISCONNECT)
 	{
 		return ErrorCode::USER_NOT_CONNECTED_STATE;
 	}
 
-	if (UserState::LOGIN == mState || UserState::ROOM == mState)
+	if (mState == UserState::LOGIN || mState == UserState::ROOM)
 	{
 		return ErrorCode::USER_ALREADY_LOGIN_STATE;
 	}
@@ -52,12 +52,12 @@ ErrorCode User::Login(const char* userId)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode User::EnterRoom(int32 roomIndex)
 {
-	if (UserState::DISCONNECT == mState || UserState::CONNECT == mState)
+	if (mState == UserState::DISCONNECT || mState == UserState::CONNECT)
 	{
 		return ErrorCode::USER_NOT_LOGIN_STATE;
 	}
 
-	if (UserState::ROOM == mState)
+	if (mState == UserState::ROOM)
 	{
 		return ErrorCode::USER_ALREADY_IN_THE_ROOM;
 	}
@@ -71,7 +71,7 @@ ErrorCode User::EnterRoom(int32 roomIndex)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode User::LeaveRoom()
 {
-	if (UserState::ROOM != mState)
+	if (mState != UserState::ROOM)
 	{
 		return ErrorCode::USER_NOT_ROOM_ENTER_STATE;
 	}

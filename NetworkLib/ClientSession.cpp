@@ -14,7 +14,7 @@ ClientSession::ClientSession(const int32 index, const uint64 uniqueId, const SOC
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession::~ClientSession()
 {
-	if (nullptr != mReceiveBuffer)
+	if (mReceiveBuffer != nullptr)
 	{
 		delete[] mReceiveBuffer;
 	}

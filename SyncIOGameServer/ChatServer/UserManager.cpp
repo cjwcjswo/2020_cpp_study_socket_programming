@@ -36,7 +36,7 @@ int32 UserManager::AllocUserIndex()
 ErrorCode UserManager::Connect(User& user)
 {
 	int32 userIndex = AllocUserIndex();
-	if (INVALID_INDEX == userIndex)
+	if (userIndex == INVALID_INDEX)
 	{
 		return ErrorCode::USER_MANAGER_POOL_IS_FULL;
 	}
@@ -59,7 +59,7 @@ CS::ErrorCode UserManager::Disconnect(const int32 userIndex)
 CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const char* userId)
 {
 	User* user = FindUser(sessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		return ErrorCode::USER_IS_INVALID;
 	}
@@ -83,7 +83,7 @@ User* UserManager::FindUser(const uint64 sessionUniqueId)
 UserState UserManager::UserState(const uint64 sessionUniqueId)
 {
 	User* user = FindUser(sessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		return UserState::DISCONNECT;
 	}

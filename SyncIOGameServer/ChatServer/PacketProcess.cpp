@@ -15,7 +15,7 @@ ErrorCode PacketHandler::Connect(const Packet& packet)
 	User newUser{ packet.mSessionIndex, packet.mSessionUniqueId };
 
 	ErrorCode errorCode = mUserManager->Connect(newUser);
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return errorCode;
 	}
@@ -29,7 +29,7 @@ ErrorCode PacketHandler::Connect(const Packet& packet)
 ErrorCode PacketHandler::Disconnect(const Packet& packet)
 {
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-	if (nullptr != user)
+	if (user != nullptr)
 	{
 		mUserManager->Disconnect(user->mIndex);
 	}
@@ -43,7 +43,7 @@ ErrorCode PacketHandler::Disconnect(const Packet& packet)
 ErrorCode PacketHandler::Login(const Packet& packet)
 {
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		LoginResponse response;
 		response.mErrorCode = ErrorCode::USER_IS_INVALID;
@@ -68,13 +68,13 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	mRedisManager->ExecuteCommandAsync(commandRequest);
 	Redis::CommandResponse commandResponse = mRedisManager->GetCommandResult();
 	
-	if (ErrorCode::SUCCESS != commandResponse.mErrorCode)
+	if (commandResponse.mErrorCode != ErrorCode::SUCCESS)
 	{
 		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 		return response.mErrorCode;
 	}
-	if (0 != std::strncmp(request->mAuthKey, commandResponse.mResult.c_str(), AUTH_KEY_SIZE))
+	if (std::strncmp(request->mAuthKey, commandResponse.mResult.c_str(), AUTH_KEY_SIZE) != 0)
 	{
 		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));

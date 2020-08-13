@@ -14,15 +14,17 @@ Network::~Network()
 {
 	Stop();
 
-	if (nullptr != mConfig)
+	if (mConfig != nullptr)
 	{
 		delete mConfig;
 	}
-	if (nullptr != mAcceptSocket)
+
+	if (mAcceptSocket != nullptr)
 	{
 		delete mAcceptSocket;
 	}
-	if (nullptr != mClientSessionManager)
+
+	if (mClientSessionManager != nullptr)
 	{
 		delete mClientSessionManager;
 	}
@@ -32,7 +34,7 @@ Network::~Network()
 ErrorCode Network::AcceptClient()
 {
 	TCPSocket clientSocket = mAcceptSocket->Accept();
-	if (INVALID_SOCKET == clientSocket.Socket())
+	if (clientSocket.Socket() == INVALID_SOCKET)
 	{
 		return ErrorCode::SOCKET_ACCEPT_CLIENT_FAIL;
 	}
@@ -41,7 +43,7 @@ ErrorCode Network::AcceptClient()
 	clientSession.mSocket = clientSocket;
 
 	clientSession.mIndex = mClientSessionManager->AllocClientSessionIndex();
-	if (INVALID_INDEX == clientSession.mIndex)
+	if (clientSession.mIndex == INVALID_INDEX)
 	{
 		CloseSession(ErrorCode::SOCKET_INDEX_POOL_IS_FULL, clientSession);
 		return ErrorCode::SOCKET_INDEX_POOL_IS_FULL;
@@ -49,7 +51,7 @@ ErrorCode Network::AcceptClient()
 
 	clientSession.mSocket.SetLingerMode();
 
-	if (ErrorCode::SUCCESS != mAcceptSocket->SetNonBlockingMode())
+	if (mAcceptSocket->SetNonBlockingMode() != ErrorCode::SUCCESS)
 	{
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
@@ -68,7 +70,7 @@ ErrorCode Network::AcceptClient()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::CheckSelectResult(int selectResult)
 {
-	if (0 == selectResult)
+	if (selectResult == 0)
 	{
 		return ErrorCode::SOCKET_SELECT_RESULT_ZERO;
 	}
@@ -107,7 +109,7 @@ void Network::SelectClient(const fd_set& readSet)
 ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 {
 	int length = clientSession.mSocket.Receive(clientSession.mReceiveBuffer, mConfig->mMaxSessionBufferSize);
-	if (0 == length)
+	if (length == 0)
 	{
 		return ErrorCode::SOCKET_RECEIVE_ZERO;
 	}
@@ -124,7 +126,7 @@ ErrorCode Network::ReceiveClient(ClientSession& clientSession)
 		}
 	}
 
-	if (false == clientSession.mMessageBuffer.Push(clientSession.mReceiveBuffer, static_cast<size_t>(length)))
+	if (clientSession.mMessageBuffer.Push(clientSession.mReceiveBuffer, static_cast<size_t>(length)) == false)
 	{
 		return ErrorCode::CLIENT_SESSION_MESSAGE_BUFFER_IS_FULL;
 	}
@@ -177,7 +179,7 @@ void Network::SelectProcess()
 		int selectResult = select(NULL, &readSet, nullptr, nullptr, nullptr);
 
 		errorCode = CheckSelectResult(selectResult);
-		if (ErrorCode::SUCCESS != errorCode)
+		if (errorCode != ErrorCode::SUCCESS)
 		{
 			continue;
 		}
@@ -185,7 +187,7 @@ void Network::SelectProcess()
 		if (FD_ISSET(mAcceptSocket->Socket(), &readSet))
 		{
 			errorCode = AcceptClient();
-			if (ErrorCode::SUCCESS != errorCode)
+			if (errorCode != ErrorCode::SUCCESS)
 			{
 				continue;
 			}
@@ -233,7 +235,7 @@ void Network::CloseSession(const ErrorCode errorCode, ClientSession& clientSessi
 
 	clientSession.mSocket.Close();
 
-	if (INVALID_INDEX == clientSession.mIndex)
+	if (clientSession.mIndex == INVALID_INDEX)
 	{
 		return;
 	}
@@ -247,24 +249,25 @@ ErrorCode Network::Init()
 {
 	ErrorCode errorCode;
 
+	//mConfig = new Config()
 	mConfig = new Config();
 	errorCode = mConfig->Load();
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return errorCode;
 	}
 
 	WSADATA wsaData;
 
-	if (SOCKET_ERROR == WSAStartup(MAKEWORD(2, 2), &wsaData))
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR)
 	{
 		return ErrorCode::WSA_START_UP_FAIL;
 	}
 
 	// Client Accept Socket Init
-	mAcceptSocket = new TCPSocket{ INVALID_SOCKET };
+	mAcceptSocket = new TCPSocket(INVALID_SOCKET);
 	errorCode = mAcceptSocket->Create();
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return errorCode;
 	}
@@ -272,13 +275,13 @@ ErrorCode Network::Init()
 	std::wstring wideIPAddress;
 	wideIPAddress.assign(mConfig->mIPAddress.begin(), mConfig->mIPAddress.end());
 	errorCode = mAcceptSocket->Bind(wideIPAddress.c_str(), mConfig->mPortNum);
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return errorCode;
 	}
 
 	errorCode = mAcceptSocket->Listen();
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return errorCode;
 	}
@@ -308,7 +311,7 @@ ErrorCode Network::Run()
 ErrorCode Network::Stop()
 {
 	// Stop Accept Socket
-	if (nullptr != mAcceptSocket)
+	if (mAcceptSocket != nullptr)
 	{
 		mAcceptSocket->Close();
 	}
@@ -423,16 +426,16 @@ void Network::SendProcess()
 		mSendPacketQueue.pop();
 
 		ClientSession* session = nullptr;
-		if (INVALID_INDEX != packet.mSessionIndex)
+		if (packet.mSessionIndex != INVALID_INDEX)
 		{
 			session = mClientSessionManager->FindClientSession(packet.mSessionIndex);
 		}
-		else if (INVALID_UNIQUE_ID != packet.mSessionUniqueId)
+		else if (packet.mSessionUniqueId != INVALID_UNIQUE_ID)
 		{
 			session = mClientSessionManager->FindClientSession(packet.mSessionUniqueId);
 		}
 
-		if (nullptr == session)
+		if (session == nullptr)
 		{
 			continue;
 		}

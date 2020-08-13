@@ -6,6 +6,7 @@
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSessionManager::Init(const uint32 maxClientSessionNum, const  uint32 maxSessionBufferSize) noexcept
 {
@@ -84,7 +85,7 @@ void ClientSessionManager::DisconnectClientSession(const int32 index)
 void ClientSessionManager::DisconnectClientSession(const uint64 uniqueId)
 {
 	ClientSession* session = FindClientSession(uniqueId);
-	if (nullptr == session)
+	if (session == nullptr)
 	{
 		return;
 	}

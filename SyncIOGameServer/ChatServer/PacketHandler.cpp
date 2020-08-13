@@ -45,12 +45,12 @@ ErrorCode PacketHandler::Process(const Packet& packet)
 {
 	if (packet.mPacketId > NetworkLib::PACKET_ID_START && packet.mPacketId < NetworkLib::PACKET_ID_END)
 	{
-		if (static_cast<uint16>(NetworkLib::PacketId::CONNECT) == packet.mPacketId)
+		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::CONNECT))
 		{
 			return Connect(packet);
 		}
 
-		if (static_cast<uint16>(NetworkLib::PacketId::DISCONNECT) == packet.mPacketId)
+		if (packet.mPacketId == static_cast<uint16>(NetworkLib::PacketId::DISCONNECT))
 		{
 			return Disconnect(packet);
 		}
@@ -63,14 +63,14 @@ ErrorCode PacketHandler::Process(const Packet& packet)
 		return ErrorCode::CHAT_SERVER_INVALID_API;
 	}
 
-	if (static_cast<uint16>(PacketId::LOGIN_REQUEST) != packet.mPacketId)
+	if (packet.mPacketId != static_cast<uint16>(PacketId::LOGIN_REQUEST))
 	{
 		User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-		if (nullptr == user)
+		if (user == nullptr)
 		{
 			return ErrorCode::USER_NOT_CONNECTED_STATE;
 		}
-		if (UserState::DISCONNECT == user->mState || UserState::CONNECT == user->mState)
+		if (user->mState == UserState::DISCONNECT || user->mState == UserState::CONNECT)
 		{
 			return ErrorCode::USER_NOT_LOGIN_STATE;
 		}

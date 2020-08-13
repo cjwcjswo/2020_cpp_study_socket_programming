@@ -23,7 +23,7 @@ ErrorCode TCPSocket::SetNonBlockingMode()
 {
 	// Set Non-Blocking Mode (https://www.joinc.co.kr/w/man/4200/ioctlsocket)
 	unsigned long mode = 1;
-	if (SOCKET_ERROR == ioctlsocket(mSocket, FIONBIO, &mode))
+	if (ioctlsocket(mSocket, FIONBIO, &mode) == SOCKET_ERROR)
 	{
 		return ErrorCode::SOCKET_SET_FIONBIO_FAIL;
 	}
@@ -48,7 +48,7 @@ ErrorCode TCPSocket::ReuseAddr()
 ErrorCode TCPSocket::Create()
 {
 	mSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (INVALID_SOCKET == mSocket)
+	if (mSocket == INVALID_SOCKET)
 	{
 		return ErrorCode::SOCKET_INIT_FAIL;
 	}
@@ -68,7 +68,7 @@ ErrorCode TCPSocket::Bind(const wchar* address, const uint16 portNum)
 	socketAddrIn.sin_port = htons(portNum);
 	InetPton(AF_INET, address, &socketAddrIn.sin_addr);
 
-	if (SOCKET_ERROR == bind(mSocket, reinterpret_cast<SOCKADDR*>(&socketAddrIn), socketAddrInSize))
+	if (bind(mSocket, reinterpret_cast<SOCKADDR*>(&socketAddrIn), socketAddrInSize) == SOCKET_ERROR)
 	{
 		return ErrorCode::SOCKET_BIND_FAIL;
 	}
@@ -79,7 +79,7 @@ ErrorCode TCPSocket::Bind(const wchar* address, const uint16 portNum)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::Listen()
 {
-	if (SOCKET_ERROR == listen(mSocket, SOMAXCONN))
+	if (listen(mSocket, SOMAXCONN) == SOCKET_ERROR)
 	{
 		return ErrorCode::SOCKET_LISTEN_FAIL;
 	}
@@ -112,7 +112,7 @@ TCPSocket TCPSocket::Accept()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TCPSocket::Close()
 {
-	if (INVALID_SOCKET == mSocket)
+	if (mSocket == INVALID_SOCKET)
 	{
 		return;
 	}

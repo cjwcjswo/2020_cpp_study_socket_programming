@@ -18,7 +18,7 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 	response.mUserUniqueId = packet.mSessionUniqueId;
 
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		response.mErrorCode = ErrorCode::USER_NOT_CONNECTED_STATE;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_ENTER_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -28,7 +28,7 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 	RoomEnterRequest* request = reinterpret_cast<RoomEnterRequest*>(packet.mBodyData);
 
 	Room* room = mRoomManager->FindRoom(request->mRoomIndex);
-	if (nullptr == room)
+	if (room == nullptr)
 	{
 		response.mErrorCode = ErrorCode::ROOM_NOT_EXIST;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_ENTER_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -36,7 +36,7 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 	}
 
 	ErrorCode errorCode = room->Enter(*user);
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		response.mErrorCode = errorCode;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_ENTER_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -77,7 +77,7 @@ ErrorCode PacketHandler::RoomLeave(const Packet& packet)
 	response.mErrorCode = ErrorCode::SUCCESS;
 
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		response.mErrorCode = ErrorCode::USER_NOT_CONNECTED_STATE;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_LEAVE_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -85,7 +85,7 @@ ErrorCode PacketHandler::RoomLeave(const Packet& packet)
 	}
 
 	Room* room = mRoomManager->FindRoom(user->mRoomIndex);
-	if (nullptr == room)
+	if (room == nullptr)
 	{
 		response.mErrorCode = ErrorCode::ROOM_NOT_EXIST;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_LEAVE_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -110,7 +110,7 @@ ErrorCode PacketHandler::RoomChat(const Packet& packet)
 	RoomChatResponse response;
 
 	User* user = mUserManager->FindUser(packet.mSessionUniqueId);
-	if (nullptr == user)
+	if (user == nullptr)
 	{
 		response.mErrorCode = ErrorCode::USER_NOT_CONNECTED_STATE;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
@@ -118,7 +118,7 @@ ErrorCode PacketHandler::RoomChat(const Packet& packet)
 	}
 
 	Room* room = mRoomManager->FindRoom(user->mRoomIndex);
-	if (nullptr == room)
+	if (room == nullptr)
 	{
 		response.mErrorCode = ErrorCode::ROOM_NOT_EXIST;
 		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));

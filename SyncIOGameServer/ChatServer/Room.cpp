@@ -26,7 +26,7 @@ ErrorCode Room::Enter(User& user)
 	}
 
 	User* findUser = FindUser(user.mSessionUniqueId);
-	if (nullptr != findUser)
+	if (findUser != nullptr)
 	{
 		return ErrorCode::USER_ALREADY_IN_THE_ROOM;
 	}

@@ -20,13 +20,13 @@ Manager::~Manager()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CS::ErrorCode Manager::Connect(const char* ipAddress, const int portNum)
 {
-	if (nullptr != mConnection)
+	if (mConnection != nullptr)
 	{
 		return CS::ErrorCode::REDIS_ALREADY_CONNECT_STATE;
 	}
 
 	mConnection = redisConnect(ipAddress, portNum);
-	if (nullptr == mConnection)
+	if (mConnection == nullptr)
 	{
 		return CS::ErrorCode::REDIS_CONNECT_FAIL;
 	}
@@ -45,7 +45,7 @@ CS::ErrorCode Manager::Connect(const char* ipAddress, const int portNum)
 void Manager::Disconnect()
 {
 	mThread->join();
-	if (nullptr != mConnection)
+	if (mConnection != nullptr)
 	{
 		redisFree(mConnection);
 	}
@@ -91,20 +91,20 @@ CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 	result.mErrorCode = CS::ErrorCode::SUCCESS;
 
 	std::string commandString = CommandRequestToString(request);
-	if ("" == commandString)
+	if (commandString == "")
 	{
 		result.mErrorCode = CS::ErrorCode::REDIS_COMMAND_FAIL;
 		return result;
 	}
 
 	redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
-	if (nullptr == reply)
+	if (reply == nullptr)
 	{
 		result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 		return result;
 	}
 
-	if (nullptr == reply->str)
+	if (reply->str == nullptr)
 	{
 		result.mResult = "";
 		mResponseQueue.push(result);
@@ -112,7 +112,7 @@ CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 		return result;
 	}
 	result.mResult = reply->str;
-	if (REDIS_REPLY_ERROR == reply->type)
+	if (reply->type == REDIS_REPLY_ERROR)
 	{
 		result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 		freeReplyObject(reply);
@@ -127,7 +127,7 @@ CommandResponse Manager::ExecuteCommand(const CommandRequest& request)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::ExecuteCommandProcess()
 {
-	while (nullptr != mConnection)
+	while (mConnection != nullptr)
 	{
 		std::unique_lock<std::mutex> lock(mMutex);
 		if (mRequestQueue.empty())
@@ -144,7 +144,7 @@ void Manager::ExecuteCommandProcess()
 		result.mErrorCode = CS::ErrorCode::SUCCESS;
 
 		std::string commandString = CommandRequestToString(request);
-		if ("" == commandString)
+		if (commandString == "")
 		{
 			result.mErrorCode = CS::ErrorCode::REDIS_COMMAND_FAIL;
 			mResponseQueue.push(result);
@@ -152,14 +152,14 @@ void Manager::ExecuteCommandProcess()
 		}
 
 		redisReply* reply = (redisReply*)redisCommand(mConnection, commandString.c_str());
-		if (nullptr == reply)
+		if (reply == nullptr)
 		{
 			result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
 			freeReplyObject(reply);
 			continue;
 		}
-		if (nullptr == reply->str)
+		if (reply->str == nullptr)
 		{
 			result.mResult = "";
 			mResponseQueue.push(result);
@@ -167,7 +167,7 @@ void Manager::ExecuteCommandProcess()
 			continue;
 		}
 		result.mResult = reply->str;
-		if (REDIS_REPLY_ERROR == reply->type)
+		if (reply->type == REDIS_REPLY_ERROR)
 		{
 			result.mErrorCode = CS::ErrorCode::REDIS_GET_FAIL;
 			mResponseQueue.push(result);
@@ -207,7 +207,7 @@ std::string Manager::CommandRequestToString(const CommandRequest& request)
 	}
 	case CommandType::GET:
 	{
-		if (sizeof(Get) > request.mCommandBodySize)
+		if (request.mCommandBodySize < sizeof(Get))
 		{
 			return "";
 		}

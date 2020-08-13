@@ -12,7 +12,7 @@ RingBuffer::RingBuffer(const uint32 bufferSize) : mBufferSize(bufferSize), mMaxB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 RingBuffer::~RingBuffer()
 {
-	if (nullptr != mBuffer)
+	if (mBuffer != nullptr)
 	{
 		delete[] mBuffer;
 	}
@@ -56,7 +56,7 @@ void RingBuffer::Clear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool RingBuffer::Push(const char* data, const size_t size)
 {
-	if (0 >= size)
+	if (size <= 0)
 	{
 		return true;
 	}
@@ -81,7 +81,7 @@ bool RingBuffer::Push(const char* data, const size_t size)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool RingBuffer::Pop(const size_t size)
 {
-	if (0 >= size)
+	if (size <= 0)
 	{
 		return true;
 	}

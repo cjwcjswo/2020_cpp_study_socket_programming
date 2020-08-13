@@ -30,12 +30,13 @@ namespace NetworkLib
 
 
 	protected:
-		Config* mConfig;
-
+		Config* mConfig = nullptr;
+		TCPSocket* mAcceptSocket = nullptr;
 		ClientSessionManager* mClientSessionManager = nullptr;
+
 		UniquePtrThread mSelectThread = nullptr;
 		UniquePtrThread mSendThread = nullptr;
-		TCPSocket* mAcceptSocket = nullptr;
+		
 
 		std::mutex mReceivePacketMutex;
 		std::mutex mSendPacketMutex;

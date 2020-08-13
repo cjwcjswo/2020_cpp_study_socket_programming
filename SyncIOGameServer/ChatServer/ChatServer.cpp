@@ -15,23 +15,23 @@ using namespace CS;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ChatServer::~ChatServer()
 {
-	if (nullptr != mNetwork)
+	if (mNetwork != nullptr)
 	{
 		delete mNetwork;
 	}
-	if (nullptr != mUserManager)
+	if (mUserManager != nullptr)
 	{
 		delete mUserManager;
 	}
-	if (nullptr != mRoomManager)
+	if (mRoomManager != nullptr)
 	{
 		delete mRoomManager;
 	}
-	if (nullptr != mPacketHandler)
+	if (mPacketHandler != nullptr)
 	{
 		delete mPacketHandler;
 	}
-	if (nullptr != mConfig)
+	if (mConfig != nullptr)
 	{
 		delete mConfig;
 	}
@@ -41,7 +41,7 @@ ChatServer::~ChatServer()
 ErrorCode ChatServer::Init()
 {
 	mNetwork = new NetworkLib::Network();
-	if (NetworkLib::ErrorCode::SUCCESS != mNetwork->Init())
+	if (mNetwork->Init() != NetworkLib::ErrorCode::SUCCESS)
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
@@ -57,7 +57,7 @@ ErrorCode ChatServer::Init()
 
 	mRedisManager = new Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
 	ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
-	if (ErrorCode::SUCCESS != errorCode)
+	if (errorCode != ErrorCode::SUCCESS)
 	{
 		return ErrorCode::CHAT_SERVER_INIT_FAIL;
 	}
@@ -80,13 +80,13 @@ ErrorCode ChatServer::Run()
 	while (mIsRunning)
 	{
 		NetworkLib::Packet receivePacket = mNetwork->GetReceivePacket();
-		if (0 == receivePacket.mPacketId)
+		if (receivePacket.mPacketId == 0)
 		{
 			continue;
 		}
 		
 		ErrorCode errorCode = mPacketHandler->Process(receivePacket);
-		if (ErrorCode::SUCCESS != errorCode)
+		if (errorCode != ErrorCode::SUCCESS)
 		{
 			GLogger->PrintConsole(Color::RED, L"Packet Process Error(%d) / [PacketId: %u, UniqueId: %u]\n",
 				static_cast<int>(errorCode), receivePacket.mPacketId, receivePacket.mSessionUniqueId);
