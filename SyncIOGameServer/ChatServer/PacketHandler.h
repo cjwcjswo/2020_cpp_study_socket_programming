@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../NetworkLib/Protocol.h"
+#include "../NetworkLib/Protocol.h"
 #include "ErrorCode.h"
 #include "Protocol.h"
 

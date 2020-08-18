@@ -3,7 +3,7 @@
 #include <vector>
 #include <queue>
 
-#include "../../NetworkLib/PrimitiveTypes.h"
+#include "../NetworkLib/PrimitiveTypes.h"
 #include "User.h"
 #include "ErrorCode.h"
 

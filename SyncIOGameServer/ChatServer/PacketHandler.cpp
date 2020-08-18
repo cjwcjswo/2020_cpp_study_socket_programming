@@ -2,8 +2,8 @@
 #include <string>
 #include <wchar.h>
 
-#include "../../NetworkLib/Network.h"
-#include "../../NetworkLib/Logger.h"
+#include "../NetworkLib/Network.h"
+#include "../NetworkLib/Logger.h"
 #include "RedisManager.h"
 #include "PacketHandler.h"
 #include "UserManager.h"

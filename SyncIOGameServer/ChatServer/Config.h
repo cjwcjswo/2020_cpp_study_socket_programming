@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../NetworkLib/Config.h"
+#include "../NetworkLib/Config.h"
 
 
 class Config : public NetworkLib::Config

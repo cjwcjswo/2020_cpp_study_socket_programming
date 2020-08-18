@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../NetworkLib/PrimitiveTypes.h"
+#include "../NetworkLib/PrimitiveTypes.h"
 
 
 namespace CS

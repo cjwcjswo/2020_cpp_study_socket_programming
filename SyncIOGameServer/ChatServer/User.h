@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../NetworkLib/PrimitiveTypes.h"
-#include "../../NetworkLib/ClientSession.h"
-#include "../../NetworkLib/Define.h"
+#include "../NetworkLib/PrimitiveTypes.h"
+#include "../NetworkLib/ClientSession.h"
+#include "../NetworkLib/Define.h"
 
 #include "ErrorCode.h"
 

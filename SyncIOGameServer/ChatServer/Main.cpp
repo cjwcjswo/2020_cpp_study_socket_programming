@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 
-#include "../../NetworkLib/Logger.h"
+#include "../NetworkLib/Logger.h"
 #include "ChatServer.h"
 
 

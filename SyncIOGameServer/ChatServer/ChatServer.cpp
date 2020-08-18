@@ -1,5 +1,5 @@
-﻿#include "../../NetworkLib/Network.h"
-#include "../../NetworkLib/Logger.h"
+﻿#include "../NetworkLib/Network.h"
+#include "../NetworkLib/Logger.h"
 #include "RedisManager.h"
 #include "Config.h"
 #include "ChatServer.h"

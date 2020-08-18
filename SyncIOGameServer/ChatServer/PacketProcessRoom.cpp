@@ -1,5 +1,5 @@
-#include "../../NetworkLib/Network.h"
-#include "../../NetworkLib/Logger.h"
+#include "../NetworkLib/Network.h"
+#include "../NetworkLib/Logger.h"
 #include "PacketHandler.h"
 #include "RoomManager.h"
 #include "Room.h"

@@ -71,7 +71,7 @@
     <ClCompile Include="Config.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ThirdParty\staticjson\src\staticjson.cpp">
+    <ClCompile Include="..\..\ThirdParty\staticjson\src\staticjson.cpp">
       <Filter>소스 파일\StaticJson</Filter>
     </ClCompile>
     <ClCompile Include="RingBuffer.cpp">

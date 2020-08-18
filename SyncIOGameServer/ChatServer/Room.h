@@ -2,7 +2,7 @@
 
 #include <deque>
 
-#include "../../NetworkLib/Define.h"
+#include "../NetworkLib/Define.h"
 #include "ErrorCode.h"
 #include "User.h"
 

@@ -3,8 +3,8 @@
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include "../../NetworkLib/Protocol.h"
-#include "../../NetworkLib/Logger.h"
+#include "../NetworkLib/Protocol.h"
+#include "../NetworkLib/Logger.h"
 #include "../ChatServer/Protocol.h"
 #include "ErrorCode.h"
 

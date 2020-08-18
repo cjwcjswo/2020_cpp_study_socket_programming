@@ -168,11 +168,6 @@
     <ClCompile Include="UserManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NetworkLib\NetworkLib.vcxproj">
-      <Project>{a4befcf1-3e43-49ce-841a-07d51a248c68}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="ChatServer.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ErrorCode.h" />
@@ -184,6 +179,11 @@
     <ClInclude Include="RoomManager.h" />
     <ClInclude Include="User.h" />
     <ClInclude Include="UserManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkLib\NetworkLib.vcxproj">
+      <Project>{a4befcf1-3e43-49ce-841a-07d51a248c68}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

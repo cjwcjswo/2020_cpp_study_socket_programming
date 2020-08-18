@@ -2,7 +2,7 @@
 
 #include <deque>
 
-#include "../../NetworkLib/Protocol.h"
+#include "../NetworkLib/Protocol.h"
 #include "Protocol.h"
 #include "ErrorCode.h"
 #include "Room.h"

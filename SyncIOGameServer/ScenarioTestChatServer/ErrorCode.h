@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../NetworkLib/PrimitiveTypes.h"
+#include "../NetworkLib/PrimitiveTypes.h"
 
 enum class ErrorCode : uint16
 {

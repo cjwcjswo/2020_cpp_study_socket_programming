@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../../NetworkLib/PrimitiveTypes.h"
+#include "../NetworkLib/PrimitiveTypes.h"
 #include "ErrorCode.h"
 
 

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <hiredis.h>
 
-#include "../../NetworkLib/Logger.h"
+#include "../NetworkLib/Logger.h"
 #include "RedisManager.h"
 
 
