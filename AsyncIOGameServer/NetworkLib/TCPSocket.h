@@ -10,10 +10,13 @@ namespace NetworkLib
 {
 	class TCPSocket
 	{
-	private:
-		SOCKET mSocket = INVALID_SOCKET;
+	protected:
 		char mBuffer[512] = { 0, };
 		char mAddressBuffer[512] = { 0, };
+
+
+	public:
+		SOCKET mSocket = INVALID_SOCKET;
 
 
 	public:
@@ -21,7 +24,7 @@ namespace NetworkLib
 		~TCPSocket() = default;
 
 
-	private:
+	protected:
 		void* GetSocketExtensionAPI(SOCKET socket, GUID functionGUID);
 
 		ErrorCode ReuseAddr();
@@ -31,17 +34,19 @@ namespace NetworkLib
 		ErrorCode Create();
 		ErrorCode Bind(const wchar* ipAddress, const uint16 portNum);
 		ErrorCode Listen(const int backlog = SOMAXCONN);
-		ErrorCode AcceptAsync(TCPSocket& clientSocket);
+		ErrorCode AcceptAsync(TCPSocket* clientSocket);
+
+		void Clear();
 	};
 
 	struct SocketItem : OVERLAPPED
 	{
 		TCPSocket* mTCPSocket = nullptr;
-
+		
 		SocketItem(TCPSocket* tcpSocket)
 		{
-			mTCPSocket = tcpSocket;
 			memset(this, 0, sizeof(*this));
+			mTCPSocket = tcpSocket;
 		}
 	};
 }

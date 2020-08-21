@@ -99,23 +99,29 @@ ErrorCode TCPSocket::Listen(const int backlog)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode TCPSocket::AcceptAsync(TCPSocket& clientSocket)
+ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 {
 	LPFN_ACCEPTEX acceptEx = reinterpret_cast<LPFN_ACCEPTEX>(GetSocketExtensionAPI(mSocket, WSAID_ACCEPTEX));
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
-	SocketItem* socketItem = new SocketItem(&clientSocket);
+	SocketItem* socketItem = new SocketItem(clientSocket);
 
 	BOOL isOK = acceptEx
-	(mSocket, clientSocket.mSocket, clientSocket.mAddressBuffer,
+	(mSocket, clientSocket->mSocket, clientSocket->mAddressBuffer,
 		0, sockAddrSize, sockAddrSize,
-		NULL, reinterpret_cast<LPOVERLAPPED>(&socketItem));
+		nullptr, reinterpret_cast<LPOVERLAPPED>(socketItem));
 	if (!isOK)
 	{
-		if (WSAGetLastError() != WSA_IO_PENDING)
+		int errorCode = WSAGetLastError();
+		if (errorCode != WSA_IO_PENDING)
 		{
 			return ErrorCode::SOCKET_ACCEPT_ASYNC_FAIL;
 		}
 	}
 
 	return ErrorCode::SUCCESS;
+}
+
+void TCPSocket::Clear()
+{
+	mSocket = INVALID_SOCKET;
 }
