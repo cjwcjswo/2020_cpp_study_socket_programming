@@ -2,8 +2,9 @@
 
 #include "TCPSocket.h"
 #include "PrimitiveTypes.h"
-
 #include "Define.h"
+#include "RingBuffer.h"
+
 
 namespace NetworkLib
 {
@@ -20,6 +21,9 @@ namespace NetworkLib
 
 
 	public:
+		RingBuffer mSendBufefr;
+		RingBuffer mReceiveBuffer;
+
 		int32 mIndex = INVALID_INDEX;
 		uint64 mUniqueId = INVALID_UNIQUE_ID;
 		TCPSocket* mTCPSocket = nullptr;
@@ -27,6 +31,12 @@ namespace NetworkLib
 
 	public:
 		bool IsConnect() const;
+
+		ErrorCode ReceiveAsync();
+		void ReceiveCompletion();
+
+		ErrorCode SendAsync();
+		void SendCompletion();
 
 		void Clear();
 	};

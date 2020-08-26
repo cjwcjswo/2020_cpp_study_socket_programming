@@ -1,5 +1,4 @@
 #pragma once
-#pragma comment(lib,"ws2_32")
 
 #include <WinSock2.h>
 
@@ -34,20 +33,16 @@ namespace NetworkLib
 		ErrorCode Create();
 		ErrorCode Bind(const wchar* ipAddress, const uint16 portNum);
 		ErrorCode Listen(const int backlog = SOMAXCONN);
+
 		ErrorCode AcceptAsync(TCPSocket* clientSocket);
 
-		void Clear();
-	};
+		ErrorCode ReceiveAsync();
+		void ReceiveCompletion();
 
-	struct SocketItem : OVERLAPPED
-	{
-		TCPSocket* mTCPSocket = nullptr;
-		
-		SocketItem(TCPSocket* tcpSocket)
-		{
-			memset(this, 0, sizeof(*this));
-			mTCPSocket = tcpSocket;
-		}
+		ErrorCode SendAsync();
+		void SendCompletion();
+
+		void Clear();
 	};
 }
 

@@ -2,6 +2,8 @@
 
 #include <WS2tcpip.h>
 #include <mswsock.h>
+#include "OverlappedIOContext.h"
+
 
 using namespace NetworkLib;
 
@@ -103,7 +105,7 @@ ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 {
 	LPFN_ACCEPTEX acceptEx = reinterpret_cast<LPFN_ACCEPTEX>(GetSocketExtensionAPI(mSocket, WSAID_ACCEPTEX));
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
-	SocketItem* socketItem = new SocketItem(clientSocket);
+	OverlappedIOContext* socketItem = new OverlappedIOContext(clientSocket);
 
 	BOOL isOK = acceptEx
 	(mSocket, clientSocket->mSocket, clientSocket->mAddressBuffer,
@@ -119,6 +121,24 @@ ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 	}
 
 	return ErrorCode::SUCCESS;
+}
+
+ErrorCode TCPSocket::ReceiveAsync()
+{
+	return ErrorCode();
+}
+
+void TCPSocket::ReceiveCompletion()
+{
+}
+
+ErrorCode TCPSocket::SendAsync()
+{
+	return ErrorCode();
+}
+
+void TCPSocket::SendCompletion()
+{
 }
 
 void TCPSocket::Clear()

@@ -1,4 +1,6 @@
 #include "Network.h"
+#include "OverlappedIOContext.h"
+#include "IOCPThread.h"
 #include "TCPSocket.h"
 #include "Logger.h"
 #include "ClientSessionManager.h"
@@ -8,68 +10,10 @@
 using namespace NetworkLib;
 
 
-DWORD WINAPI Network::IOCPSocketProcess()
-{
-	SocketItem* socketItem = nullptr;
-	DWORD trBytes = 0;
-	IOKey devKey = IOKey::NONE;
-	
-	while (true)
-	{
-		// Blcking
-		bool isOk = GetQueuedCompletionStatus
-		(
-			mIOCPHandle, &trBytes, reinterpret_cast<PULONG_PTR>(&devKey), reinterpret_cast<LPOVERLAPPED*>(&socketItem), INFINITE
-		);
-		if (!isOk)
-		{
-			if (socketItem != nullptr)
-			{
-				// 소켓 관련 에러
-				continue;
-			}
-
-			int errorCode = WSAGetLastError();
-			if (errorCode != ERROR_ABANDONED_WAIT_0)
-			{
-				GLogger->PrintConsole(Color::RED, L"GQCS Failed: %d\n", errorCode);
-			}
-
-			break;
-		}
-
-		switch (devKey)
-		{
-		case IOKey::ACCEPT:
-		{
-			GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", socketItem->mTCPSocket->mSocket);
-
-			CreateIoCompletionPort((HANDLE)socketItem->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::ACCEPT), 0);
-
-			break;
-		}
-		//case IOKey::CLIENT_CONNECT:
-		//{
-		//	CreateIoCompletionPort((HANDLE)socketItem->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::ACCEPT), 0);
-
-		//	GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", socketItem->mTCPSocket->mSocket);
-
-		//	// Insert Client Socket
-		//}
-
-		}
-		
-	}
-
-	return 0;
-}
-
 ErrorCode NetworkLib::Network::Init(int maxClientNum)
 {
 	mMaxClientNum = maxClientNum;
-
-	InitializeCriticalSection(&mCriticalSection);
-
+	
 	WSADATA wsaData;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR)
@@ -108,10 +52,12 @@ ErrorCode NetworkLib::Network::Init(int maxClientNum)
 		return errorCode;
 	}
 
+	mIOCPThreads = new IOCPThread[mMaxThreadNum];
+
 	return ErrorCode::SUCCESS;
 }
 
-ErrorCode NetworkLib::Network::Run()
+ErrorCode Network::Run()
 {
 	HANDLE exitEvent = CreateEvent(nullptr, true, false, nullptr);
 
@@ -119,7 +65,11 @@ ErrorCode NetworkLib::Network::Run()
 
 	mIOCPHandle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListenSocket->mSocket), nullptr, static_cast<ULONG_PTR>(IOKey::ACCEPT), 0);
 
-	mSocketProcessThread = std::make_unique<std::thread>([&]() {IOCPSocketProcess(); });
+	for (int i = 0; i < mMaxThreadNum; ++i)
+	{
+		mIOCPThreads[i].Init(mIOCPHandle, mClientSessionManager);
+		mIOCPThreads[i].Run();
+	}
 
 	// Reserve Accept Async
 	ErrorCode errorCode;
