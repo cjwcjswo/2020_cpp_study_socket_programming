@@ -1,138 +1,41 @@
 #pragma once
 
-#include <memory.h>
+#include "PrimitiveTypes.h"
 
 
 namespace NetworkLib
 {
 	class RingBuffer
 	{
-	private:
-		char* mBuffer;
-		char* mBufferEnd;
-
-		char* mARegionPointer;
-		size_t	mARegionSize;
-
-		char* mBRegionPointer;
-		size_t	mBRegionSize;
-
-		size_t	mCapacity;
-
-
 	public:
-		RingBuffer(size_t capacity) : mBRegionPointer(nullptr), mARegionSize(0), mBRegionSize(0), mCapacity(capacity)
-		{
-			mBuffer = new char[mCapacity];
-			mBufferEnd = mBuffer + mCapacity;
-			mARegionPointer = mBuffer;
-		}
-
-		~RingBuffer()
-		{
-			delete[] mBuffer;
-		}
+		explicit RingBuffer(const uint32 bufferSize);
+		~RingBuffer();
 
 
 	private:
-		void AllocateB()
-		{
-			mBRegionPointer = mBuffer;
-		}
-
-		size_t GetAFreeSpace() const
-		{
-			return (mBufferEnd - mARegionPointer - mARegionSize);
-		}
-
-		size_t GetSpaceBeforeA() const
-		{
-			return (mARegionPointer - mBuffer);
-		}
+		char* mBuffer = nullptr;
+		uint32 mBufferSize = 0;
+		uint32 mMaxBufferSize = 0;
+		uint32 mDataSize = 0;
+		char* mFrontMark = nullptr;
+		char* mRearMark = nullptr;
+		char* mEndMark = nullptr;
 
 
-		size_t GetBFreeSpace() const
-		{
-			if (mBRegionPointer == nullptr)
-				return 0;
-
-			return (mARegionPointer - mBRegionPointer - mBRegionSize);
-		}
+	private:
+		const size_t MaxBufferSize() const;
+		void Rearrange();
 
 	public:
-		void BufferReset()
-		{
-			mBRegionPointer = nullptr;
-			mARegionSize = 0;
-			mBRegionSize = 0;
+		void Clear();
+		bool Push(const char* data, const size_t size);
+		bool Pop(const size_t size);
 
-			memset(mBuffer, 0, mCapacity);
+		const size_t RemainBufferSize() const;
 
-			mBufferEnd = mBuffer + mCapacity;
-			mARegionPointer = mBuffer;
-		}
-
-		/// 버퍼의 첫부분 len만큼 날리기
-		void Remove(size_t len);
-
-		size_t GetFreeSpaceSize()
-		{
-			if (mBRegionPointer != nullptr)
-			{
-				return GetBFreeSpace();
-			}
-			else
-			{
-				/// A 버퍼보다 더 많이 존재하면, B 버퍼로 스위치
-				if (GetAFreeSpace() < GetSpaceBeforeA())
-				{
-					AllocateB();
-					return GetBFreeSpace();
-				}
-				else
-					return GetAFreeSpace();
-			}
-		}
-
-		size_t GetStoredSize() const
-		{
-			return mARegionSize + mBRegionSize;
-		}
-
-		size_t GetContiguiousBytes() const
-		{
-			if (mARegionSize > 0)
-				return mARegionSize;
-			else
-				return mBRegionSize;
-		}
-
-		/// 쓰기가 가능한 위치 (버퍼의 끝부분) 반환
-		char* GetBuffer() const
-		{
-			if (mBRegionPointer != nullptr)
-				return mBRegionPointer + mBRegionSize;
-			else
-				return mARegionPointer + mARegionSize;
-		}
-
-
-		/// 커밋(aka. IncrementWritten)
-		void Commit(size_t len)
-		{
-			if (mBRegionPointer != nullptr)
-				mBRegionSize += len;
-			else
-				mARegionSize += len;
-		}
-
-		/// 버퍼의 첫부분 리턴
-		char* GetBufferStart() const
-		{
-			if (mARegionSize > 0)
-				return mARegionPointer;
-			else
-				return mBRegionPointer;
-		}
+		inline const size_t DataSize() const { return mDataSize; };
+		inline char* FrontData() { return mFrontMark; };
+		inline void Commit(size_t size) { mRearMark += size; };
+		char* GetBuffer();
 	};
 }

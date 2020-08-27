@@ -12,18 +12,70 @@ namespace NetworkLib
 		NONE = 0,
 		ACCEPT = 1,
 		RECEIVE = 2,
+		SEND = 3,
 	};
 
 	struct OverlappedIOContext : OVERLAPPED
 	{
 		TCPSocket* mTCPSocket = nullptr;
+		IOKey mIOKey = IOKey::NONE;
+	};
 
-		OverlappedIOContext(TCPSocket* tcpSocket)
+	struct OverlappedIOAcceptContext : OverlappedIOContext
+	{
+		OverlappedIOAcceptContext(TCPSocket* tcpSocket)
 		{
 			memset(this, 0, sizeof(*this));
 			mTCPSocket = tcpSocket;
+			mIOKey = IOKey::ACCEPT;
 		}
 	};
+
+	struct OverlappedIOReceiveContext : OverlappedIOContext
+	{
+		WSABUF mWSABuf;
+
+		OverlappedIOReceiveContext(TCPSocket* tcpSocket)
+		{
+			memset(this, 0, sizeof(*this));
+			mTCPSocket = tcpSocket;
+			mIOKey = IOKey::RECEIVE;
+		}
+	};
+
+	struct OverlappedIOSendContext : OverlappedIOContext
+	{
+		WSABUF mWSABuf;
+
+		OverlappedIOSendContext(TCPSocket* tcpSocket)
+		{
+			memset(this, 0, sizeof(*this));
+			mTCPSocket = tcpSocket;
+			mIOKey = IOKey::SEND;
+		}
+	};
+
+	inline void DeleteIOContext(OverlappedIOContext* context)
+	{
+		if (context == nullptr)
+		{
+			return;
+		}
+
+		switch (context->mIOKey)
+		{
+		case IOKey::ACCEPT:
+		{
+			delete reinterpret_cast<OverlappedIOAcceptContext*>(context);
+			break;
+		}
+		case IOKey::RECEIVE:
+		{
+			delete reinterpret_cast<OverlappedIOReceiveContext*>(context);
+			break;
+		}
+		}
+	}
 }
 
 

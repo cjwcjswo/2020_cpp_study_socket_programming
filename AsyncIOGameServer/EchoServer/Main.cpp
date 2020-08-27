@@ -14,5 +14,16 @@ int main()
 	
 	network.Run();
 
+	while (true)
+	{
+		Packet packet = network.GetReceivePacket();
+		if (packet.mPacketId == 0)
+		{
+			continue;
+		}
+
+		network.Send(packet.mSessionIndex, packet.mPacketId, packet.mBodyData, packet.mBodyDataSize);
+	}
+
 	return 0;
 }

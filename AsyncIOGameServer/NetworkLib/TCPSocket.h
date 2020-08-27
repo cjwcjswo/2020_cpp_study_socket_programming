@@ -36,12 +36,6 @@ namespace NetworkLib
 
 		ErrorCode AcceptAsync(TCPSocket* clientSocket);
 
-		ErrorCode ReceiveAsync();
-		void ReceiveCompletion();
-
-		ErrorCode SendAsync();
-		void SendCompletion();
-
 		void Clear();
 	};
 }

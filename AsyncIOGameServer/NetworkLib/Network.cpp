@@ -1,4 +1,5 @@
 #include "Network.h"
+
 #include "OverlappedIOContext.h"
 #include "IOCPThread.h"
 #include "TCPSocket.h"
@@ -10,7 +11,15 @@
 using namespace NetworkLib;
 
 
-ErrorCode NetworkLib::Network::Init(int maxClientNum)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Network::PushReceivePacket(const Packet receivePacket)
+{
+	std::lock_guard<std::mutex> lock(mReceivePacketMutex);
+	mReceivePacketQueue.push(receivePacket);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ErrorCode Network::Init(int maxClientNum)
 {
 	mMaxClientNum = maxClientNum;
 	
@@ -57,9 +66,16 @@ ErrorCode NetworkLib::Network::Init(int maxClientNum)
 	return ErrorCode::SUCCESS;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::Run()
 {
 	HANDLE exitEvent = CreateEvent(nullptr, true, false, nullptr);
+	if (exitEvent == 0)
+	{
+		GLogger->PrintConsole(Color::RED, L"Create Exit Event Fail\n");
+
+		return ErrorCode::CREATE_EVENT_FAIL;
+	}
 
 	GLogger->PrintConsole(Color::LBLUE, "Run Server~~~~~\n");
 
@@ -67,7 +83,7 @@ ErrorCode Network::Run()
 
 	for (int i = 0; i < mMaxThreadNum; ++i)
 	{
-		mIOCPThreads[i].Init(mIOCPHandle, mClientSessionManager);
+		mIOCPThreads[i].Init(mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
 		mIOCPThreads[i].Run();
 	}
 
@@ -97,4 +113,59 @@ ErrorCode Network::Run()
 	GLogger->PrintConsole(Color::LBLUE, "Stop Server~~~~~~\n");
 
 	return ErrorCode::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Network::SendRawData(const int32 sessionIndex, char* data, const uint16 dataSize)
+{
+	ClientSession* session = mClientSessionManager->FindClientSession(sessionIndex);
+	if (session == nullptr)
+	{
+		return;
+	}
+
+	session->SendAsync(data, dataSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Network::Send(const int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize)
+{
+	ClientSession* session = mClientSessionManager->FindClientSession(sessionIndex);
+	if (session == nullptr)
+	{
+		return;
+	}
+
+	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
+	PacketData packetData{ PacketHeader{totalSize, packetId}, bodyData };
+	session->SendAsync(reinterpret_cast<char*>(&packetData), totalSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Network::Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize)
+{
+	ClientSession* session = mClientSessionManager->FindClientSession(sessionUniqueId);
+	if (session == nullptr)
+	{
+		return;
+	}
+
+	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
+	PacketData packetData{ PacketHeader{totalSize, packetId}, bodyData };
+	session->SendAsync(reinterpret_cast<char*>(&packetData), totalSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Packet Network::GetReceivePacket()
+{
+	std::lock_guard<std::mutex> lock(mReceivePacketMutex);
+
+	if (mReceivePacketQueue.empty())
+	{
+		return Packet{};
+	}
+	Packet receivePacket = mReceivePacketQueue.front();
+	mReceivePacketQueue.pop();
+
+	return receivePacket;
 }

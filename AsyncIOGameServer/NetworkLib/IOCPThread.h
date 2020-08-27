@@ -3,6 +3,9 @@
 #include <WinSock2.h>
 #include <thread>
 #include <mutex>
+#include <functional>
+#include "Protocol.h"
+
 
 namespace NetworkLib
 {
@@ -19,6 +22,7 @@ namespace NetworkLib
 		HANDLE mIOCPHandle = INVALID_HANDLE_VALUE;
 		ClientSessionManager* mClientSessionManager = nullptr;
 		std::mutex mSessionMutex;
+		std::function<void(const Packet)> mPushPacketFunction;
 
 
 	public:
@@ -28,10 +32,11 @@ namespace NetworkLib
 
 	protected:
 		DWORD WINAPI IOCPSocketProcess();
+		void SendProcess();
 
 
 	public:
-		void Init(const HANDLE iocpHandle, ClientSessionManager* clientSessionManager);
+		void Init(const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction);
 		void Run();
 	};
 }

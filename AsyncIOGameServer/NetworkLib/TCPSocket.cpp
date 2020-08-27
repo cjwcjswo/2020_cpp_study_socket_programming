@@ -105,12 +105,12 @@ ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 {
 	LPFN_ACCEPTEX acceptEx = reinterpret_cast<LPFN_ACCEPTEX>(GetSocketExtensionAPI(mSocket, WSAID_ACCEPTEX));
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
-	OverlappedIOContext* socketItem = new OverlappedIOContext(clientSocket);
+	OverlappedIOAcceptContext* context = new OverlappedIOAcceptContext(clientSocket);
 
 	BOOL isOK = acceptEx
 	(mSocket, clientSocket->mSocket, clientSocket->mAddressBuffer,
 		0, sockAddrSize, sockAddrSize,
-		nullptr, reinterpret_cast<LPOVERLAPPED>(socketItem));
+		nullptr, reinterpret_cast<LPOVERLAPPED>(context));
 	if (!isOK)
 	{
 		int errorCode = WSAGetLastError();
@@ -123,24 +123,7 @@ ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 	return ErrorCode::SUCCESS;
 }
 
-ErrorCode TCPSocket::ReceiveAsync()
-{
-	return ErrorCode();
-}
-
-void TCPSocket::ReceiveCompletion()
-{
-}
-
-ErrorCode TCPSocket::SendAsync()
-{
-	return ErrorCode();
-}
-
-void TCPSocket::SendCompletion()
-{
-}
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TCPSocket::Clear()
 {
 	mSocket = INVALID_SOCKET;

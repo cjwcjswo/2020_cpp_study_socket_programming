@@ -1,5 +1,6 @@
 #pragma once
 
+#include <WinSock2.h>
 #include <vector>
 #include <queue>
 
@@ -16,8 +17,10 @@ namespace NetworkLib
 		std::vector<ClientSession> mClientVector;
 		std::queue<int32> mClientIndexPool;
 
-		uint32 mMaxSessionSize = 0;
 		uint32 mMaxSessionBufferSize = 0;
+
+	public:
+		uint32 mMaxSessionSize = 0;
 
 
 	private:
@@ -37,10 +40,13 @@ namespace NetworkLib
 
 		ClientSession* FindClientSession(const int32 index);
 		ClientSession* FindClientSession(const uint64 uniqueId);
+		ClientSession* FindClientSessionBySocket(const SOCKET socket);
 
-		void ConnectClientSession(ClientSession& clientSession);
+		ClientSession& ConnectClientSession(ClientSession& clientSession);
 
 		void DisconnectClientSession(const int32 index);
 		void DisconnectClientSession(const uint64 uniqueId);
+
+		void FlushSendClientSessionAll();
 	};
 }

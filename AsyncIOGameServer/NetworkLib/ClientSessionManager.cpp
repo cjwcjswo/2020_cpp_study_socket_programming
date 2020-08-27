@@ -1,13 +1,11 @@
-#pragma comment(lib,"ws2_32")
-
-#include <WinSock2.h>
+#include "ClientSessionManager.h"
 
 #include "Define.h"
-#include "ClientSessionManager.h"
 #include "ClientSession.h"
 
 
 using namespace NetworkLib;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize) noexcept
@@ -31,12 +29,14 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 
 		mClientVector.emplace_back(i, 0, tcpSocket);
 	}
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 {
-	if (index < 0 || index > mMaxSessionSize - 1)
+	if (index < 0 || index > static_cast<int32>(mMaxSessionSize) - 1)
 	{
 		return nullptr;
 	}
@@ -47,10 +47,23 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
 {
-
 	for (uint32 i = 0; i < mMaxSessionSize; i++)
 	{
 		if (mClientVector[i].mUniqueId == uniqueId)
+		{
+			return &mClientVector[i];
+		}
+	}
+
+	return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ClientSession* ClientSessionManager::FindClientSessionBySocket(const SOCKET socket)
+{
+	for (uint32 i = 0; i < mMaxSessionSize; i++)
+	{
+		if (mClientVector[i].mTCPSocket->mSocket == socket)
 		{
 			return &mClientVector[i];
 		}
@@ -79,11 +92,14 @@ int32 ClientSessionManager::AllocClientSessionIndex()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
+ClientSession& ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
 {
 	ClientSession& session = mClientVector[clientSession.mIndex];
 	session.mUniqueId = clientSession.mUniqueId;
 	session.mTCPSocket = clientSession.mTCPSocket;
+	session.mIsConnect = true;
+
+	return session;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,4 +119,18 @@ void ClientSessionManager::DisconnectClientSession(const uint64 uniqueId)
 
 	mClientIndexPool.push(session->mIndex);
 	session->Clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ClientSessionManager::FlushSendClientSessionAll()
+{
+	for (auto& session : mClientVector)
+	{
+		if (!session.IsConnect())
+		{
+			continue;
+		}
+
+		session.FlushSend();
+	}
 }

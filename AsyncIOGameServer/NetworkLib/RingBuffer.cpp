@@ -1,52 +1,116 @@
 #include "RingBuffer.h"
 
+#include <Windows.h>
+
 
 using namespace NetworkLib;
 
 
-void RingBuffer::Remove(size_t len)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+RingBuffer::RingBuffer(const uint32 bufferSize) : mBufferSize(bufferSize), mMaxBufferSize(bufferSize * 10 + bufferSize)
 {
-	size_t cnt = len;
+	Clear();
+}
 
-	/// Read와 마찬가지로 A가 있다면 A영역에서 먼저 삭제
-
-	if (mARegionSize > 0)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+RingBuffer::~RingBuffer()
+{
+	if (mBuffer != nullptr)
 	{
-		size_t aRemove = (cnt > mARegionSize) ? mARegionSize : cnt;
-		mARegionSize -= aRemove;
-		mARegionPointer += aRemove;
-		cnt -= aRemove;
+		delete[] mBuffer;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const size_t RingBuffer::MaxBufferSize() const
+{
+	return static_cast<size_t>(mMaxBufferSize - mBufferSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const size_t RingBuffer::RemainBufferSize() const
+{
+	return static_cast<size_t>(mMaxBufferSize - mDataSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+char* RingBuffer::GetBuffer()
+{
+	if (mRearMark + RemainBufferSize() > mEndMark)
+	{
+		Rearrange();
 	}
 
-	// 제거할 용량이 더 남은경우 B에서 제거 
-	if (cnt > 0 && mBRegionSize > 0)
+	return mRearMark;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RingBuffer::Rearrange()
+{
+	if (mDataSize > 0)
 	{
-		size_t bRemove = (cnt > mBRegionSize) ? mBRegionSize : cnt;
-		mBRegionSize -= bRemove;
-		mBRegionPointer += bRemove;
-		cnt -= bRemove;
+		memmove_s(mBuffer, mDataSize, mBuffer + (mFrontMark - mBuffer), mDataSize);
+	}
+	mFrontMark = mBuffer;
+	mRearMark = mBuffer + mDataSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RingBuffer::Clear()
+{
+	mBuffer = new char[mMaxBufferSize];
+	ZeroMemory(mBuffer, mMaxBufferSize);
+
+	mFrontMark = mBuffer;
+	mRearMark = mBuffer;
+	mEndMark = mFrontMark + (mMaxBufferSize - mBufferSize);
+	mDataSize = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool RingBuffer::Push(const char* data, const size_t size)
+{
+	if (size <= 0)
+	{
+		return true;
 	}
 
-	/// A영역이 비워지면 B를 A로 스위치 
-	if (mARegionSize == 0)
+	if (size > RemainBufferSize())
 	{
-		if (mBRegionSize > 0)
-		{
-			/// 앞으로 당겨 붙이기
-			if (mBRegionPointer != mBuffer)
-				memmove(mBuffer, mBRegionPointer, mBRegionSize);
-
-			mARegionPointer = mBuffer;
-			mARegionSize = mBRegionSize;
-			mBRegionPointer = nullptr;
-			mBRegionSize = 0;
-		}
-		else
-		{
-			mBRegionPointer = nullptr;
-			mBRegionSize = 0;
-			mARegionPointer = mBuffer;
-			mARegionSize = 0;
-		}
+		return false;
 	}
+
+	if (mRearMark + size > mEndMark)
+	{
+		Rearrange();
+	}
+
+	memcpy_s(mRearMark, size, data, size);
+	mRearMark += static_cast<uint32>(size);
+	mDataSize += static_cast<uint32>(size);
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool RingBuffer::Pop(const size_t size)
+{
+	if (size <= 0)
+	{
+		return true;
+	}
+
+	if (size > mDataSize)
+	{
+		return false;
+	}
+
+	if (mFrontMark + size > mEndMark)
+	{
+		Rearrange();
+	}
+
+	mFrontMark += static_cast<uint32>(size);
+	mDataSize -= static_cast<uint32>(size);
+	return true;
 }

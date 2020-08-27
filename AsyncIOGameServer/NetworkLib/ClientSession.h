@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include "TCPSocket.h"
 #include "PrimitiveTypes.h"
 #include "Define.h"
@@ -18,11 +19,15 @@ namespace NetworkLib
 
 	private:
 		uint32 mMaxBufferSize = 0;
+		//std::mutex mSessionMutex;
 
 
 	public:
-		RingBuffer mSendBufefr;
+		RingBuffer mSendBuffer;
 		RingBuffer mReceiveBuffer;
+
+		int mSendPendingCount = 0;
+		bool mIsConnect = false;
 
 		int32 mIndex = INVALID_INDEX;
 		uint64 mUniqueId = INVALID_UNIQUE_ID;
@@ -33,14 +38,13 @@ namespace NetworkLib
 		bool IsConnect() const;
 
 		ErrorCode ReceiveAsync();
-		void ReceiveCompletion();
+		void ReceiveCompletion(DWORD transferred);
 
-		ErrorCode SendAsync();
-		void SendCompletion();
+		ErrorCode SendAsync(const char* data, size_t length);
+		ErrorCode FlushSend();
+		void SendCompletion(DWORD transferred);
 
 		void Clear();
 	};
-
-
 }
 
