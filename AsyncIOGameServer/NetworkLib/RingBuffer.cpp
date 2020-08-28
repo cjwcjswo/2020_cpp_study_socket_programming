@@ -47,6 +47,9 @@ char* RingBuffer::GetBuffer()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RingBuffer::Rearrange()
 {
+	//TODO 최흥배
+	// 문제가 있습니다. 만약 mFrontMark의 위치가 mDataSize 보다 작은 경우 덮어씁니다.
+	// push는 많이 되었는데 pop 속도가 느린 경우 발생할 수 있습니다.
 	if (mDataSize > 0)
 	{
 		memmove_s(mBuffer, mDataSize, mBuffer + (mFrontMark - mBuffer), mDataSize);

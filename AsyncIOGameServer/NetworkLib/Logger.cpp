@@ -9,6 +9,9 @@
 #include "Logger.h"
 
 
+//TODO 최흥배
+// 채팅 서버 이후에 작업합니다.
+// 파일 쓰기 기능을 추가하고, 특히 스레드를 사용하여 로그를 남기도록 합니다. 즉 로그 전용 스레드를 만듭니다
 Logger::Logger() noexcept
 {
 	mStdErrHandle = GetStdHandle(STD_ERROR_HANDLE);

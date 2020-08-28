@@ -18,6 +18,8 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 	DWORD transferred = 0;
 	IOKey ioKey = IOKey::NONE;
 
+	//TODO 최흥배
+	// GetQueuedCompletionStatusEX 버전을 사용해봅니다
 	bool isOk = GetQueuedCompletionStatus
 	(
 		mIOCPHandle, &transferred, reinterpret_cast<PULONG_PTR>(&ioKey), reinterpret_cast<LPOVERLAPPED*>(&ioContext), INFINITE
@@ -94,6 +96,9 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 				receivePacket.mBodyData = session->mReceiveBuffer.FrontData() + PACKET_HEADER_SIZE;
 			}
 
+			//TODO 최흥배
+			// 뒤에 생각해봐야할 부분인데 패킷 처리쪽에서 처리에 비해 receive가 자주 발생하면(혹는 큰 데이터를 받거나) 덮어써여지는 문제가 발생할 수 있는데
+			// 이 문제에 대해서 어떻게 처리해야 할지 고민해봐야겠습니다.
 			session->mReceiveBuffer.Pop(header->mPacketSize);
 
 			mPushPacketFunction(receivePacket);

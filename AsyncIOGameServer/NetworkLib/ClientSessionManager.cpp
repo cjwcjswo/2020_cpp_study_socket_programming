@@ -44,6 +44,9 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 	return &mClientVector[index];
 }
 
+//TODO 최흥배
+// 아램 함수로는 검색하지 않도록 합니다. 전체 검색이 너무 되네요
+// FindClientSession(const int32 index)로만 검색하고, 검증이 필요하면 index로 검색 후 uniqueId로 확인하면 될 것 같습니다
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
 {
@@ -78,6 +81,9 @@ uint64  ClientSessionManager::GenerateUniqueId() const
 	return ++mUniqueIdGenerator;
 }
 
+//TODO 최흥배
+// 멀티스레드에서 호출되는데 스레드 세이프 하지 않습니다.
+// Interlocked Singly linked list를 사용해보죠
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int32 ClientSessionManager::AllocClientSessionIndex()
 {
