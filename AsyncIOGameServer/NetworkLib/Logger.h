@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <winnt.h>
 #include "PrimitiveTypes.h"

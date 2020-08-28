@@ -1,7 +1,7 @@
-#pragma once
+﻿#pragma once
 
-#include <mutex>
 #include "TCPSocket.h"
+#include "FastSpinLock.h"
 #include "PrimitiveTypes.h"
 #include "Define.h"
 #include "RingBuffer.h"
@@ -19,12 +19,14 @@ namespace NetworkLib
 
 	private:
 		uint32 mMaxBufferSize = 0;
-		//std::mutex mSessionMutex;
+		
 
 
 	public:
 		RingBuffer mSendBuffer;
 		RingBuffer mReceiveBuffer;
+
+		FastSpinLock mSessionLock;
 
 		int mSendPendingCount = 0;
 		bool mIsConnect = false;

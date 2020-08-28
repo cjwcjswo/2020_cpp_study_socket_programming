@@ -1,4 +1,4 @@
-#include "ClientSession.h"
+﻿#include "ClientSession.h"
 
 #include <WinSock2.h>
 #include "OverlappedIOContext.h"
@@ -42,7 +42,7 @@ ErrorCode ClientSession::ReceiveAsync()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
-	//std::lock_guard<std::mutex> lock(mSessionMutex);
+	FastSpinlockGuard criticalSection(mSessionLock);
 
 	if (mReceiveBuffer.RemainBufferSize() == 0)
 	{
@@ -71,19 +71,20 @@ ErrorCode ClientSession::ReceiveAsync()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::ReceiveCompletion(DWORD transferred)
 {
-	//std::lock_guard<std::mutex> lock(mSessionMutex);
+	FastSpinlockGuard criticalSection(mSessionLock);
+
 	mReceiveBuffer.Commit(transferred);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ClientSession::SendAsync(const char* data, size_t length)
 {
+	FastSpinlockGuard criticalSection(mSessionLock);
+
 	if (!IsConnect())
 	{
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
-
-	//std::lock_guard<std::mutex> lock(mSessionMutex);
 
 	if (!mSendBuffer.Push(data, length))
 	{
@@ -101,7 +102,7 @@ ErrorCode ClientSession::FlushSend()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
-	//std::lock_guard<std::mutex> lock(mSessionMutex);
+	FastSpinlockGuard criticalSection(mSessionLock);
 
 	if (mSendBuffer.RemainBufferSize() == 0)
 	{
@@ -141,12 +142,12 @@ ErrorCode ClientSession::FlushSend()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::SendCompletion(DWORD transferred)
 {
+	FastSpinlockGuard criticalSection(mSessionLock);
+
 	if (!IsConnect())
 	{
 		return;
 	}
-
-	//std::lock_guard<std::mutex> lock(mSessionMutex);
 
 	mSendBuffer.Pop(transferred);
 

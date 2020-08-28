@@ -1,4 +1,4 @@
-#include "IOCPThread.h"
+О╩©#include "IOCPThread.h"
 
 #include "Define.h"
 #include "Logger.h"
@@ -26,7 +26,7 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 	{
 		if (ioContext != nullptr)
 		{
-			// ╪рдо ╟Э╥ц ©║╥╞
+			// Л├▄Л╪⌠ Й╢─К═╗ Л≈░К÷╛
 			return 0;
 		}
 

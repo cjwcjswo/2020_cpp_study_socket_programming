@@ -1,4 +1,4 @@
-#include <Windows.h>
+﻿#include <Windows.h>
 //#include <WinBase.h>
 //#include <ConsoleApi2.h>
 #include <stdarg.h>
