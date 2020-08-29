@@ -130,8 +130,9 @@ void IOCPThread::SendProcess()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void IOCPThread::Init(const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction)
+void IOCPThread::Init(bool* isRunning, const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction)
 {
+	mIsRunning = isRunning;
 	mIOCPHandle = iocpHandle;
 	mClientSessionManager = clientSessionManager;
 	mPushPacketFunction = pushPacketFunction;
@@ -150,4 +151,10 @@ void IOCPThread::Run()
 			}
 		}
 	);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void IOCPThread::Join()
+{
+	mThread->join();
 }

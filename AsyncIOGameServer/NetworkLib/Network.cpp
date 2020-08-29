@@ -69,8 +69,8 @@ ErrorCode Network::Init(int maxClientNum)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::Run()
 {
-	HANDLE exitEvent = CreateEvent(nullptr, true, false, nullptr);
-	if (exitEvent == 0)
+	mExitEvent = CreateEvent(nullptr, true, false, nullptr);
+	if (mExitEvent == 0)
 	{
 		GLogger->PrintConsole(Color::RED, L"Create Exit Event Fail\n");
 
@@ -83,7 +83,7 @@ ErrorCode Network::Run()
 
 	for (int i = 0; i < mMaxThreadNum; ++i)
 	{
-		mIOCPThreads[i].Init(mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
+		mIOCPThreads[i].Init(&mIsRunning, mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
 		mIOCPThreads[i].Run();
 	}
 
@@ -108,11 +108,27 @@ ErrorCode Network::Run()
 		}
 	}
 
-	WaitForSingleObject(exitEvent, INFINITE);
+	mIsRunning = true;
 
-	GLogger->PrintConsole(Color::LBLUE, "Stop Server~~~~~~\n");
+	WaitForSingleObject(mExitEvent, INFINITE);
 
 	return ErrorCode::SUCCESS;
+}
+
+void Network::Stop()
+{
+	GLogger->PrintConsole(Color::LBLUE, "Stop Server~~~~~~\n");
+
+	mIsRunning = false;
+
+	CloseHandle(mExitEvent);
+
+	for (int i = 0; i < mMaxThreadNum; ++i)
+	{
+		mIOCPThreads[i].Join();
+	}
+
+	WSACleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

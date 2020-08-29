@@ -24,6 +24,8 @@ namespace NetworkLib
 		std::mutex mSessionMutex;
 		std::function<void(const Packet)> mPushPacketFunction;
 
+		bool* mIsRunning = nullptr;
+
 
 	public:
 		IOCPThread() = default;
@@ -36,8 +38,9 @@ namespace NetworkLib
 
 
 	public:
-		void Init(const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction);
+		void Init(bool* isRunning, const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction);
 		void Run();
+		void Join();
 	};
 }
 

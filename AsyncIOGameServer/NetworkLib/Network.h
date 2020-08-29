@@ -21,6 +21,7 @@ namespace NetworkLib
 	protected:
 		TCPSocket* mListenSocket = nullptr;
 		HANDLE mIOCPHandle = INVALID_HANDLE_VALUE;
+		HANDLE mExitEvent = INVALID_HANDLE_VALUE;
 
 		ClientSessionManager* mClientSessionManager = nullptr;
 
@@ -29,10 +30,13 @@ namespace NetworkLib
 		std::queue<Packet> mReceivePacketQueue;
 		std::mutex mReceivePacketMutex;
 
+		// TODO: Config 적용
 		int mMaxClientNum = 0;
 		int mMaxThreadNum = 10;
 
-		
+		bool mIsRunning = false;
+
+
 	public:
 		Network() = default;
 		~Network() = default;
@@ -45,6 +49,7 @@ namespace NetworkLib
 	public:
 		ErrorCode Init(int maxClientNum);
 		ErrorCode Run();
+		void Stop();
 
 		void SendRawData(const int32 sessionIndex, char* bodyData, const uint16 bodySize);
 
