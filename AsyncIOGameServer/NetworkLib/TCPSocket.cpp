@@ -103,6 +103,8 @@ ErrorCode TCPSocket::Listen(const int backlog)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 {
+	//TODO 최흥배
+	// windows 7 이후부터는 바로 사용할 수 있습니다. https://jacking75.github.io/cpp_iocp_extension_method/
 	LPFN_ACCEPTEX acceptEx = reinterpret_cast<LPFN_ACCEPTEX>(GetSocketExtensionAPI(mSocket, WSAID_ACCEPTEX));
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
 	OverlappedIOAcceptContext* context = new OverlappedIOAcceptContext(clientSocket);
