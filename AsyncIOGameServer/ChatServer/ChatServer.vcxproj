@@ -163,6 +163,7 @@
     <ClCompile Include="ChatServer.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MySQLManager.cpp" />
     <ClCompile Include="PacketHandler.cpp" />
     <ClCompile Include="PacketProcess.cpp" />
     <ClCompile Include="PacketProcessRoom.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="DBManager.h" />
     <ClInclude Include="ErrorCode.h" />
+    <ClInclude Include="MySQLManager.h" />
     <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RedisManager.h" />

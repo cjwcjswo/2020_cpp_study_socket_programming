@@ -2,7 +2,7 @@
 
 #include "Define.h"
 #include "ClientSession.h"
-
+#include "SList.h"
 
 using namespace NetworkLib;
 
@@ -14,11 +14,18 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 	mMaxSessionBufferSize = maxSessionBufferSize;
 
 	mClientVector.reserve(maxClientSessionNum);
+	mClientIndexPool = new SList;
+	if (!mClientIndexPool->Create(maxClientSessionNum))
+	{
+		return ErrorCode::CLIENT_SESSION_MANAGER_INIT_FAIL;
+	}
 
 	ErrorCode errorCode;
 	for (uint32 i = 0; i < maxClientSessionNum; ++i)
 	{
-		mClientIndexPool.push(i);
+		IndexElement* indexElement = new IndexElement;
+		indexElement->mIndex = static_cast<int32>(i);
+		mClientIndexPool->Push(reinterpret_cast<SLIST_ENTRY*>(indexElement));
 
 		TCPSocket* tcpSocket = new TCPSocket();
 		errorCode = tcpSocket->Create();
@@ -47,7 +54,7 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 //TODO 최흥배
 // 아램 함수로는 검색하지 않도록 합니다. 전체 검색이 너무 되네요
 // FindClientSession(const int32 index)로만 검색하고, 검증이 필요하면 index로 검색 후 uniqueId로 확인하면 될 것 같습니다
-// 적용 완료
+// 적용 완료(함수 삭제)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint64  ClientSessionManager::GenerateUniqueId() const
 {
@@ -57,17 +64,17 @@ uint64  ClientSessionManager::GenerateUniqueId() const
 //TODO 최흥배
 // 멀티스레드에서 호출되는데 스레드 세이프 하지 않습니다.
 // Interlocked Singly linked list를 사용해보죠
+// 적용 완료
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int32 ClientSessionManager::AllocClientSessionIndex()
 {
-	if (mClientIndexPool.empty())
+	if (mClientIndexPool->Count() == 0)
 	{
 		return INVALID_INDEX;
 	}
-	int32 index = mClientIndexPool.front();
-	mClientIndexPool.pop();
+	IndexElement* indexElement = reinterpret_cast<IndexElement*>(mClientIndexPool->Pop());
 
-	return index;
+	return indexElement->mIndex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,19 +92,9 @@ ClientSession& ClientSessionManager::ConnectClientSession(ClientSession& clientS
 void ClientSessionManager::DisconnectClientSession(const int32 index)
 {
 	mClientVector[index].Clear();
-	mClientIndexPool.push(index);
-}
-
-void ClientSessionManager::DisconnectClientSession(const uint64 uniqueId)
-{
-	ClientSession* session = FindClientSession(uniqueId);
-	if (session == nullptr)
-	{
-		return;
-	}
-
-	mClientIndexPool.push(session->mIndex);
-	session->Clear();
+	IndexElement indexElement;
+	indexElement.mIndex = static_cast<int32>(index);
+	mClientIndexPool->Push(reinterpret_cast<SLIST_ENTRY*>(&indexElement));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

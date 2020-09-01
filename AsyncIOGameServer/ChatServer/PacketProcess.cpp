@@ -53,29 +53,29 @@ ErrorCode PacketHandler::Login(const Packet& packet)
 	LoginRequest* request = reinterpret_cast<LoginRequest*>(packet.mBodyData);
 	LoginResponse response;
 
-#ifndef _DEBUG
-	Redis::CommandRequest commandRequest;
-	commandRequest.mCommandType = Redis::CommandType::GET;
-	Redis::Get get;
-	strcpy_s(get.mKey, CS::RedisLoginKey(request->mUserId).c_str());
-	commandRequest.mCommandBody = reinterpret_cast<char*>(&get);
-	commandRequest.mCommandBodySize = sizeof(get);
-	mRedisManager->ExecuteCommandAsync(commandRequest);
-	Redis::CommandResponse commandResponse = mRedisManager->GetCommandResult();
-
-	if (commandResponse.mErrorCode != ErrorCode::SUCCESS)
-	{
-		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
-		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-		return response.mErrorCode;
-	}
-	if (std::strncmp(request->mAuthKey, commandResponse.mResult.c_str(), AUTH_KEY_SIZE) != 0)
-	{
-		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
-		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
-		return response.mErrorCode;
-	}
-#endif
+//#ifndef _DEBUG
+//	Redis::CommandRequest commandRequest;
+//	commandRequest.mCommandType = Redis::CommandType::GET;
+//	Redis::Get get;
+//	strcpy_s(get.mKey, CS::RedisLoginKey(request->mUserId).c_str());
+//	commandRequest.mCommandBody = reinterpret_cast<char*>(&get);
+//	commandRequest.mCommandBodySize = sizeof(get);
+//	mRedisManager->ExecuteCommandAsync(commandRequest);
+//	Redis::CommandResponse commandResponse = mRedisManager->GetCommandResult();
+//
+//	if (commandResponse.mErrorCode != ErrorCode::SUCCESS)
+//	{
+//		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
+//		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+//		return response.mErrorCode;
+//	}
+//	if (std::strncmp(request->mAuthKey, commandResponse.mResult.c_str(), AUTH_KEY_SIZE) != 0)
+//	{
+//		response.mErrorCode = ErrorCode::USER_LOGIN_AUTH_FAIL;
+//		mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
+//		return response.mErrorCode;
+//	}
+//#endif
 
 	response.mErrorCode = mUserManager->Login(packet.mSessionUniqueId, request->mUserId);
 	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::LOGIN_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));

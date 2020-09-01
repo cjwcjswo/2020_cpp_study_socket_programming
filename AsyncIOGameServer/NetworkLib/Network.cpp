@@ -177,22 +177,6 @@ void Network::Send(const int32 sessionIndex, const uint16 packetId, char* bodyDa
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Network::Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize)
-{
-	ClientSession* session = mClientSessionManager->FindClientSession(sessionUniqueId);
-	if (session == nullptr)
-	{
-		return;
-	}
-
-	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
-	PacketData packetData;
-	packetData.mHeader = PacketHeader{ totalSize, packetId };
-	memcpy_s(packetData.mBodyData, bodySize, bodyData, bodySize);
-	session->SendAsync(reinterpret_cast<char*>(&packetData), totalSize);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Packet Network::GetReceivePacket()
 {
 	std::lock_guard<std::mutex> lock(mReceivePacketMutex);

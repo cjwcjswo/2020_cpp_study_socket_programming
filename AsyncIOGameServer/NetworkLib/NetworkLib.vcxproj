@@ -160,6 +160,7 @@
     <ClInclude Include="PrimitiveTypes.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RingBuffer.h" />
+    <ClInclude Include="SList.h" />
     <ClInclude Include="TCPSocket.h" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +172,7 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
+    <ClCompile Include="SList.cpp" />
     <ClCompile Include="TCPSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

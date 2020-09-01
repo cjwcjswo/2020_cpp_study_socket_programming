@@ -55,6 +55,7 @@ ErrorCode ChatServer::Init()
 	mRoomManager = new RoomManager;
 	mRoomManager->Init(mConfig->mMaxRoomUserNum);
 
+	// TODO: DBManager 완성 후 작성
 	/*mRedisManager = new Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
 	ErrorCode errorCode = mRedisManager->Connect(mConfig->mRedisAddress.c_str(), mConfig->mRedisPortNum);
 	if (errorCode != ErrorCode::SUCCESS)

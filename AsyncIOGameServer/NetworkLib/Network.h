@@ -55,7 +55,6 @@ namespace NetworkLib
 		void SendRawData(const int32 sessionIndex, char* bodyData, const uint16 bodySize);
 
 		void Send(const int32 sessionIndex, const uint16 packetId, char* bodyData, const uint16 bodySize);
-		void Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize);
 
 		Packet GetReceivePacket();
 	};

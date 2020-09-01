@@ -6,16 +6,24 @@
 
 #include "PrimitiveTypes.h"
 #include "ErrorCode.h"
+#include "Define.h"
+
 
 namespace NetworkLib
 {
+	class SList;
 	class ClientSession;
+
+	struct IndexElement : SLIST_ENTRY
+	{
+		int32 mIndex = INVALID_INDEX;
+	};
 
 	class ClientSessionManager
 	{
 	private:
 		std::vector<ClientSession> mClientVector;
-		std::queue<int32> mClientIndexPool;
+		SList* mClientIndexPool = nullptr;
 
 		uint32 mMaxSessionBufferSize = 0;
 
@@ -43,7 +51,6 @@ namespace NetworkLib
 		ClientSession& ConnectClientSession(ClientSession& clientSession);
 
 		void DisconnectClientSession(const int32 index);
-		void DisconnectClientSession(const uint64 uniqueId);
 
 		void FlushSendClientSessionAll();
 	};
