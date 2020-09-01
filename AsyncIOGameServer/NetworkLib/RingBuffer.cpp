@@ -38,24 +38,34 @@ char* RingBuffer::GetBuffer()
 {
 	if (mRearMark + RemainBufferSize() > mEndMark)
 	{
-		Rearrange();
+		if (!Rearrange())
+		{
+			return nullptr;
+		}
 	}
 
 	return mRearMark;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RingBuffer::Rearrange()
+bool RingBuffer::Rearrange()
 {
-	//TODO ÃÖÈï¹è
-	// ¹®Á¦°¡ ÀÖ½À´Ï´Ù. ¸¸¾à mFrontMarkÀÇ À§Ä¡°¡ mDataSize º¸´Ù ÀÛÀº °æ¿ì µ¤¾î¾¹´Ï´Ù.
-	// push´Â ¸¹ÀÌ µÇ¾ú´Âµ¥ pop ¼Óµµ°¡ ´À¸° °æ¿ì ¹ß»ıÇÒ ¼ö ÀÖ½À´Ï´Ù.
+	//TODO ìµœí¥ë°°
+	// ë¬¸ì œê°€ ìˆìŠµë‹ˆë‹¤. ë§Œì•½ mFrontMarkì˜ ìœ„ì¹˜ê°€ mDataSize ë³´ë‹¤ ì‘ì€ ê²½ìš° ë®ì–´ì”ë‹ˆë‹¤.
+	// pushëŠ” ë§ì´ ë˜ì—ˆëŠ”ë° pop ì†ë„ê°€ ëŠë¦° ê²½ìš° ë°œìƒí•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+	// ì ìš© ì™„ë£Œ -> ì¶”í›„ ë‹¨ìˆœíˆ falseë¡œ ë¦¬í„´í•˜ëŠ” ë°©ë²• ì™¸ì— ìœ ì—°í•œ ë°©ë²•ìœ¼ë¡œ ê°œì„ 
 	if (mDataSize > 0)
 	{
+		if (mDataSize > static_cast<uint32>(mFrontMark - mBuffer))
+		{
+			return false;
+		}
 		memmove_s(mBuffer, mDataSize, mBuffer + (mFrontMark - mBuffer), mDataSize);
 	}
 	mFrontMark = mBuffer;
 	mRearMark = mBuffer + mDataSize;
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +95,10 @@ bool RingBuffer::Push(const char* data, const size_t size)
 
 	if (mRearMark + size > mEndMark)
 	{
-		Rearrange();
+		if (!Rearrange())
+		{
+			return false;
+		}
 	}
 
 	memcpy_s(mRearMark, size, data, size);
@@ -110,7 +123,10 @@ bool RingBuffer::Pop(const size_t size)
 
 	if (mFrontMark + size > mEndMark)
 	{
-		Rearrange();
+		if (!Rearrange())
+		{
+			return false;
+		}
 	}
 
 	mFrontMark += static_cast<uint32>(size);

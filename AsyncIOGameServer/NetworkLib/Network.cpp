@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "ClientSessionManager.h"
 #include "ClientSession.h"
+#include "Config.h"
 
 
 using namespace NetworkLib;
@@ -19,10 +20,15 @@ void Network::PushReceivePacket(const Packet receivePacket)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode Network::Init(int maxClientNum)
+ErrorCode Network::Init()
 {
-	mMaxClientNum = maxClientNum;
-	
+	mConfig = new Config();
+	ErrorCode errorCode = mConfig->Load();
+	if (errorCode != ErrorCode::SUCCESS)
+	{
+		return errorCode;
+	}
+
 	WSADATA wsaData;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR)
@@ -32,7 +38,7 @@ ErrorCode Network::Init(int maxClientNum)
 
 	mListenSocket = new TCPSocket();
 
-	ErrorCode errorCode = mListenSocket->Create();
+	errorCode = mListenSocket->Create();
 	if (errorCode != ErrorCode::SUCCESS)
 	{
 		GLogger->PrintConsole(Color::RED, L"Listen Socket Create Error: %d\n", static_cast<uint16>(errorCode));
@@ -54,14 +60,14 @@ ErrorCode Network::Init(int maxClientNum)
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	errorCode = mClientSessionManager->Init(mMaxClientNum, 1024);
+	errorCode = mClientSessionManager->Init(mConfig->mMaxThreadNum, 1024);
 	if (errorCode != ErrorCode::SUCCESS)
 	{
 		GLogger->PrintConsole(Color::RED, L"ClientSessionManager Init Error: %d\n", static_cast<uint16>(errorCode));
 		return errorCode;
 	}
 
-	mIOCPThreads = new IOCPThread[mMaxThreadNum];
+	mIOCPThreads = new IOCPThread[mConfig->mMaxThreadNum];
 
 	return ErrorCode::SUCCESS;
 }
@@ -81,17 +87,27 @@ ErrorCode Network::Run()
 
 	mIOCPHandle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListenSocket->mSocket), nullptr, static_cast<ULONG_PTR>(IOKey::ACCEPT), 0);
 
-	for (int i = 0; i < mMaxThreadNum; ++i)
+	for (uint32 i = 0; i < mConfig->mMaxThreadNum; ++i)
 	{
-		mIOCPThreads[i].Init(&mIsRunning, mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
+		mIOCPThreads[i].Init(&mIsRunning, mListenSocket, mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
 		mIOCPThreads[i].Run();
 	}
+	mSendThread = std::make_unique<std::thread>(
+		[this]() 
+		{
+			while (true)
+			{
+				mClientSessionManager->FlushSendClientSessionAll();
+				Sleep(mConfig->mSendPacketCheckTick);
+			}
+		}
+	);
 
 	// Reserve Accept Async
 	ErrorCode errorCode;
-	for (int i = 0; i < mMaxClientNum; ++i)
+	for (uint32 i = 0; i < mConfig->mMaxThreadNum; ++i)
 	{
-		ClientSession* session = mClientSessionManager->FindClientSession(i);
+		ClientSession* session = mClientSessionManager->FindClientSession(static_cast<int32>(i));
 		if (session == nullptr)
 		{
 			GLogger->PrintConsole(Color::RED, L"ClientSession(index: %d) Not Exist Error: %d\n", i, static_cast<uint16>(ErrorCode::CLIENT_SESSION_NOT_EXIST));
@@ -123,10 +139,11 @@ void Network::Stop()
 
 	CloseHandle(mExitEvent);
 
-	for (int i = 0; i < mMaxThreadNum; ++i)
+	for (uint32 i = 0; i < mConfig->mMaxThreadNum; ++i)
 	{
 		mIOCPThreads[i].Join();
 	}
+	mSendThread->join();
 
 	WSACleanup();
 }
@@ -153,7 +170,9 @@ void Network::Send(const int32 sessionIndex, const uint16 packetId, char* bodyDa
 	}
 
 	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
-	PacketData packetData{ PacketHeader{totalSize, packetId}, bodyData };
+	PacketData packetData;
+	packetData.mHeader = PacketHeader{ totalSize, packetId };
+	memcpy_s(packetData.mBodyData, bodySize, bodyData, bodySize);
 	session->SendAsync(reinterpret_cast<char*>(&packetData), totalSize);
 }
 
@@ -167,7 +186,9 @@ void Network::Send(const uint64 sessionUniqueId, const uint16 packetId, char* bo
 	}
 
 	uint16 totalSize = PACKET_HEADER_SIZE + bodySize;
-	PacketData packetData{ PacketHeader{totalSize, packetId}, bodyData };
+	PacketData packetData;
+	packetData.mHeader = PacketHeader{ totalSize, packetId };
+	memcpy_s(packetData.mBodyData, bodySize, bodyData, bodySize);
 	session->SendAsync(reinterpret_cast<char*>(&packetData), totalSize);
 }
 

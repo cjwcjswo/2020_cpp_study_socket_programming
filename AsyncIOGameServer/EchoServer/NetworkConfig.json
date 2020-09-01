@@ -1,0 +1,9 @@
+{
+	"IPAddress": "127.0.0.1",
+	"PortNum": 32452,
+	"MaxSessionNum": 100,
+	"MaxSessionBufferSize": 1024,
+	"MaxPacketBodySize": 1024,
+	"SendPacketCheckTick": 10,
+	"MaxThreadNum": 10
+}

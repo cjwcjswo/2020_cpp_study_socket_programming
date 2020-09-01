@@ -24,8 +24,6 @@ namespace NetworkLib
 
 
 	protected:
-		void* GetSocketExtensionAPI(SOCKET socket, GUID functionGUID);
-
 		ErrorCode ReuseAddr();
 
 

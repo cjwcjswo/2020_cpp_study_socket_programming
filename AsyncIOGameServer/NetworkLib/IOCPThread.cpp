@@ -14,24 +14,19 @@ using namespace NetworkLib;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DWORD WINAPI IOCPThread::IOCPSocketProcess()
 {
-	OverlappedIOContext* ioContext = nullptr;
-	DWORD transferred = 0;
-	IOKey ioKey = IOKey::NONE;
-
-	//TODO √÷»ÔπË
-	// GetQueuedCompletionStatusEX πˆ¿¸¿ª ªÁøÎ«ÿ∫æ¥œ¥Ÿ
-	bool isOk = GetQueuedCompletionStatus
+	const int PENDING_COUNT = 100;
+	OVERLAPPED_ENTRY entries[PENDING_COUNT];
+	ULONG entryNum = 0;
+	
+	//TODO ÏµúÌù•Î∞∞
+	// GetQueuedCompletionStatusEX Î≤ÑÏ†ÑÏùÑ ÏÇ¨Ïö©Ìï¥Î¥ÖÎãàÎã§
+	// Ï†ÅÏö© ÏôÑÎ£å
+	bool isOk = GetQueuedCompletionStatusEx
 	(
-		mIOCPHandle, &transferred, reinterpret_cast<PULONG_PTR>(&ioKey), reinterpret_cast<LPOVERLAPPED*>(&ioContext), INFINITE
+		mIOCPHandle, entries, PENDING_COUNT, &entryNum, INFINITE, false
 	);
 	if (!isOk)
 	{
-		if (ioContext != nullptr)
-		{
-			// ÏÜåÏºì Í¥ÄÎ†® ÏóêÎü¨
-			return 0;
-		}
-
 		int errorCode = WSAGetLastError();
 		if (errorCode != ERROR_ABANDONED_WAIT_0)
 		{
@@ -41,103 +36,141 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 		return 0;
 	}
 
-	switch (ioContext->mIOKey)
+	for (ULONG i = 0; i < entryNum; ++i)
 	{
-	case IOKey::ACCEPT:
-	{
-		std::lock_guard<std::mutex> lock(mSessionMutex);
-
-		int32 sessionIndex = mClientSessionManager->AllocClientSessionIndex();
-		if (sessionIndex == INVALID_INDEX)
+		OVERLAPPED_ENTRY entry = entries[i];
+		DWORD transferred = entry.dwNumberOfBytesTransferred;
+		OverlappedIOContext* ioContext = reinterpret_cast<OverlappedIOContext*>(entry.lpOverlapped);
+		
+		if (ioContext == nullptr)
 		{
-			GLogger->PrintConsole(Color::RED, L"%d AllocClientSessionIndex Fail", ioContext->mTCPSocket->mSocket);
-			break;
+			GLogger->PrintConsole(Color::RED, L"io context is nullptr(entry: %d)\n", i);
+
+			continue;
 		}
-
-		ClientSession session{ sessionIndex, mClientSessionManager->GenerateUniqueId(), ioContext->mTCPSocket };
-		ClientSession& newSession = mClientSessionManager->ConnectClientSession(session);
-
-		CreateIoCompletionPort((HANDLE)ioContext->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::RECEIVE), 0);
-		newSession.ReceiveAsync();
-
-		GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", ioContext->mTCPSocket->mSocket);
-
-		break;
-	}
-	case IOKey::RECEIVE:
-	{
-		ClientSession* session = mClientSessionManager->FindClientSessionBySocket(ioContext->mTCPSocket->mSocket);
-		if (session == nullptr)
+		
+		switch (ioContext->mIOKey)
 		{
-			GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", ioContext->mTCPSocket->mSocket);
-			break;
-		}
-
-		session->ReceiveCompletion(transferred);
-
-		PacketHeader* header;
-		while (session->mReceiveBuffer.DataSize() >= PACKET_HEADER_SIZE)
+		case IOKey::ACCEPT:
 		{
-			header = reinterpret_cast<PacketHeader*>(session->mReceiveBuffer.FrontData());
-			uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
+			OverlappedIOAcceptContext* acceptContext = reinterpret_cast<OverlappedIOAcceptContext*>(ioContext);
+			std::lock_guard<std::mutex> lock(mSessionMutex);
 
-			if (requireBodySize > 0)
+			int32 sessionIndex = mClientSessionManager->AllocClientSessionIndex();
+			if (sessionIndex == INVALID_INDEX)
 			{
-				if (requireBodySize > session->mReceiveBuffer.DataSize())
+				GLogger->PrintConsole(Color::RED, L"%d AllocClientSessionIndex Fail", acceptContext->mTCPSocket->mSocket);
+				break;
+			}
+
+			ClientSession session{ sessionIndex, mClientSessionManager->GenerateUniqueId(), acceptContext->mTCPSocket };
+			ClientSession& newSession = mClientSessionManager->ConnectClientSession(session);
+
+			CreateIoCompletionPort((HANDLE)acceptContext->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::RECEIVE), 0);
+			newSession.ReceiveAsync();
+
+			GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", acceptContext->mTCPSocket->mSocket);
+
+			break;
+		}
+		case IOKey::RECEIVE:
+		{
+			OverlappedIOReceiveContext* receiveContext = reinterpret_cast<OverlappedIOReceiveContext*>(ioContext);
+			if (!receiveContext->mSession->IsConnect())
+			{
+				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", receiveContext->mSession->mTCPSocket->mSocket);
+				break;
+			}
+
+			ClientSession* session = receiveContext->mSession;
+			if (entry.dwNumberOfBytesTransferred == 0)
+			{
+				session->DisconnectAsync();
+
+				GLogger->PrintConsole(Color::LGREEN, L"Client %d Disconnected!\n", session->mTCPSocket->mSocket);
+
+				ErrorCode errorCode = mListenSocket->AcceptAsync(session->mTCPSocket);
+				if (errorCode != ErrorCode::SUCCESS)
 				{
-					break;
+					GLogger->PrintConsole(Color::RED, L"Socket(index: %d) Accept Async Error: %d\n", i, static_cast<uint16>(errorCode));
 				}
+				break;
 			}
 
-			Packet receivePacket = { session->mIndex, session->mUniqueId, header->mPacketId, 0, nullptr };
-			if (requireBodySize > 0)
+			session->ReceiveCompletion(transferred);
+
+			PacketHeader* header;
+			while (receiveContext->mSession->mReceiveBuffer.DataSize() >= PACKET_HEADER_SIZE)
 			{
-				receivePacket.mBodyDataSize = requireBodySize;
-				receivePacket.mBodyData = session->mReceiveBuffer.FrontData() + PACKET_HEADER_SIZE;
+				header = reinterpret_cast<PacketHeader*>(session->mReceiveBuffer.FrontData());
+				uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
+
+				if (requireBodySize > 0)
+				{
+					if (requireBodySize > session->mReceiveBuffer.DataSize())
+					{
+						break;
+					}
+				}
+
+				Packet receivePacket = { session->mIndex, session->mUniqueId, header->mPacketId, 0, nullptr };
+				if (requireBodySize > 0)
+				{
+					receivePacket.mBodyDataSize = requireBodySize;
+					receivePacket.mBodyData = session->mReceiveBuffer.FrontData() + PACKET_HEADER_SIZE;
+				}
+
+				//TODO ÏµúÌù•Î∞∞
+				// Îí§Ïóê ÏÉùÍ∞ÅÌï¥Î¥êÏïºÌï† Î∂ÄÎ∂ÑÏù∏Îç∞ Ìå®ÌÇ∑ Ï≤òÎ¶¨Ï™ΩÏóêÏÑú Ï≤òÎ¶¨Ïóê ÎπÑÌï¥ receiveÍ∞Ä ÏûêÏ£º Î∞úÏÉùÌïòÎ©¥(ÌòπÎäî ÌÅ∞ Îç∞Ïù¥ÌÑ∞Î•º Î∞õÍ±∞ÎÇò) ÎçÆÏñ¥Ïç®Ïó¨ÏßÄÎäî Î¨∏Ï†úÍ∞Ä Î∞úÏÉùÌï† Ïàò ÏûàÎäîÎç∞
+				// Ïù¥ Î¨∏Ï†úÏóê ÎåÄÌï¥ÏÑú Ïñ¥ÎñªÍ≤å Ï≤òÎ¶¨Ìï¥Ïïº Ìï†ÏßÄ Í≥†ÎØºÌï¥Î¥êÏïºÍ≤†ÏäµÎãàÎã§.
+				// OK(Ï±ÑÌåÖÏÑúÎ≤Ñ Ïù¥ÌõÑ ÏûëÏóÖ ÏòàÏ†ï)
+				session->mReceiveBuffer.Pop(header->mPacketSize);
+
+				mPushPacketFunction(receivePacket);
 			}
 
-			//TODO √÷»ÔπË
-			// µ⁄ø° ª˝∞¢«ÿ∫¡æﬂ«“ ∫Œ∫–¿Œµ• ∆–≈∂ √≥∏Æ¬ ø°º≠ √≥∏Æø° ∫Ò«ÿ receive∞° ¿⁄¡÷ πﬂª˝«œ∏È(»§¥¬ ≈´ µ•¿Ã≈Õ∏¶ πﬁ∞≈≥™) µ§æÓΩ·ø©¡ˆ¥¬ πÆ¡¶∞° πﬂª˝«“ ºˆ ¿÷¥¬µ•
-			// ¿Ã πÆ¡¶ø° ¥Î«ÿº≠ æÓ∂ª∞‘ √≥∏Æ«ÿæﬂ «“¡ˆ ∞ÌπŒ«ÿ∫¡æﬂ∞⁄Ω¿¥œ¥Ÿ.
-			session->mReceiveBuffer.Pop(header->mPacketSize);
+			session->ReceiveAsync();
 
-			mPushPacketFunction(receivePacket);
-		}
-
-		session->ReceiveAsync();
-
-		break;
-	}
-	case IOKey::SEND:
-	{
-		ClientSession* session = mClientSessionManager->FindClientSessionBySocket(ioContext->mTCPSocket->mSocket);
-		if (session == nullptr)
-		{
-			GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Send)", ioContext->mTCPSocket->mSocket);
 			break;
 		}
+		case IOKey::SEND:
+		{
+			OverlappedIOReceiveContext* sendContext = reinterpret_cast<OverlappedIOReceiveContext*>(ioContext);
+			if (!sendContext->mSession->IsConnect())
+			{
+				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", sendContext->mSession->mTCPSocket->mSocket);
+				break;
+			}
 
-		session->SendCompletion(transferred);
+			sendContext->mSession->SendCompletion(transferred);
 
-		break;
+			break;
+		}
+		case IOKey::DISCONNECT:
+		{
+			OverlappedIODisconnectContext* disconnectContext = reinterpret_cast<OverlappedIODisconnectContext*>(ioContext);
+			ErrorCode errorCode = mListenSocket->AcceptAsync(disconnectContext->mTCPSocket);
+			if (errorCode != ErrorCode::SUCCESS)
+			{
+				GLogger->PrintConsole(Color::RED, L"Socket(index: %d) Accept Async Error: %d\n", i, static_cast<uint16>(errorCode));
+			}
+			break;
+		}
+		}
+
+		DeleteIOContext(ioContext);
 	}
-	}
 
-	DeleteIOContext(ioContext);
 
 	return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void IOCPThread::SendProcess()
-{
-	mClientSessionManager->FlushSendClientSessionAll();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void IOCPThread::Init(bool* isRunning, const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction)
+void IOCPThread::Init(bool* isRunning, TCPSocket* listenSocket, const HANDLE iocpHandle, ClientSessionManager
+	* clientSessionManager, std::function<void(const Packet)> pushPacketFunction)
 {
 	mIsRunning = isRunning;
+	mListenSocket = listenSocket;
 	mIOCPHandle = iocpHandle;
 	mClientSessionManager = clientSessionManager;
 	mPushPacketFunction = pushPacketFunction;
@@ -152,7 +185,6 @@ void IOCPThread::Run()
 			while (true)
 			{
 				IOCPSocketProcess();
-				SendProcess();
 			}
 		}
 	);

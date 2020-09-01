@@ -1,6 +1,9 @@
-﻿#include "ClientSession.h"
+﻿#pragma comment(lib, "mswsock.lib")  
+
+#include "ClientSession.h"
 
 #include <WinSock2.h>
+#include <mswsock.h>
 #include "OverlappedIOContext.h"
 
 
@@ -49,7 +52,7 @@ ErrorCode ClientSession::ReceiveAsync()
 		return ErrorCode::CLIENT_SESSION_RECEIVE_BUFFER_FULL;
 	}
 
-	OverlappedIOReceiveContext* context = new OverlappedIOReceiveContext(mTCPSocket);
+	OverlappedIOReceiveContext* context = new OverlappedIOReceiveContext(this);
 
 	DWORD receiveBytes = 0;
 	DWORD flags = 0;
@@ -104,21 +107,17 @@ ErrorCode ClientSession::FlushSend()
 
 	FastSpinlockGuard criticalSection(mSessionLock);
 
+	if (mSendBuffer.DataSize() == 0 || mSendPendingCount > 0)
+	{
+		return ErrorCode::SUCCESS;
+	}
+
 	if (mSendBuffer.RemainBufferSize() == 0)
 	{
-		if (mSendPendingCount == 0) {
-			return ErrorCode::SUCCESS;
-		}
-
 		return ErrorCode::CLIENT_SESSION_SEND_FAIL;
 	}
 
-	if (mSendPendingCount > 0)
-	{
-		return ErrorCode::CLIENT_SESSION_SEND_FAIL;
-	}
-
-	OverlappedIOSendContext* context = new OverlappedIOSendContext(mTCPSocket);
+	OverlappedIOSendContext* context = new OverlappedIOSendContext(this);
 
 	DWORD snedBytes = 0;
 	DWORD flags = 0;
@@ -130,7 +129,7 @@ ErrorCode ClientSession::FlushSend()
 		if (WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DeleteIOContext(context);
-			return ErrorCode::CLIENT_SESSION_RECEIVE_FAIL;
+			return ErrorCode::CLIENT_SESSION_SEND_FAIL;
 		}
 	}
 
@@ -152,6 +151,20 @@ void ClientSession::SendCompletion(DWORD transferred)
 	mSendBuffer.Pop(transferred);
 
 	--mSendPendingCount;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void NetworkLib::ClientSession::DisconnectAsync()
+{
+	// TODO: 집 운영체제가 윈도우 7이라 DisconnectEx를 지원 안함 -.-;;... 운영체제별 분기 처리
+	closesocket(mTCPSocket->mSocket);
+	mTCPSocket->Clear();
+	mTCPSocket->Create();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void NetworkLib::ClientSession::DisconnectCompletion()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

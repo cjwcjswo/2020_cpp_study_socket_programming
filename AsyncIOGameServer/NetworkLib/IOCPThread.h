@@ -10,6 +10,7 @@
 namespace NetworkLib
 {
 	class ClientSessionManager;
+	class TCPSocket;
 
 	class IOCPThread
 	{
@@ -20,6 +21,8 @@ namespace NetworkLib
 	protected:
 		UniquePtrThread mThread = nullptr;
 		HANDLE mIOCPHandle = INVALID_HANDLE_VALUE;
+		TCPSocket* mListenSocket = nullptr;
+
 		ClientSessionManager* mClientSessionManager = nullptr;
 		std::mutex mSessionMutex;
 		std::function<void(const Packet)> mPushPacketFunction;
@@ -34,11 +37,10 @@ namespace NetworkLib
 
 	protected:
 		DWORD WINAPI IOCPSocketProcess();
-		void SendProcess();
 
 
 	public:
-		void Init(bool* isRunning, const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction);
+		void Init(bool* isRunning, TCPSocket* listenSocket, const HANDLE iocpHandle, ClientSessionManager* clientSessionManager, std::function<void(const Packet)> pushPacketFunction);
 		void Run();
 		void Join();
 	};

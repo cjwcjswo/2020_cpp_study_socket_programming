@@ -9,9 +9,10 @@
 #include "Logger.h"
 
 
-//TODO �����
-// ä�� ���� ���Ŀ� �۾��մϴ�.
-// ���� ���� ����� �߰��ϰ�, Ư�� �����带 ����Ͽ� �α׸� ���⵵�� �մϴ�. �� �α� ���� �����带 ����ϴ�
+//TODO 최흥배
+// 채팅 서버 이후에 작업합니다.
+// 파일 쓰기 기능을 추가하고, 특히 스레드를 사용하여 로그를 남기도록 합니다. 즉 로그 전용 스레드를 만듭니다
+// OK(채팅서버 이후 작업 예정)
 Logger::Logger() noexcept
 {
 	mStdErrHandle = GetStdHandle(STD_ERROR_HANDLE);

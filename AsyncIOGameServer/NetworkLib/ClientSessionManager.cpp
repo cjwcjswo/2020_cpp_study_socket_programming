@@ -44,46 +44,19 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 	return &mClientVector[index];
 }
 
-//TODO ÃÖÈï¹è
-// ¾Æ·¥ ÇÔ¼ö·Î´Â °Ë»öÇÏÁö ¾Êµµ·Ï ÇÕ´Ï´Ù. ÀüÃ¼ °Ë»öÀÌ ³Ê¹« µÇ³×¿ä
-// FindClientSession(const int32 index)·Î¸¸ °Ë»öÇÏ°í, °ËÁõÀÌ ÇÊ¿äÇÏ¸é index·Î °Ë»ö ÈÄ uniqueId·Î È®ÀÎÇÏ¸é µÉ °Í °°½À´Ï´Ù
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession* ClientSessionManager::FindClientSession(const uint64 uniqueId)
-{
-	for (uint32 i = 0; i < mMaxSessionSize; i++)
-	{
-		if (mClientVector[i].mUniqueId == uniqueId)
-		{
-			return &mClientVector[i];
-		}
-	}
-
-	return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession* ClientSessionManager::FindClientSessionBySocket(const SOCKET socket)
-{
-	for (uint32 i = 0; i < mMaxSessionSize; i++)
-	{
-		if (mClientVector[i].mTCPSocket->mSocket == socket)
-		{
-			return &mClientVector[i];
-		}
-	}
-
-	return nullptr;
-}
-
+//TODO ìµœí¥ë°°
+// ì•„ë¨ í•¨ìˆ˜ë¡œëŠ” ê²€ìƒ‰í•˜ì§€ ì•Šë„ë¡ í•©ë‹ˆë‹¤. ì „ì²´ ê²€ìƒ‰ì´ ë„ˆë¬´ ë˜ë„¤ìš”
+// FindClientSession(const int32 index)ë¡œë§Œ ê²€ìƒ‰í•˜ê³ , ê²€ì¦ì´ í•„ìš”í•˜ë©´ indexë¡œ ê²€ìƒ‰ í›„ uniqueIdë¡œ í™•ì¸í•˜ë©´ ë  ê²ƒ ê°™ìŠµë‹ˆë‹¤
+// ì ìš© ì™„ë£Œ
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint64  ClientSessionManager::GenerateUniqueId() const
 {
 	return ++mUniqueIdGenerator;
 }
 
-//TODO ÃÖÈï¹è
-// ¸ÖÆ¼½º·¹µå¿¡¼­ È£ÃâµÇ´Âµ¥ ½º·¹µå ¼¼ÀÌÇÁ ÇÏÁö ¾Ê½À´Ï´Ù.
-// Interlocked Singly linked list¸¦ »ç¿ëÇØº¸ÁÒ
+//TODO ìµœí¥ë°°
+// ë©€í‹°ìŠ¤ë ˆë“œì—ì„œ í˜¸ì¶œë˜ëŠ”ë° ìŠ¤ë ˆë“œ ì„¸ì´í”„ í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+// Interlocked Singly linked listë¥¼ ì‚¬ìš©í•´ë³´ì£ 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int32 ClientSessionManager::AllocClientSessionIndex()
 {

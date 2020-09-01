@@ -6,6 +6,8 @@
 namespace NetworkLib
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	const int MAX_BODY_SIZE = 1024;
+
 #pragma pack(push, 1)
 	struct PacketHeader
 	{
@@ -16,7 +18,7 @@ namespace NetworkLib
 	struct PacketData
 	{
 		PacketHeader mHeader;
-		char* mBodyData;
+		char mBodyData[MAX_BODY_SIZE] = { 0, };
 	};
 #pragma pack(pop)
 

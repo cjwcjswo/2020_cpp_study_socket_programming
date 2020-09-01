@@ -24,7 +24,7 @@ namespace NetworkLib
 
 	private:
 		const size_t MaxBufferSize() const;
-		void Rearrange();
+		bool Rearrange();
 
 	public:
 		void Clear();
@@ -35,7 +35,7 @@ namespace NetworkLib
 
 		inline const size_t DataSize() const { return mDataSize; };
 		inline char* FrontData() { return mFrontMark; };
-		inline void Commit(size_t size) { mRearMark += size; };
+		inline void Commit(size_t size) { mRearMark += size; mDataSize += static_cast<uint32>(size); };
 		char* GetBuffer();
 	};
 }

@@ -6,6 +6,7 @@
 namespace NetworkLib
 {
 	class TCPSocket;
+	class ClientSession;
 
 	enum class IOKey : ULONG_PTR
 	{
@@ -13,21 +14,23 @@ namespace NetworkLib
 		ACCEPT = 1,
 		RECEIVE = 2,
 		SEND = 3,
+		DISCONNECT = 4,
 	};
 
-	//TODO ÃÖÈï¹è
-	// Ã¤ÆÃ ¼­¹ö ¿Ï¼º ÀÌÈÄ ÇÏ¸é µË´Ï´Ù.
-	// Interlocked Singly linked list¸¦ »ç¿ëÇÏ¿© OverlappedIOContext °´Ã¼ Ç®À» »ç¿ëÇÕ´Ï´Ù.
-	// ÀÚÁÖ DeleteIOContext ¸Ş¸ğ¸® ÇÒ´ç°ú ÇØÁ¦°¡ ¹ß»ıÇÏ´Âµ¥ ÀÌ ºñ¿ëÀ» °¨¼Ò ½ÃÅµ´Ï´Ù.
-	// Interlocked Singly linked list »ç¿ëÀº Á¦°¡ °øÀ¯ÇÑ ¹®¼­¸¦ Âü°íÇÏ¼¼¿ä
+	//TODO ìµœí¥ë°°
+	// ì±„íŒ… ì„œë²„ ì™„ì„± ì´í›„ í•˜ë©´ ë©ë‹ˆë‹¤.
+	// Interlocked Singly linked listë¥¼ ì‚¬ìš©í•˜ì—¬ OverlappedIOContext ê°ì²´ í’€ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
+	// ìì£¼ DeleteIOContext ë©”ëª¨ë¦¬ í• ë‹¹ê³¼ í•´ì œê°€ ë°œìƒí•˜ëŠ”ë° ì´ ë¹„ìš©ì„ ê°ì†Œ ì‹œí‚µë‹ˆë‹¤.
+	// Interlocked Singly linked list ì‚¬ìš©ì€ ì œê°€ ê³µìœ í•œ ë¬¸ì„œë¥¼ ì°¸ê³ í•˜ì„¸ìš”
 	struct OverlappedIOContext : OVERLAPPED
 	{
-		TCPSocket* mTCPSocket = nullptr;
 		IOKey mIOKey = IOKey::NONE;
 	};
 
 	struct OverlappedIOAcceptContext : OverlappedIOContext
 	{
+		TCPSocket* mTCPSocket = nullptr;
+
 		OverlappedIOAcceptContext(TCPSocket* tcpSocket)
 		{
 			memset(this, 0, sizeof(*this));
@@ -38,25 +41,39 @@ namespace NetworkLib
 
 	struct OverlappedIOReceiveContext : OverlappedIOContext
 	{
+		ClientSession* mSession = nullptr;
 		WSABUF mWSABuf;
 
-		OverlappedIOReceiveContext(TCPSocket* tcpSocket)
+		OverlappedIOReceiveContext(ClientSession* session)
 		{
 			memset(this, 0, sizeof(*this));
-			mTCPSocket = tcpSocket;
+			mSession = session;
 			mIOKey = IOKey::RECEIVE;
 		}
 	};
 
 	struct OverlappedIOSendContext : OverlappedIOContext
 	{
+		ClientSession* mSession = nullptr;
 		WSABUF mWSABuf;
 
-		OverlappedIOSendContext(TCPSocket* tcpSocket)
+		OverlappedIOSendContext(ClientSession* session)
+		{
+			memset(this, 0, sizeof(*this));
+			mSession = session;
+			mIOKey = IOKey::SEND;
+		}
+	};
+
+	struct OverlappedIODisconnectContext : OverlappedIOContext
+	{
+		TCPSocket* mTCPSocket = nullptr;
+
+		OverlappedIODisconnectContext(TCPSocket* tcpSocket)
 		{
 			memset(this, 0, sizeof(*this));
 			mTCPSocket = tcpSocket;
-			mIOKey = IOKey::SEND;
+			mIOKey = IOKey::ACCEPT;
 		}
 	};
 
@@ -79,8 +96,11 @@ namespace NetworkLib
 			delete reinterpret_cast<OverlappedIOReceiveContext*>(context);
 			break;
 		}
+		case IOKey::DISCONNECT:
+		{
+			delete reinterpret_cast<OverlappedIODisconnectContext*>(context);
+			break;
+		}
 		}
 	}
 }
-
-

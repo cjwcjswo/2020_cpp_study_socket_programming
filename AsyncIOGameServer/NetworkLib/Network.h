@@ -4,6 +4,7 @@
 #include <WinSock2.h>
 #include <queue>
 #include <mutex>
+#include <thread>
 #include "Protocol.h"
 #include "PrimitiveTypes.h"
 #include "ErrorCode.h"
@@ -15,6 +16,7 @@ namespace NetworkLib
 	class TCPSocket;
 	class ClientSessionManager;
 	class ClientSession;
+	class Config;
 
 	class Network
 	{
@@ -26,13 +28,12 @@ namespace NetworkLib
 		ClientSessionManager* mClientSessionManager = nullptr;
 
 		IOCPThread* mIOCPThreads = nullptr;
+		std::unique_ptr<std::thread> mSendThread = nullptr;
 
 		std::queue<Packet> mReceivePacketQueue;
 		std::mutex mReceivePacketMutex;
 
-		// TODO: Config 적용
-		int mMaxClientNum = 0;
-		int mMaxThreadNum = 10;
+		Config* mConfig = nullptr;
 
 		bool mIsRunning = false;
 
@@ -47,7 +48,7 @@ namespace NetworkLib
 
 
 	public:
-		ErrorCode Init(int maxClientNum);
+		ErrorCode Init();
 		ErrorCode Run();
 		void Stop();
 
@@ -57,7 +58,6 @@ namespace NetworkLib
 		void Send(const uint64 sessionUniqueId, const uint16 packetId, char* bodyData, const uint16 bodySize);
 
 		Packet GetReceivePacket();
-
 	};
 }
 

@@ -15,28 +15,6 @@ TCPSocket::TCPSocket()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void* TCPSocket::GetSocketExtensionAPI(SOCKET socket, GUID functionGUID)
-{
-	void* function = nullptr;
-	GUID guid = functionGUID;
-	DWORD bytes = 0;
-	LONG result = WSAIoctl
-	(
-		socket,
-		SIO_GET_EXTENSION_FUNCTION_POINTER,
-		&guid, sizeof(guid),
-		&function, sizeof(function),
-		&bytes, nullptr, nullptr
-	);
-	if (result == SOCKET_ERROR)
-	{
-		return nullptr;
-	}
-
-	return function;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::ReuseAddr()
 {
 	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
@@ -103,13 +81,13 @@ ErrorCode TCPSocket::Listen(const int backlog)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
 {
-	//TODO √÷»ÔπË
-	// windows 7 ¿Ã»ƒ∫Œ≈Õ¥¬ πŸ∑Œ ªÁøÎ«“ ºˆ ¿÷Ω¿¥œ¥Ÿ. https://jacking75.github.io/cpp_iocp_extension_method/
-	LPFN_ACCEPTEX acceptEx = reinterpret_cast<LPFN_ACCEPTEX>(GetSocketExtensionAPI(mSocket, WSAID_ACCEPTEX));
+	//TODO ÏµúÌù•Î∞∞
+	// windows 7 Ïù¥ÌõÑÎ∂ÄÌÑ∞Îäî Î∞îÎ°ú ÏÇ¨Ïö©Ìï† Ïàò ÏûàÏäµÎãàÎã§. https://jacking75.github.io/cpp_iocp_extension_method/
+	// Ï†ÅÏö© ÏôÑÎ£å
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
 	OverlappedIOAcceptContext* context = new OverlappedIOAcceptContext(clientSocket);
 
-	BOOL isOK = acceptEx
+	BOOL isOK = AcceptEx
 	(mSocket, clientSocket->mSocket, clientSocket->mAddressBuffer,
 		0, sockAddrSize, sockAddrSize,
 		nullptr, reinterpret_cast<LPOVERLAPPED>(context));

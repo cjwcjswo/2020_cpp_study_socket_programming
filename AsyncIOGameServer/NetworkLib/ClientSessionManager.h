@@ -39,8 +39,6 @@ namespace NetworkLib
 		int32 AllocClientSessionIndex();
 
 		ClientSession* FindClientSession(const int32 index);
-		ClientSession* FindClientSession(const uint64 uniqueId);
-		ClientSession* FindClientSessionBySocket(const SOCKET socket);
 
 		ClientSession& ConnectClientSession(ClientSession& clientSession);
 

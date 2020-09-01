@@ -21,7 +21,6 @@ namespace NetworkLib
 		uint32 mMaxBufferSize = 0;
 		
 
-
 	public:
 		RingBuffer mSendBuffer;
 		RingBuffer mReceiveBuffer;
@@ -45,6 +44,9 @@ namespace NetworkLib
 		ErrorCode SendAsync(const char* data, size_t length);
 		ErrorCode FlushSend();
 		void SendCompletion(DWORD transferred);
+
+		void DisconnectAsync();
+		void DisconnectCompletion();
 
 		void Clear();
 	};
