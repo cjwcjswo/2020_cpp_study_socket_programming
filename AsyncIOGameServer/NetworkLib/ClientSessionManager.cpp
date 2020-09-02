@@ -38,6 +38,10 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 			return errorCode;
 		}
 
+		//TODO 최흥배
+		// 이렇게 사용하면 emplace_back의 효과는 얻을 수 없습니다.
+		// 그냥 push_back을 사용하세요.
+		// 특히 현재 포인터를 저장하는 것이라서 올바르게 emplace_back를 사용하더라도 별 이득이 없습니다
 		mClientVector.emplace_back(indexElement, 0, tcpSocket);
 	}
 
@@ -55,20 +59,14 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 	return &mClientVector[index];
 }
 
-//TODO 최흥배
-// 아램 함수로는 검색하지 않도록 합니다. 전체 검색이 너무 되네요
-// FindClientSession(const int32 index)로만 검색하고, 검증이 필요하면 index로 검색 후 uniqueId로 확인하면 될 것 같습니다
-// 적용 완료(함수 삭제)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint64  ClientSessionManager::GenerateUniqueId() const
 {
 	return ++mUniqueIdGenerator;
 }
 
-//TODO 최흥배
-// 멀티스레드에서 호출되는데 스레드 세이프 하지 않습니다.
-// Interlocked Singly linked list를 사용해보죠
-// 적용 완료
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IndexElement* ClientSessionManager::AllocClientSessionIndexElement()
 {

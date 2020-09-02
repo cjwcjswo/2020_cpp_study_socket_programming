@@ -63,6 +63,10 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 				break;
 			}
 
+			// TODO 최흥배
+			// 새로운 ClientSession 객체를 만들어서 인자로 넘기 후 객체풀에서 또 ClientSession를 얻는 방식이 너무 특이합니다.
+			// 자연스럽지 않습니다.
+			// mClientSessionManager->GenerateUniqueId() 스레드 세이프하지 않습니다
 			ClientSession session{ indexElement, mClientSessionManager->GenerateUniqueId(), acceptContext->mTCPSocket };
 			ClientSession& newSession = mClientSessionManager->ConnectClientSession(session);
 
@@ -85,6 +89,9 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 			ClientSession* session = receiveContext->mSession;
 			if (entry.dwNumberOfBytesTransferred == 0)
 			{
+				// TODO 최흥배
+				// 다른 스레드에서 send 작업이 걸려 있다면 아래는 스레드세이프하지 않습니다.
+				// IOCP에서 Close 처리가 꽤 까다롭습니다
 				session->DisconnectAsync();
 
 				GLogger->PrintConsole(Color::LGREEN, L"Client %d Disconnected!\n", session->mTCPSocket->mSocket);

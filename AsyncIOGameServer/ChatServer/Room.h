@@ -15,6 +15,7 @@ public:
 
 
 private:
+	// TODO 최흥배  일부러 deque를 사용한 것 같은데 이유가 무엇인가요? 성능이나 추상화 측면에서 올바르지 않습니다.
 	std::deque<User> mUserDeque;
 	int32 mRoomIndex = INVALID_INDEX;
 	uint16 mMaxUserNum = 0;

@@ -11,6 +11,9 @@ namespace NetworkLib
 	{
 	protected:
 		char mBuffer[512] = { 0, };
+
+		// TODO 최흥배
+		// 외부 설정 정보 사용하여 실행 시에 크기를 바꿀 수 있도록 해주세요
 		char mAddressBuffer[512] = { 0, };
 
 

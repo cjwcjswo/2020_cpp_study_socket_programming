@@ -50,10 +50,6 @@ char* RingBuffer::GetBuffer()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool RingBuffer::Rearrange()
 {
-	//TODO 최흥배
-	// 문제가 있습니다. 만약 mFrontMark의 위치가 mDataSize 보다 작은 경우 덮어씁니다.
-	// push는 많이 되었는데 pop 속도가 느린 경우 발생할 수 있습니다.
-	// 적용 완료 -> 추후 단순히 false로 리턴하는 방법 외에 유연한 방법으로 개선
 	if (mDataSize > 0)
 	{
 		if (mDataSize > static_cast<uint32>(mFrontMark - mBuffer))
@@ -68,6 +64,9 @@ bool RingBuffer::Rearrange()
 	return true;
 }
 
+// TODO 최흥배
+// Clear는 이 객체가 재사용되면서 매번 호출되는 경우에 적합합 이름 같은데 코드에서는 클래스 생성 떄 한번 호출합니다.
+// Init나 Create가 맞지 않을까 생각합니다
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RingBuffer::Clear()
 {

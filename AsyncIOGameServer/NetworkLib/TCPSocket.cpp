@@ -80,11 +80,10 @@ ErrorCode TCPSocket::Listen(const int backlog)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
-{
-	//TODO 최흥배
-	// windows 7 이후부터는 바로 사용할 수 있습니다. https://jacking75.github.io/cpp_iocp_extension_method/
-	// 적용 완료
+{	
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
+	
+	// TODO 최흥배. 아래 것도 pool로 관리하죠
 	OverlappedIOAcceptContext* context = new OverlappedIOAcceptContext(clientSocket);
 
 	BOOL isOK = AcceptEx

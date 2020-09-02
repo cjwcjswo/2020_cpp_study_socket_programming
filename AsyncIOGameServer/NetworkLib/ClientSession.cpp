@@ -74,6 +74,9 @@ ErrorCode ClientSession::ReceiveAsync()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::ReceiveCompletion(DWORD transferred)
 {
+	// TODO 최흥배
+	// mReceiveBuffer 이 버퍼를 이 세션 객체만 접근하고 recv는 한번에 한번씩만 하기 때문에 락을 걸 필요가 없습니다.
+	// 만약 패킷을 처리하는 스레드에서 이 버퍼를 접근한다면 당연 락을 걸어야 하지만 지금은 접근하지 않는걸로 보입니다.
 	FastSpinlockGuard criticalSection(mSessionLock);
 
 	mReceiveBuffer.Commit(transferred);
@@ -107,6 +110,9 @@ ErrorCode ClientSession::FlushSend()
 
 	FastSpinlockGuard criticalSection(mSessionLock);
 
+	// TODO 최흥배
+	// mSendPendingCount 1과 0 두가지 값만 가지니 bool 타입이 좋을 것 같아요
+	// mSendPendingCount의 타입과 이름을 보면 send 횟수를 계속 카운팅해서 뭔가에 사용할 것 같은데 지금 코드에서느 그렇지 않네요
 	if (mSendBuffer.DataSize() == 0 || mSendPendingCount > 0)
 	{
 		return ErrorCode::SUCCESS;
@@ -119,6 +125,9 @@ ErrorCode ClientSession::FlushSend()
 
 	OverlappedIOSendContext* context = new OverlappedIOSendContext(this);
 
+
+	// TODO 최흥배
+	// 보낼 때 MSS 사이즈를 넘지 않게 보내도록 하죠
 	DWORD snedBytes = 0;
 	DWORD flags = 0;
 	context->mWSABuf.len = static_cast<ULONG>(mSendBuffer.DataSize());
@@ -156,6 +165,12 @@ void ClientSession::SendCompletion(DWORD transferred)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void NetworkLib::ClientSession::DisconnectAsync()
 {
+	// TODO 최흥배
+	// DisconnectEx 사용은 개인적으로 비추입니다.
+	// DisconnectEx를 사용하면 OS TIME_WAIT의 동작을 생각하고 코딩해야 합니다
+
+	// mTCPSocket 객체의 멤버를 멀티스레드에서 접근해서 아래처럼 하면 문제가 있지 않을까요?
+
 	// TODO: 집 운영체제가 윈도우 7이라 DisconnectEx를 지원 안함 -.-;;... 운영체제별 분기 처리
 	closesocket(mTCPSocket->mSocket);
 	mTCPSocket->Clear();
