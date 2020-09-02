@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 
+#include "SList.h"
 #include "PrimitiveTypes.h"
 #include "ErrorCode.h"
 #include "Define.h"
@@ -11,19 +12,14 @@
 
 namespace NetworkLib
 {
-	class SList;
 	class ClientSession;
-
-	struct IndexElement : SLIST_ENTRY
-	{
-		int32 mIndex = INVALID_INDEX;
-	};
+	struct IndexElement;
 
 	class ClientSessionManager
 	{
 	private:
 		std::vector<ClientSession> mClientVector;
-		SList* mClientIndexPool = nullptr;
+		SList<IndexElement>* mClientIndexPool = nullptr;
 
 		uint32 mMaxSessionBufferSize = 0;
 
@@ -44,7 +40,7 @@ namespace NetworkLib
 		ErrorCode Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize) noexcept;
 
 		uint64 GenerateUniqueId() const;
-		int32 AllocClientSessionIndex();
+		IndexElement* AllocClientSessionIndexElement();
 
 		ClientSession* FindClientSession(const int32 index);
 

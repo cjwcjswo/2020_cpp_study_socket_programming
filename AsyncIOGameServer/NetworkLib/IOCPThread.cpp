@@ -56,14 +56,14 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 			OverlappedIOAcceptContext* acceptContext = reinterpret_cast<OverlappedIOAcceptContext*>(ioContext);
 			std::lock_guard<std::mutex> lock(mSessionMutex);
 
-			int32 sessionIndex = mClientSessionManager->AllocClientSessionIndex();
-			if (sessionIndex == INVALID_INDEX)
+			IndexElement* indexElement = mClientSessionManager->AllocClientSessionIndexElement();
+			if (indexElement == nullptr)
 			{
 				GLogger->PrintConsole(Color::RED, L"%d AllocClientSessionIndex Fail", acceptContext->mTCPSocket->mSocket);
 				break;
 			}
 
-			ClientSession session{ sessionIndex, mClientSessionManager->GenerateUniqueId(), acceptContext->mTCPSocket };
+			ClientSession session{ indexElement, mClientSessionManager->GenerateUniqueId(), acceptContext->mTCPSocket };
 			ClientSession& newSession = mClientSessionManager->ConnectClientSession(session);
 
 			CreateIoCompletionPort((HANDLE)acceptContext->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::RECEIVE), 0);
@@ -113,7 +113,7 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 					}
 				}
 
-				Packet receivePacket = { session->mIndex, session->mUniqueId, header->mPacketId, 0, nullptr };
+				Packet receivePacket = { session->mIndexElement->mIndex, session->mUniqueId, header->mPacketId, 0, nullptr };
 				if (requireBodySize > 0)
 				{
 					receivePacket.mBodyDataSize = requireBodySize;

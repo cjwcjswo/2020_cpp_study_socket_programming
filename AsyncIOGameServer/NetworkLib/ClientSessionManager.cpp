@@ -14,7 +14,7 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 	mMaxSessionBufferSize = maxSessionBufferSize;
 
 	mClientVector.reserve(maxClientSessionNum);
-	mClientIndexPool = new SList;
+	mClientIndexPool = new SList<IndexElement>;
 	if (!mClientIndexPool->Create(maxClientSessionNum))
 	{
 		return ErrorCode::CLIENT_SESSION_MANAGER_INIT_FAIL;
@@ -29,7 +29,7 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 			return ErrorCode::CLIENT_SESSION_MANAGER_INDEX_ALIGN_FAIL;
 		}
 		indexElement->mIndex = static_cast<int32>(i);
-		mClientIndexPool->Push(reinterpret_cast<SLIST_ENTRY*>(indexElement));
+		mClientIndexPool->Push(indexElement);
 
 		TCPSocket* tcpSocket = new TCPSocket();
 		errorCode = tcpSocket->Create();
@@ -38,7 +38,7 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 			return errorCode;
 		}
 
-		mClientVector.emplace_back(i, 0, tcpSocket);
+		mClientVector.emplace_back(indexElement, 0, tcpSocket);
 	}
 
 	return ErrorCode::SUCCESS;
@@ -70,21 +70,20 @@ uint64  ClientSessionManager::GenerateUniqueId() const
 // Interlocked Singly linked list를 사용해보죠
 // 적용 완료
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int32 ClientSessionManager::AllocClientSessionIndex()
+IndexElement* ClientSessionManager::AllocClientSessionIndexElement()
 {
 	if (mClientIndexPool->Count() == 0)
 	{
-		return INVALID_INDEX;
+		return nullptr;
 	}
-	IndexElement* indexElement = reinterpret_cast<IndexElement*>(mClientIndexPool->Pop());
 
-	return indexElement->mIndex;
+	return mClientIndexPool->Pop();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession& ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
 {
-	ClientSession& session = mClientVector[clientSession.mIndex];
+	ClientSession& session = mClientVector[clientSession.mIndexElement->mIndex];
 	session.mUniqueId = clientSession.mUniqueId;
 	session.mTCPSocket = clientSession.mTCPSocket;
 	session.mIsConnect = true;
@@ -95,10 +94,8 @@ ClientSession& ClientSessionManager::ConnectClientSession(ClientSession& clientS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSessionManager::DisconnectClientSession(const int32 index)
 {
+	mClientIndexPool->Push(mClientVector[index].mIndexElement);
 	mClientVector[index].Clear();
-	IndexElement indexElement;
-	indexElement.mIndex = static_cast<int32>(index);
-	mClientIndexPool->Push(reinterpret_cast<SLIST_ENTRY*>(&indexElement));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

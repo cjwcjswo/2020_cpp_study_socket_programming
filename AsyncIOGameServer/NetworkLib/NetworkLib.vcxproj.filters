@@ -92,9 +92,6 @@
     <ClCompile Include="Config.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="SList.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="OverlappedIOContextPool.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

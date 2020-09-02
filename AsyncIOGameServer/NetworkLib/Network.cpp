@@ -60,7 +60,7 @@ ErrorCode Network::Init()
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	errorCode = mClientSessionManager->Init(mConfig->mMaxThreadNum, 1024);
+	errorCode = mClientSessionManager->Init(mConfig->mMaxSessionNum, 1024);
 	if (errorCode != ErrorCode::SUCCESS)
 	{
 		GLogger->PrintConsole(Color::RED, L"ClientSessionManager Init Error: %d\n", static_cast<uint16>(errorCode));
@@ -92,6 +92,7 @@ ErrorCode Network::Run()
 		mIOCPThreads[i].Init(&mIsRunning, mListenSocket, mIOCPHandle, mClientSessionManager, [this](const Packet packet) {PushReceivePacket(packet); });
 		mIOCPThreads[i].Run();
 	}
+
 	mSendThread = std::make_unique<std::thread>(
 		[this]() 
 		{

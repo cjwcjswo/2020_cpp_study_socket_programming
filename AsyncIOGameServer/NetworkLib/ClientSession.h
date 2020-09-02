@@ -9,10 +9,15 @@
 
 namespace NetworkLib
 {
+	struct IndexElement : SLIST_ENTRY
+	{
+		int32 mIndex = INVALID_INDEX;
+	};
+
 	class ClientSession
 	{
 	public:
-		explicit ClientSession(const int32 index, const uint64 uniqueId, TCPSocket* tcpSocket);
+		ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket);
 
 		~ClientSession();
 
@@ -30,7 +35,7 @@ namespace NetworkLib
 		int mSendPendingCount = 0;
 		bool mIsConnect = false;
 
-		int32 mIndex = INVALID_INDEX;
+		IndexElement* mIndexElement = nullptr;
 		uint64 mUniqueId = INVALID_UNIQUE_ID;
 		TCPSocket* mTCPSocket = nullptr;
 

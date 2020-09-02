@@ -11,8 +11,8 @@ using namespace NetworkLib;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession::ClientSession(const int32 index, const uint64 uniqueId, TCPSocket* tcpSocket) : 
-	mIndex(index), mUniqueId(uniqueId), mTCPSocket(tcpSocket), mSendBuffer(1024), mReceiveBuffer(1024)
+ClientSession::ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket) : 
+	mIndexElement(indexElement), mUniqueId(uniqueId), mTCPSocket(tcpSocket), mSendBuffer(1024), mReceiveBuffer(1024)
 {
 }
 
@@ -170,7 +170,7 @@ void NetworkLib::ClientSession::DisconnectCompletion()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::Clear()
 {
-	mIndex = -1;
+	mIndexElement = nullptr;
 	mUniqueId = 0;
 	mSendPendingCount = 0;
 	mTCPSocket->Clear();

@@ -85,7 +85,7 @@ namespace csharp_test_client
 
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
-            SetDisconnectd();
+            SetDisconnect();
             Network.Close();
         }
 
@@ -136,7 +136,7 @@ namespace csharp_test_client
                 else
                 {
                     Network.Close();
-                    SetDisconnectd();
+                    SetDisconnect();
                     DevLog.Write("서버와 접속 종료 !!!", LOG_LEVEL.INFO);
                 }
             }
@@ -226,20 +226,25 @@ namespace csharp_test_client
             }
         }
 
-
-        public void SetDisconnectd()
+        private delegate void DisconnectDelegate();
+        public void SetDisconnect()
         {
-            if (btnConnect.Enabled == false)
+            if(echoListBox.InvokeRequired)
             {
-                btnConnect.Enabled = true;
-                btnDisconnect.Enabled = false;
+                var d = new DisconnectDelegate(SetDisconnect);
+                Invoke(d);
             }
-
+            else
+            {
+                echoListBox.Items.Clear();
+                if (btnConnect.Enabled == false)
+                {
+                    btnConnect.Enabled = true;
+                    btnDisconnect.Enabled = false;
+                }
+                labelStatus.Text = "서버 접속이 끊어짐";
+            }
             SendPacketQueue.Clear();
-
-            echoListBox.Items.Clear();
-
-            labelStatus.Text = "서버 접속이 끊어짐";
         }
     }
 }
