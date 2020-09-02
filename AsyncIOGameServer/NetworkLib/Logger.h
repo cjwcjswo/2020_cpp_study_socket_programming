@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <winnt.h>
+#include <Windows.h>
 #include "PrimitiveTypes.h"
 
 
