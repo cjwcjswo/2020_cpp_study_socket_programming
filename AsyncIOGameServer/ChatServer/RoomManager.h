@@ -18,6 +18,8 @@ public:
 
 
 private:
+	// TODO 최흥배
+	// 적합하지 않은 자료구조를 사용했습니다
 	std::deque<Room> mRoomDeque;
 
 

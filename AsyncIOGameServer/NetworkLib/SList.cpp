@@ -83,6 +83,8 @@ unsigned short NetworkLib::SList::Count() const
     unsigned short count = 0;
     if (mHeader != nullptr)
     {
+        // TODO 최흥배
+        // QueryDepthSList 이 함수를 호출할 때 상수 타임으로 크기를 알아내는지 아니면 O(n)의 시간이 걸리는지 확인 바랍니다.
         count = QueryDepthSList(mHeader);
     }
 
