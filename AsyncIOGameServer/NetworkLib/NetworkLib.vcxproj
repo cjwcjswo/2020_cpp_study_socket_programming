@@ -157,6 +157,7 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="OverlappedIOContext.h" />
+    <ClInclude Include="OverlappedIOContextPool.h" />
     <ClInclude Include="PrimitiveTypes.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RingBuffer.h" />
@@ -171,6 +172,7 @@
     <ClCompile Include="IOCPThread.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Network.cpp" />
+    <ClCompile Include="OverlappedIOContextPool.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="SList.cpp" />
     <ClCompile Include="TCPSocket.cpp" />

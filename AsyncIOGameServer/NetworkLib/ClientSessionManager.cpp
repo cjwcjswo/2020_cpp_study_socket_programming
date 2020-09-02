@@ -23,7 +23,11 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 	ErrorCode errorCode;
 	for (uint32 i = 0; i < maxClientSessionNum; ++i)
 	{
-		IndexElement* indexElement = new IndexElement;
+		IndexElement* indexElement = reinterpret_cast<IndexElement*>(_aligned_malloc(sizeof(IndexElement), MEMORY_ALLOCATION_ALIGNMENT));
+		if (indexElement == nullptr)
+		{
+			return ErrorCode::CLIENT_SESSION_MANAGER_INDEX_ALIGN_FAIL;
+		}
 		indexElement->mIndex = static_cast<int32>(i);
 		mClientIndexPool->Push(reinterpret_cast<SLIST_ENTRY*>(indexElement));
 
