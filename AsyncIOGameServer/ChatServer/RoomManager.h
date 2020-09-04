@@ -19,9 +19,9 @@ public:
 
 private:
 	// TODO 최흥배
-	// 적합하지 않은 자료구조를 사용했습니다
-	// 적용 완료
+	// 안전하고 사용하기 편하게 vector를 사용하면 되지 않을까요?
 	Room* mRoomList = nullptr;
+
 	uint32 mMaxRoomNum = 0;
 
 

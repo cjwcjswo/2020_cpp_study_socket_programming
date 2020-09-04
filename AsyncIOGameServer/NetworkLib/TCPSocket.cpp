@@ -64,6 +64,9 @@ ErrorCode TCPSocket::Bind(const wchar* ipAddress, const uint16 portNum)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::Listen(const int backlog)
 {
+	//TODO 최흥배
+	// backlog가 어떤 것이고, 이 크기가 변함에 따라 어떤 영향을 미치는지 아시나요?
+	// 혹시 모르시면 좀 알아보시고, 잘 이해 안가면 저에게 질문 바랍니다^^
 	if (listen(mSocket, backlog) == SOCKET_ERROR)
 	{
 		return ErrorCode::SOCKET_LISTEN_FAIL;

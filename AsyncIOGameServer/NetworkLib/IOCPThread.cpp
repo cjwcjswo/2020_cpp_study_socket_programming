@@ -18,9 +18,6 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 	OVERLAPPED_ENTRY entries[PENDING_COUNT];
 	ULONG entryNum = 0;
 	
-	//TODO 최흥배
-	// GetQueuedCompletionStatusEX 버전을 사용해봅니다
-	// 적용 완료
 	bool isOk = GetQueuedCompletionStatusEx
 	(
 		mIOCPHandle, entries, PENDING_COUNT, &entryNum, INFINITE, false
@@ -56,10 +53,7 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 			std::lock_guard<std::mutex> lock(mSessionMutex);
 
 			// TODO 최흥배
-			// 새로운 ClientSession 객체를 만들어서 인자로 넘기 후 객체풀에서 또 ClientSession를 얻는 방식이 너무 특이합니다.
-			// 자연스럽지 않습니다.
-			// mClientSessionManager->GenerateUniqueId() 스레드 세이프하지 않습니다
-			// 적용 완료
+			// 애플리케이션에 새로운 연결이 발생했음을 알려줄 수 있어야 합니다.
 			ErrorCode errorCode = mClientSessionManager->ConnectClientSession(mIOCPHandle, ioContext->mTCPSocket);
 			if (errorCode != ErrorCode::SUCCESS)
 			{
@@ -99,6 +93,8 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 				// TODO: 일단 여러번 테스트해보고 문제 파악 & 고민해보고 수정하기
 				session->Disconnect();
 
+				// TODO 최흥배
+				// 애플리케이션측에 연결이 끊어짐을 통보하지 못하고 있습니다
 				GLogger->PrintConsole(Color::LGREEN, L"Client %d Disconnected!\n", session->mTCPSocket->mSocket);
 
 				ErrorCode errorCode = mListenSocket->AcceptAsync(session->mTCPSocket);
@@ -147,6 +143,8 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 		}
 		case IOKey::SEND:
 		{
+			// TODO 최흥배
+			// 같은 세션 객체가 다른 스레드에서 Receive 이벤트에서 Close 처리를 하고 있는 중이거나 혹은 이미 막 한 상태에서 아래 코드가 호출되는 경우 문제가 없을까요?
 			if (!ioContext->mSession->IsConnect())
 			{
 				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", ioContext->mSession->mTCPSocket->mSocket);

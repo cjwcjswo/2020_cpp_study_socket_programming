@@ -67,6 +67,9 @@ CS::ErrorCode UserManager::Login(const uint64 sessionUniqueId, const char* userI
 	return user->Login(userId);
 }
 
+// TODO 최흥배
+// 검색 비용이 발생하지 않도록 sessionUniqueId 검색이 아닌 userIndex로 검색하도록 합니다.
+// sessionUniqueId는 이후 정확한지 한번 더 체크하는 용도로 비교하면 좋을 것 같습니다.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 User* UserManager::FindUser(const uint64 sessionUniqueId)
 {
