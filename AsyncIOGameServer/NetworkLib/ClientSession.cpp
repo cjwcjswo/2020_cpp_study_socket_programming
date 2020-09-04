@@ -10,6 +10,9 @@
 using namespace NetworkLib;
 
 
+//TODO 최흥배
+// mIndexElement(indexElement), mUniqueId(uniqueId)가 값을 대입하는 것이 성능적으로 좋을 수는 있지만 코드 보기에는 별로 좋지 않습니다.
+// ClientSession은 매번 생성하는 것이 아니니 성능 이득은 없습니다. 코드 보기를 더 좋게 하는 것이 좋습니다.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ClientSession::ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket, const uint32 spinLockCount, const uint32 maxBufferSize) : 
 	mIndexElement(indexElement), mUniqueId(uniqueId), mTCPSocket(tcpSocket), mSpinLockCount(spinLockCount), mSendBuffer(maxBufferSize), mReceiveBuffer(maxBufferSize)
@@ -45,6 +48,9 @@ ErrorCode ClientSession::ReceiveAsync()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
+	//TODO 최흥배
+	// 사용법이 틀렸습니다. 아래 글을 참고하세요
+	// https://docs.microsoft.com/en-us/windows/win32/sync/using-critical-section-objects
 	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
 	{
 		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
@@ -89,16 +95,14 @@ ErrorCode ClientSession::ReceiveAsync()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSession::ReceiveCompletion(DWORD transferred)
 {
-	// TODO 최흥배
-	// mReceiveBuffer 이 버퍼를 이 세션 객체만 접근하고 recv는 한번에 한번씩만 하기 때문에 락을 걸 필요가 없습니다.
-	// 만약 패킷을 처리하는 스레드에서 이 버퍼를 접근한다면 당연 락을 걸어야 하지만 지금은 접근하지 않는걸로 보입니다.
-	// 적용 완료
 	mReceiveBuffer.Commit(transferred);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ClientSession::SendAsync(const char* data, size_t length)
 {
+	//TODO 최흥배
+	// 사용법 에러
 	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
 	{
 		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
@@ -132,15 +136,13 @@ ErrorCode ClientSession::FlushSend()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
+	//TODO 최흥배
+	// 사용법 에러
 	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
 	{
 		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
 	}
 
-	// TODO 최흥배
-	// mSendPendingCount 1과 0 두가지 값만 가지니 bool 타입이 좋을 것 같아요
-	// mSendPendingCount의 타입과 이름을 보면 send 횟수를 계속 카운팅해서 뭔가에 사용할 것 같은데 지금 코드에서느 그렇지 않네요
-	// 적용 완료
 	if (mSendBuffer.DataSize() == 0 || !isSending)
 	{
 		DeleteCriticalSection(&mCriticalSection);
@@ -155,13 +157,14 @@ ErrorCode ClientSession::FlushSend()
 		return ErrorCode::CLIENT_SESSION_SEND_FAIL;
 	}
 
-	// TODO 최흥배
-	// 보낼 때 MSS 사이즈를 넘지 않게 보내도록 하죠
-	// 적용 완료
 	const int MAX_SEGMENT_SIZE = 1024; // 넉넉하게 1K
 	ULONG remainSize = static_cast<ULONG>(mSendBuffer.DataSize());
 	int pos = 0;
 
+	// TODO 최흥배
+	// n-send, 1-send 이야기 기억나시나요? send 전용 스레드를 만들어서 패킷을 보낼 때는 1-send를 쉽게 적용할 수 있으므로 대부분 1-send를 합니다.
+	// 아래는 n-send를 하고 있습니다. 1-send로 바꾸어보세요. send 요청 후 send가 완료된 이후에만 다시 WSASend를 호출합니다.
+	// 위 코드를 보면 1-send를 하기 위한 조건은 거의 다 갖추고 있습니다.
 	while (remainSize > 0)
 	{
 		ULONG sendLength = MAX_SEGMENT_SIZE;
@@ -231,13 +234,6 @@ ErrorCode ClientSession::SendCompletion(DWORD transferred)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode NetworkLib::ClientSession::Disconnect()
 {
-	// TODO 최흥배
-	// DisconnectEx 사용은 개인적으로 비추입니다.
-	// DisconnectEx를 사용하면 OS TIME_WAIT의 동작을 생각하고 코딩해야 합니다
-	// 적용 완료
-	
-	// mTCPSocket 객체의 멤버를 멀티스레드에서 접근해서 아래처럼 하면 문제가 있지 않을까요?
-	// 적용 완료
 	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
 	{
 		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
