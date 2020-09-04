@@ -5,6 +5,8 @@
 #include <queue>
 #include <mutex>
 #include <thread>
+
+#include "SList.h"
 #include "Protocol.h"
 #include "PrimitiveTypes.h"
 #include "ErrorCode.h"
@@ -12,6 +14,7 @@
 
 namespace NetworkLib
 {
+	struct OverlappedIOContext;
 	class IOCPThread;
 	class TCPSocket;
 	class ClientSessionManager;

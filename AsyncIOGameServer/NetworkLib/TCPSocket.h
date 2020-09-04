@@ -5,16 +5,16 @@
 #include "ErrorCode.h"
 #include "PrimitiveTypes.h"
 
+
 namespace NetworkLib
 {
 	class TCPSocket
 	{
 	protected:
-		char mBuffer[512] = { 0, };
-
 		// TODO 최흥배
 		// 외부 설정 정보 사용하여 실행 시에 크기를 바꿀 수 있도록 해주세요
-		char mAddressBuffer[512] = { 0, };
+		// 적용 완료
+		char* mAddressBuffer = nullptr;
 
 
 	public:
@@ -22,7 +22,7 @@ namespace NetworkLib
 
 
 	public:
-		explicit TCPSocket();
+		explicit TCPSocket(uint32 socketAddressBufferSize) { mAddressBuffer = new char[socketAddressBufferSize]; };
 		~TCPSocket() = default;
 
 

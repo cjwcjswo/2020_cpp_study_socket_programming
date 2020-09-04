@@ -53,7 +53,7 @@ ErrorCode ChatServer::Init()
 	mUserManager->Init(mConfig->mMaxUserNum);
 
 	mRoomManager = new RoomManager;
-	mRoomManager->Init(mConfig->mMaxRoomUserNum);
+	mRoomManager->Init(mConfig->mMaxRoomUserNum, mConfig->mMaxRoomUserNum);
 
 	// TODO: DBManager 완성 후 작성
 	/*mRedisManager = new Redis::Manager(mConfig->mRedisCheckSendTick, mConfig->mRedisCheckReceiveTick, mConfig->mRedisCheckReceiveTimeOut);
@@ -78,7 +78,8 @@ ErrorCode ChatServer::Run()
 	// TODO 최흥배
 	// Run 함수의 마지막에서 WaitForSingleObject(mExitEvent, INFINITE); 호출 때문에 스레드를 만들어서 Run을 호출하고 있는데
 	// 올바르지 않습니다. WaitForSingleObject(mExitEvent, INFINITE)로 대기를 하는 의미를 모르겠습니다
-	mNetworkThread = std::make_unique<std::thread>([this]() {mNetwork->Run(); });
+	// 적용 완료
+	mNetwork->Run();
 
 	GLogger->PrintConsole(Color::GREEN, L"ChatServer Start\n");
 
@@ -108,5 +109,4 @@ void ChatServer::Stop()
 
 	mIsRunning = false;
 	mNetwork->Stop();
-	mNetworkThread->join();
 }

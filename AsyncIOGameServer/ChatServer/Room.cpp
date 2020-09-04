@@ -8,19 +8,39 @@ using namespace CS;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 User* Room::FindUser(const uint64 sessionUniqueId)
 {
-	auto userIter = std::find_if(mUserDeque.begin(), mUserDeque.end(), [sessionUniqueId](User& user) {return user.mSessionUniqueId == sessionUniqueId; });
-	if (userIter == mUserDeque.end())
+	for (int i = 0; i < mMaxRoomUserNum; ++i)
 	{
-		return nullptr;
-	}
+		if (mRoomUserList[i] == nullptr)
+		{
+			continue;
+		}
 
-	return &(*userIter);
+		if (mRoomUserList[i]->mSessionUniqueId == sessionUniqueId)
+		{
+			return mRoomUserList[i];
+		}
+	}
+	
+	return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Room::Init(const int32 roomIndex, const uint16 maxUserNum)
+{
+	mRoomIndex = roomIndex;
+	mMaxRoomUserNum = maxUserNum;
+
+	mRoomUserList = new User*[maxUserNum];
+	for (int i = 0; i < maxUserNum; ++i)
+	{
+		mRoomUserIndexPool.push(i);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Room::Enter(User& user)
 {
-	if (mMaxUserNum <= mUserDeque.size())
+	if ((mMaxRoomUserNum <= mRoomUserCount) || mRoomUserIndexPool.empty())
 	{
 		return ErrorCode::ROOM_IS_FULL;
 	}
@@ -37,7 +57,11 @@ ErrorCode Room::Enter(User& user)
 		return errorCode;
 	}
 
-	mUserDeque.push_back(user);
+	int32 roomUserIndex = mRoomUserIndexPool.front();
+	mRoomUserIndexPool.pop();
+	mRoomUserList[roomUserIndex] = &user;
+
+	++mRoomUserCount;
 
 	return ErrorCode::SUCCESS;
 }
@@ -45,13 +69,20 @@ ErrorCode Room::Enter(User& user)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Room::Leave(User& user)
 {
-	uint64 userSessionUniqueId = user.mSessionUniqueId;
-
-	auto userIter = std::find_if(mUserDeque.begin(), mUserDeque.end(), [userSessionUniqueId](User& user) {return user.mSessionUniqueId == userSessionUniqueId; });
-	if (userIter != mUserDeque.end())
+	uint64 sessionUniqueId = INVALID_UNIQUE_ID;
+	for (int i = 0; i < mMaxRoomUserNum; ++i)
 	{
-		mUserDeque.erase(userIter);
+		if (mRoomUserList[i] == nullptr)
+		{
+			continue;
+		}
+
+		if (mRoomUserList[i]->mSessionUniqueId == sessionUniqueId)
+		{
+			mRoomUserIndexPool.push(i);
+			return user.LeaveRoom();
+		}
 	}
 
-	return user.LeaveRoom();
+	return ErrorCode::SUCCESS;
 }

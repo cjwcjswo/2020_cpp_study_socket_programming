@@ -3,32 +3,32 @@
 #include <WinSock2.h>
 #include <vector>
 #include <queue>
+#include <atomic>
 
 #include "SList.h"
-#include "PrimitiveTypes.h"
 #include "ErrorCode.h"
 #include "Define.h"
 
 
 namespace NetworkLib
 {
+	class TCPSocket;
 	class ClientSession;
 	struct IndexElement;
 
 	class ClientSessionManager
 	{
 	private:
-		std::vector<ClientSession> mClientVector;
+		std::vector<ClientSession*> mClientVector;
 		SList<IndexElement>* mClientIndexPool = nullptr;
 
 		uint32 mMaxSessionBufferSize = 0;
 
+		std::atomic<unsigned long> mUniqueIdGenerator = 0;
+
+
 	public:
 		uint32 mMaxSessionSize = 0;
-
-
-	private:
-		inline static unsigned long mUniqueIdGenerator = 0; // is atomic?
 
 
 	public:
@@ -36,15 +36,17 @@ namespace NetworkLib
 		~ClientSessionManager() = default;
 
 
-	public:
-		ErrorCode Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize) noexcept;
-
-		uint64 GenerateUniqueId() const;
+	private:
+		const uint64 GenerateUniqueId();
 		IndexElement* AllocClientSessionIndexElement();
+
+
+	public:
+		ErrorCode Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize, const uint32 socketAddressBufferSize, const uint32 spinLockCount) noexcept;
 
 		ClientSession* FindClientSession(const int32 index);
 
-		ClientSession& ConnectClientSession(ClientSession& clientSession);
+		ErrorCode ConnectClientSession(HANDLE iocpHandle, TCPSocket* tcpSocket);
 
 		void DisconnectClientSession(const int32 index);
 

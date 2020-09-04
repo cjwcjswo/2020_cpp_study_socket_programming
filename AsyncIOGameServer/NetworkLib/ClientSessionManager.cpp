@@ -1,14 +1,14 @@
 ﻿#include "ClientSessionManager.h"
 
-#include "Define.h"
 #include "ClientSession.h"
-#include "SList.h"
+#include "OverlappedIOContext.h"
+
 
 using namespace NetworkLib;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize) noexcept
+ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uint32 maxSessionBufferSize, const uint32 socketAddressBufferSize, const uint32 spinLockCount) noexcept
 {
 	mMaxSessionSize = maxClientSessionNum;
 	mMaxSessionBufferSize = maxSessionBufferSize;
@@ -31,7 +31,7 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 		indexElement->mIndex = static_cast<int32>(i);
 		mClientIndexPool->Push(indexElement);
 
-		TCPSocket* tcpSocket = new TCPSocket();
+		TCPSocket* tcpSocket = new TCPSocket(socketAddressBufferSize);
 		errorCode = tcpSocket->Create();
 		if (errorCode != ErrorCode::SUCCESS)
 		{
@@ -42,7 +42,8 @@ ErrorCode ClientSessionManager::Init(const uint32 maxClientSessionNum, const uin
 		// 이렇게 사용하면 emplace_back의 효과는 얻을 수 없습니다.
 		// 그냥 push_back을 사용하세요.
 		// 특히 현재 포인터를 저장하는 것이라서 올바르게 emplace_back를 사용하더라도 별 이득이 없습니다
-		mClientVector.emplace_back(indexElement, 0, tcpSocket);
+		// 적용 완료
+		mClientVector.push_back(new ClientSession(indexElement, 0, tcpSocket, spinLockCount, maxSessionBufferSize));
 	}
 
 	return ErrorCode::SUCCESS;
@@ -56,14 +57,14 @@ ClientSession* ClientSessionManager::FindClientSession(const int32 index)
 		return nullptr;
 	}
 
-	return &mClientVector[index];
+	return mClientVector[index];
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-uint64  ClientSessionManager::GenerateUniqueId() const
+const uint64 ClientSessionManager::GenerateUniqueId()
 {
-	return ++mUniqueIdGenerator;
+	return mUniqueIdGenerator++;;
 }
 
 
@@ -79,21 +80,30 @@ IndexElement* ClientSessionManager::AllocClientSessionIndexElement()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession& ClientSessionManager::ConnectClientSession(ClientSession& clientSession)
+ErrorCode ClientSessionManager::ConnectClientSession(HANDLE iocpHandle, TCPSocket* tcpSocket)
 {
-	ClientSession& session = mClientVector[clientSession.mIndexElement->mIndex];
-	session.mUniqueId = clientSession.mUniqueId;
-	session.mTCPSocket = clientSession.mTCPSocket;
-	session.mIsConnect = true;
+	IndexElement* indexElement = AllocClientSessionIndexElement();
+	if (indexElement == nullptr)
+	{
+		return ErrorCode::CLIENT_SESSION_MANAGER_INDEX_ALIGN_FAIL;
+	}
 
-	return session;
+	ClientSession* session = mClientVector[indexElement->mIndex];
+	session->mUniqueId = GenerateUniqueId();
+	session->mTCPSocket = tcpSocket;
+	session->mIsConnect = true;
+
+	CreateIoCompletionPort((HANDLE)tcpSocket->mSocket, iocpHandle, static_cast<ULONG_PTR>(IOKey::RECEIVE), 0);
+	session->ReceiveAsync();
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ClientSessionManager::DisconnectClientSession(const int32 index)
 {
-	mClientIndexPool->Push(mClientVector[index].mIndexElement);
-	mClientVector[index].Clear();
+	mClientIndexPool->Push(mClientVector[index]->mIndexElement);
+	mClientVector[index]->Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,11 +111,11 @@ void ClientSessionManager::FlushSendClientSessionAll()
 {
 	for (auto& session : mClientVector)
 	{
-		if (!session.IsConnect())
+		if (!session->IsConnect())
 		{
 			continue;
 		}
 
-		session.FlushSend();
+		session->FlushSend();
 	}
 }

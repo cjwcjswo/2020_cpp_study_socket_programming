@@ -20,11 +20,13 @@ public:
 private:
 	// TODO 최흥배
 	// 적합하지 않은 자료구조를 사용했습니다
-	std::deque<Room> mRoomDeque;
+	// 적용 완료
+	Room* mRoomList = nullptr;
+	uint32 mMaxRoomNum = 0;
 
 
 public:
-	void Init(const int32 maxRoomNum);
+	void Init(const int32 maxRoomNum, const uint32 maxRoomUserNum);
 	Room* FindRoom(const int32 roomIndex);
 };
 

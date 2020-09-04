@@ -11,8 +11,8 @@ using namespace NetworkLib;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ClientSession::ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket) : 
-	mIndexElement(indexElement), mUniqueId(uniqueId), mTCPSocket(tcpSocket), mSendBuffer(1024), mReceiveBuffer(1024)
+ClientSession::ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket, const uint32 spinLockCount, const uint32 maxBufferSize) : 
+	mIndexElement(indexElement), mUniqueId(uniqueId), mTCPSocket(tcpSocket), mSpinLockCount(spinLockCount), mSendBuffer(maxBufferSize), mReceiveBuffer(maxBufferSize)
 {
 }
 
@@ -45,14 +45,24 @@ ErrorCode ClientSession::ReceiveAsync()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
-	FastSpinlockGuard criticalSection(mSessionLock);
+	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
+	{
+		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
+	}
 
 	if (mReceiveBuffer.RemainBufferSize() == 0)
 	{
+		DeleteCriticalSection(&mCriticalSection);
+
 		return ErrorCode::CLIENT_SESSION_RECEIVE_BUFFER_FULL;
 	}
 
-	OverlappedIOReceiveContext* context = new OverlappedIOReceiveContext(this);
+	OverlappedIOContext* context = GIOContextPool->Pop();
+	if (context == nullptr)
+	{
+		return ErrorCode::IO_CONTEXT_ELEMENT_IS_NOT_ENOUGH;
+	}
+	context->mIOKey = IOKey::RECEIVE;
 
 	DWORD receiveBytes = 0;
 	DWORD flags = 0;
@@ -63,10 +73,15 @@ ErrorCode ClientSession::ReceiveAsync()
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 		{
-			DeleteIOContext(context);
+			context->Clear();
+			GIOContextPool->Push(context);
+			DeleteCriticalSection(&mCriticalSection);
+
 			return ErrorCode::CLIENT_SESSION_RECEIVE_FAIL;
 		}
 	}
+
+	DeleteCriticalSection(&mCriticalSection);
 
 	return ErrorCode::SUCCESS;
 }
@@ -77,25 +92,34 @@ void ClientSession::ReceiveCompletion(DWORD transferred)
 	// TODO 최흥배
 	// mReceiveBuffer 이 버퍼를 이 세션 객체만 접근하고 recv는 한번에 한번씩만 하기 때문에 락을 걸 필요가 없습니다.
 	// 만약 패킷을 처리하는 스레드에서 이 버퍼를 접근한다면 당연 락을 걸어야 하지만 지금은 접근하지 않는걸로 보입니다.
-	FastSpinlockGuard criticalSection(mSessionLock);
-
+	// 적용 완료
 	mReceiveBuffer.Commit(transferred);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode ClientSession::SendAsync(const char* data, size_t length)
 {
-	FastSpinlockGuard criticalSection(mSessionLock);
+	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
+	{
+		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
+	}
 
 	if (!IsConnect())
 	{
+		DeleteCriticalSection(&mCriticalSection);
+
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
 	if (!mSendBuffer.Push(data, length))
 	{
+		DeleteCriticalSection(&mCriticalSection);
+
 		return ErrorCode::CLIENT_SESSION_SEND_FAIL;
 	}
+
+	DeleteCriticalSection(&mCriticalSection);
+
 
 	return ErrorCode::SUCCESS;
 }
@@ -108,78 +132,124 @@ ErrorCode ClientSession::FlushSend()
 		return ErrorCode::CLIENT_SESSION_NOT_CONNECTED;
 	}
 
-	FastSpinlockGuard criticalSection(mSessionLock);
+	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
+	{
+		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
+	}
 
 	// TODO 최흥배
 	// mSendPendingCount 1과 0 두가지 값만 가지니 bool 타입이 좋을 것 같아요
 	// mSendPendingCount의 타입과 이름을 보면 send 횟수를 계속 카운팅해서 뭔가에 사용할 것 같은데 지금 코드에서느 그렇지 않네요
-	if (mSendBuffer.DataSize() == 0 || mSendPendingCount > 0)
+	// 적용 완료
+	if (mSendBuffer.DataSize() == 0 || !isSending)
 	{
+		DeleteCriticalSection(&mCriticalSection);
+
 		return ErrorCode::SUCCESS;
 	}
 
 	if (mSendBuffer.RemainBufferSize() == 0)
 	{
+		DeleteCriticalSection(&mCriticalSection);
+
 		return ErrorCode::CLIENT_SESSION_SEND_FAIL;
 	}
 
-	OverlappedIOSendContext* context = new OverlappedIOSendContext(this);
-
-
 	// TODO 최흥배
 	// 보낼 때 MSS 사이즈를 넘지 않게 보내도록 하죠
-	DWORD snedBytes = 0;
-	DWORD flags = 0;
-	context->mWSABuf.len = static_cast<ULONG>(mSendBuffer.DataSize());
-	context->mWSABuf.buf = mSendBuffer.FrontData();
+	// 적용 완료
+	const int MAX_SEGMENT_SIZE = 1024; // 넉넉하게 1K
+	ULONG remainSize = static_cast<ULONG>(mSendBuffer.DataSize());
+	int pos = 0;
 
-	if (WSASend(mTCPSocket->mSocket, &context->mWSABuf, 1, &snedBytes, flags, (LPWSAOVERLAPPED)context, nullptr) == SOCKET_ERROR)
+	while (remainSize > 0)
 	{
-		if (WSAGetLastError() != WSA_IO_PENDING)
+		ULONG sendLength = MAX_SEGMENT_SIZE;
+		if (remainSize < MAX_SEGMENT_SIZE)
 		{
-			DeleteIOContext(context);
-			return ErrorCode::CLIENT_SESSION_SEND_FAIL;
+			sendLength = remainSize;
 		}
+
+		OverlappedIOContext* context = GIOContextPool->Pop();
+		if (context == nullptr)
+		{
+			return ErrorCode::IO_CONTEXT_ELEMENT_IS_NOT_ENOUGH;
+		}
+
+		DWORD sendBytes = 0;
+		DWORD flags = 0;
+		context->mWSABuf.len = sendLength;
+		context->mWSABuf.buf = mSendBuffer.FrontData() + pos;
+
+		if (WSASend(mTCPSocket->mSocket, &context->mWSABuf, 1, &sendBytes, flags, (LPWSAOVERLAPPED)context, nullptr) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				DeleteCriticalSection(&mCriticalSection);
+				context->Clear();
+				GIOContextPool->Push(context);
+
+				return ErrorCode::CLIENT_SESSION_SEND_FAIL;
+			}
+		}
+
+		remainSize -= MAX_SEGMENT_SIZE;
+		pos += MAX_SEGMENT_SIZE;
 	}
 
-	++mSendPendingCount;
+	isSending = true;
+
+	DeleteCriticalSection(&mCriticalSection);
 
 	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ClientSession::SendCompletion(DWORD transferred)
+ErrorCode ClientSession::SendCompletion(DWORD transferred)
 {
-	FastSpinlockGuard criticalSection(mSessionLock);
+	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
+	{
+		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
+	}
 
 	if (!IsConnect())
 	{
-		return;
+		DeleteCriticalSection(&mCriticalSection);
+
+		return ErrorCode::SUCCESS;
 	}
 
 	mSendBuffer.Pop(transferred);
 
-	--mSendPendingCount;
+	isSending = false;
+
+	DeleteCriticalSection(&mCriticalSection);
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkLib::ClientSession::DisconnectAsync()
+ErrorCode NetworkLib::ClientSession::Disconnect()
 {
 	// TODO 최흥배
 	// DisconnectEx 사용은 개인적으로 비추입니다.
 	// DisconnectEx를 사용하면 OS TIME_WAIT의 동작을 생각하고 코딩해야 합니다
-
+	// 적용 완료
+	
 	// mTCPSocket 객체의 멤버를 멀티스레드에서 접근해서 아래처럼 하면 문제가 있지 않을까요?
+	// 적용 완료
+	if (!InitializeCriticalSectionAndSpinCount(&mCriticalSection, mSpinLockCount))
+	{
+		return ErrorCode::CLIENT_SESSION_LOCK_FAIL;
+	}
 
-	// TODO: 집 운영체제가 윈도우 7이라 DisconnectEx를 지원 안함 -.-;;... 운영체제별 분기 처리
 	closesocket(mTCPSocket->mSocket);
 	mTCPSocket->Clear();
 	mTCPSocket->Create();
-}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void NetworkLib::ClientSession::DisconnectCompletion()
-{
+	DeleteCriticalSection(&mCriticalSection);
+
+	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,6 +257,6 @@ void ClientSession::Clear()
 {
 	mIndexElement = nullptr;
 	mUniqueId = 0;
-	mSendPendingCount = 0;
+	isSending = false;
 	mTCPSocket->Clear();
 }

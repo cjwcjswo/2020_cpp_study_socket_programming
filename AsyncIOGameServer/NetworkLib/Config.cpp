@@ -44,10 +44,13 @@ void Config::staticjson_init(staticjson::ObjectHandler* handler)
 {
 	handler->add_property("IPAddress", &mIPAddress);
 	handler->add_property("PortNum", &mPortNum);
+	handler->add_property("SocketAddressBufferSize", &mSocketAddressBufferSize);
 	handler->add_property("MaxSessionNum", &mMaxSessionNum);
 	handler->add_property("MaxSessionBufferSize", &mMaxSessionBufferSize);
 	handler->add_property("MaxPacketBodySize", &mMaxPacketBodySize);
 	handler->add_property("SendPacketCheckTick", &mSendPacketCheckTick);
 	handler->add_property("MaxThreadNum", &mMaxThreadNum);
+	handler->add_property("SpinLockCount", &mSpinLockCount);
+	handler->add_property("IOContextPoolSize", &mIOContextPoolSize);
 	handler->set_flags(staticjson::Flags::DisallowUnknownKey);
 }

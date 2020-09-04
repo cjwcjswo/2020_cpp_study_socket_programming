@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "TCPSocket.h"
-#include "FastSpinLock.h"
 #include "PrimitiveTypes.h"
 #include "Define.h"
 #include "RingBuffer.h"
@@ -17,22 +16,22 @@ namespace NetworkLib
 	class ClientSession
 	{
 	public:
-		ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket);
+		ClientSession(IndexElement* indexElement, const uint64 uniqueId, TCPSocket* tcpSocket, const uint32 spinLockCount, const uint32 maxBufferSize);
 
 		~ClientSession();
 
 
 	private:
+		CRITICAL_SECTION mCriticalSection;
 		uint32 mMaxBufferSize = 0;
+		uint32 mSpinLockCount = 0;
 		
 
 	public:
 		RingBuffer mSendBuffer;
 		RingBuffer mReceiveBuffer;
 
-		FastSpinLock mSessionLock;
-
-		int mSendPendingCount = 0;
+		bool isSending = false;
 		bool mIsConnect = false;
 
 		IndexElement* mIndexElement = nullptr;
@@ -48,10 +47,9 @@ namespace NetworkLib
 
 		ErrorCode SendAsync(const char* data, size_t length);
 		ErrorCode FlushSend();
-		void SendCompletion(DWORD transferred);
+		ErrorCode SendCompletion(DWORD transferred);
 
-		void DisconnectAsync();
-		void DisconnectCompletion();
+		ErrorCode Disconnect();
 
 		void Clear();
 	};

@@ -44,26 +44,31 @@ ErrorCode PacketHandler::RoomEnter(const Packet& packet)
 	}
 	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_ENTER_RESPONSE), reinterpret_cast<char*>(&response), sizeof(response));
 
-	auto roomUserDeque = room->UserDeque();
-	uint16 roomUserCount = static_cast<uint16>(roomUserDeque.size());
-
-
-	char* listNotifyBuffer = new char[RoomUserListNotify::Size(roomUserCount)];
+	char* listNotifyBuffer = new char[RoomUserListNotify::Size(room->mRoomUserCount)];
 	RoomUserListNotify* roomUserListNotify = reinterpret_cast<RoomUserListNotify*>(listNotifyBuffer);
-	roomUserListNotify->mUserCount = roomUserCount;
+	roomUserListNotify->mUserCount = room->mRoomUserCount;
 
-	for (int i = 0; i < roomUserCount; ++i)
+	for (int i = 0; i < room->mRoomUserCount; ++i)
 	{
-		User& roomUser = roomUserDeque[i];
-		roomUserListNotify->mRoomUserList[i].mUserUniqueId = roomUser.mSessionUniqueId;
-		memcpy_s(roomUserListNotify->mRoomUserList[i].mUserIdList, MAX_USER_ID_SIZE, roomUserDeque[i].mUserId, MAX_USER_ID_SIZE);
+		User* roomUser = room->mRoomUserList[i];
+		roomUserListNotify->mRoomUserList[i].mUserUniqueId = roomUser->mSessionUniqueId;
+		memcpy_s(roomUserListNotify->mRoomUserList[i].mUserIdList, MAX_USER_ID_SIZE, roomUser->mUserId, MAX_USER_ID_SIZE);
 	}
-	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_USER_LIST_NOTIFY), reinterpret_cast<char*>(roomUserListNotify), RoomUserListNotify::Size(roomUserCount));
+	mNetwork->Send(packet.mSessionIndex, static_cast<uint16>(PacketId::ROOM_USER_LIST_NOTIFY), reinterpret_cast<char*>(roomUserListNotify), RoomUserListNotify::Size(room->mRoomUserCount));
 
 	RoomNewUserBroadcast newUserBroadcast;
 	newUserBroadcast.mUserUniueId = user->mSessionUniqueId;
 	memcpy_s(newUserBroadcast.mUserId, MAX_USER_ID_SIZE, user->mUserId, MAX_USER_ID_SIZE);
-	//mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&newUserBroadcast), sizeof(newUserBroadcast), { user->mSessionUniqueId });
+	for (int i = 0; i < room->mRoomUserCount; ++i)
+	{
+		User* roomUser = room->mRoomUserList[i];
+		if (roomUser->mSessionUniqueId == user->mSessionUniqueId)
+		{
+			continue;
+		}
+		mNetwork->Send(roomUser->mSessionIndex,
+			static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&newUserBroadcast), sizeof(newUserBroadcast));
+	}
 
 	delete[] listNotifyBuffer;
 
@@ -98,7 +103,16 @@ ErrorCode PacketHandler::RoomLeave(const Packet& packet)
 
 	RoomLeaveUserBroadcast leaveUserBroadcast;
 	leaveUserBroadcast.mUserUniqueId = user->mSessionUniqueId;
-	//mNetwork->Broadcast(static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&leaveUserBroadcast), sizeof(leaveUserBroadcast), { user->mSessionUniqueId });
+	for (int i = 0; i < room->mRoomUserCount; ++i)
+	{
+		User* roomUser = room->mRoomUserList[i];
+		if (roomUser->mSessionUniqueId == user->mSessionUniqueId)
+		{
+			continue;
+		}
+		mNetwork->Send(roomUser->mSessionIndex, 
+			static_cast<uint16>(PacketId::ROOM_NEW_USER_BROADCAST), reinterpret_cast<char*>(&leaveUserBroadcast), sizeof(leaveUserBroadcast));
+	}
 
 	return response.mErrorCode;
 }
@@ -130,9 +144,10 @@ ErrorCode PacketHandler::RoomChat(const Packet& packet)
 	broadcast.mMessageLen = request->mMessageLen;
 	wmemcpy_s(broadcast.mMessage, request->mMessageLen, request->mMessage, request->mMessageLen);
 
-	for (auto& user : room->UserDeque())
+	for (int i = 0; i < room->mRoomUserCount; ++i)
 	{
-		mNetwork->Send(user.mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
+		User* roomUser = room->mRoomUserList[i];
+		mNetwork->Send(roomUser->mSessionIndex, static_cast<uint16>(PacketId::ROOM_CHAT_BROADCAST), reinterpret_cast<char*>(&broadcast), sizeof(broadcast) - MAX_CHAT_SIZE - broadcast.mMessageLen);
 	}
 
 	GLogger->PrintConsole(Color::LGREEN, L"<RoomChat> [%lu]: %ls\n", 5, broadcast.mMessage);

@@ -36,7 +36,7 @@ ErrorCode Network::Init()
 		return ErrorCode::WSA_START_UP_FAIL;
 	}
 
-	mListenSocket = new TCPSocket();
+	mListenSocket = new TCPSocket(mConfig->mSocketAddressBufferSize);
 
 	errorCode = mListenSocket->Create();
 	if (errorCode != ErrorCode::SUCCESS)
@@ -60,7 +60,7 @@ ErrorCode Network::Init()
 	}
 
 	mClientSessionManager = new ClientSessionManager();
-	errorCode = mClientSessionManager->Init(mConfig->mMaxSessionNum, 1024);
+	errorCode = mClientSessionManager->Init(mConfig->mMaxSessionNum, mConfig->mMaxSessionBufferSize, mConfig->mSocketAddressBufferSize, mConfig->mSpinLockCount);
 	if (errorCode != ErrorCode::SUCCESS)
 	{
 		GLogger->PrintConsole(Color::RED, L"ClientSessionManager Init Error: %d\n", static_cast<uint16>(errorCode));
@@ -69,20 +69,22 @@ ErrorCode Network::Init()
 
 	mIOCPThreads = new IOCPThread[mConfig->mMaxThreadNum];
 
+	if (!GIOContextPool->Create(mConfig->mIOContextPoolSize))
+	{
+		GLogger->PrintConsole(Color::RED, L"IOCPContextPool Create Error: %d\n", static_cast<uint16>(ErrorCode::IO_CONTEXT_POOL_CREATE_FAIL));
+		return ErrorCode::IO_CONTEXT_POOL_CREATE_FAIL;
+	}
+	for (uint32 i = 0; i < mConfig->mIOContextPoolSize; ++i)
+	{
+		GIOContextPool->Push(new OverlappedIOContext);
+	}
+
 	return ErrorCode::SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode Network::Run()
 {
-	mExitEvent = CreateEvent(nullptr, true, false, nullptr);
-	if (mExitEvent == 0)
-	{
-		GLogger->PrintConsole(Color::RED, L"Create Exit Event Fail\n");
-
-		return ErrorCode::CREATE_EVENT_FAIL;
-	}
-
 	GLogger->PrintConsole(Color::LBLUE, "Run Server~~~~~\n");
 
 	mIOCPHandle = CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListenSocket->mSocket), nullptr, static_cast<ULONG_PTR>(IOKey::ACCEPT), 0);
@@ -126,8 +128,6 @@ ErrorCode Network::Run()
 	}
 
 	mIsRunning = true;
-
-	WaitForSingleObject(mExitEvent, INFINITE);
 
 	return ErrorCode::SUCCESS;
 }

@@ -1,9 +1,20 @@
 #pragma once
 
-#include "DBManager.h"
+#include "IDBManager.h"
+#include "ErrorCode.h"
 
-// TODO: MySQL, Redis 인터페이스 작성
-class MySQLManager : DBManager
+namespace CS
 {
-};
+	class MySQLManager : IDBManager
+	{
+	public:
+		MySQLManager() = default;
+		~MySQLManager() = default;
 
+
+	public:
+		void Init() override;
+		ErrorCode Connect() override;
+		void Close() override;
+	};
+}

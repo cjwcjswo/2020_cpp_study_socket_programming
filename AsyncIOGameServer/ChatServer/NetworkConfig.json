@@ -1,9 +1,12 @@
 {
 	"IPAddress": "127.0.0.1",
 	"PortNum": 32452,
-	"MaxSessionNum": 500,
-	"MaxSessionBufferSize": 2048,
+	"SocketAddressBufferSize": 1024,
+	"MaxSessionNum": 100,
+	"MaxSessionBufferSize": 1024,
 	"MaxPacketBodySize": 1024,
-	"SendPacketCheckTick": 50,
-	"MaxThreadNum": 10
+	"SendPacketCheckTick": 10,
+	"MaxThreadNum": 10,
+	"SpinLockCount": 4000,
+	"IOContextPoolSize": 100
 }

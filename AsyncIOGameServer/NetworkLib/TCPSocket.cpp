@@ -9,12 +9,6 @@ using namespace NetworkLib;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TCPSocket::TCPSocket()
-{
-	
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::ReuseAddr()
 {
 	// https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/SocketOption
@@ -80,11 +74,17 @@ ErrorCode TCPSocket::Listen(const int backlog)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ErrorCode TCPSocket::AcceptAsync(TCPSocket* clientSocket)
-{	
+{
 	DWORD sockAddrSize = sizeof(SOCKADDR_IN) + 16;
-	
+
 	// TODO 최흥배. 아래 것도 pool로 관리하죠
-	OverlappedIOAcceptContext* context = new OverlappedIOAcceptContext(clientSocket);
+	// 적용 완료
+	OverlappedIOContext* context = GIOContextPool->Pop();
+	if (context == nullptr)
+	{
+		return ErrorCode::IO_CONTEXT_ELEMENT_IS_NOT_ENOUGH;
+	}
+	context->mIOKey = IOKey::ACCEPT;
 
 	BOOL isOK = AcceptEx
 	(mSocket, clientSocket->mSocket, clientSocket->mAddressBuffer,

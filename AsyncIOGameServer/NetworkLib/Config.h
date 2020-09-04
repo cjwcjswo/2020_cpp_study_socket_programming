@@ -28,10 +28,14 @@ namespace NetworkLib
 		uint32 mPortNum = 0;
 
 		uint32 mMaxThreadNum = 0;
+		uint32 mSpinLockCount = 0;
 
+		uint32 mIOContextPoolSize = 0;
+
+		uint32 mSocketAddressBufferSize = 0;
 		uint32 mMaxSessionNum = 0;
 		uint32 mMaxSessionBufferSize = 0;
-
+		
 		uint32 mMaxPacketBodySize = 0;
 
 		uint32 mSendPacketCheckTick = 0;

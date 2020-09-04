@@ -29,7 +29,6 @@ private:
 	PacketHandler* mPacketHandler = nullptr;
 	Config* mConfig = nullptr;
 
-	std::unique_ptr<std::thread> mNetworkThread = nullptr;
 	bool mIsRunning = false;
 
 

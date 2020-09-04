@@ -167,7 +167,6 @@
     <ClCompile Include="PacketHandler.cpp" />
     <ClCompile Include="PacketProcess.cpp" />
     <ClCompile Include="PacketProcessRoom.cpp" />
-    <ClCompile Include="RedisManager.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="User.cpp" />
@@ -176,12 +175,11 @@
   <ItemGroup>
     <ClInclude Include="ChatServer.h" />
     <ClInclude Include="Config.h" />
-    <ClInclude Include="DBManager.h" />
+    <ClInclude Include="IDBManager.h" />
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="MySQLManager.h" />
     <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="Protocol.h" />
-    <ClInclude Include="RedisManager.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="RoomManager.h" />
     <ClInclude Include="User.h" />

@@ -53,46 +53,50 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 		{
 		case IOKey::ACCEPT:
 		{
-			OverlappedIOAcceptContext* acceptContext = reinterpret_cast<OverlappedIOAcceptContext*>(ioContext);
 			std::lock_guard<std::mutex> lock(mSessionMutex);
-
-			IndexElement* indexElement = mClientSessionManager->AllocClientSessionIndexElement();
-			if (indexElement == nullptr)
-			{
-				GLogger->PrintConsole(Color::RED, L"%d AllocClientSessionIndex Fail", acceptContext->mTCPSocket->mSocket);
-				break;
-			}
 
 			// TODO 최흥배
 			// 새로운 ClientSession 객체를 만들어서 인자로 넘기 후 객체풀에서 또 ClientSession를 얻는 방식이 너무 특이합니다.
 			// 자연스럽지 않습니다.
 			// mClientSessionManager->GenerateUniqueId() 스레드 세이프하지 않습니다
-			ClientSession session{ indexElement, mClientSessionManager->GenerateUniqueId(), acceptContext->mTCPSocket };
-			ClientSession& newSession = mClientSessionManager->ConnectClientSession(session);
+			// 적용 완료
+			ErrorCode errorCode = mClientSessionManager->ConnectClientSession(mIOCPHandle, ioContext->mTCPSocket);
+			if (errorCode != ErrorCode::SUCCESS)
+			{
+				GLogger->PrintConsole(Color::RED, L"Client %d Connect Fail\n", ioContext->mTCPSocket->mSocket);
 
-			CreateIoCompletionPort((HANDLE)acceptContext->mTCPSocket->mSocket, mIOCPHandle, static_cast<ULONG_PTR>(IOKey::RECEIVE), 0);
-			newSession.ReceiveAsync();
+				closesocket(ioContext->mTCPSocket->mSocket);
+				ioContext->mTCPSocket->Clear();
+				ioContext->mTCPSocket->Create();
 
-			GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", acceptContext->mTCPSocket->mSocket);
+				ErrorCode errorCode = mListenSocket->AcceptAsync(ioContext->mTCPSocket);
+				if (errorCode != ErrorCode::SUCCESS)
+				{
+					GLogger->PrintConsole(Color::RED, L"Socket(index: %d) Accept Async Error: %d\n", i, static_cast<uint16>(errorCode));
+				}
+
+				break;
+			}
+
+			GLogger->PrintConsole(Color::LGREEN, L"New Client %d Connected!\n", ioContext->mTCPSocket->mSocket);
 
 			break;
 		}
 		case IOKey::RECEIVE:
 		{
-			OverlappedIOReceiveContext* receiveContext = reinterpret_cast<OverlappedIOReceiveContext*>(ioContext);
-			if (!receiveContext->mSession->IsConnect())
+			if (!ioContext->mSession->IsConnect())
 			{
-				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", receiveContext->mSession->mTCPSocket->mSocket);
+				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", ioContext->mSession->mTCPSocket->mSocket);
 				break;
 			}
 
-			ClientSession* session = receiveContext->mSession;
+			ClientSession* session = ioContext->mSession;
 			if (entry.dwNumberOfBytesTransferred == 0)
 			{
 				// TODO 최흥배
 				// 다른 스레드에서 send 작업이 걸려 있다면 아래는 스레드세이프하지 않습니다.
 				// IOCP에서 Close 처리가 꽤 까다롭습니다
-				session->DisconnectAsync();
+				session->Disconnect();
 
 				GLogger->PrintConsole(Color::LGREEN, L"Client %d Disconnected!\n", session->mTCPSocket->mSocket);
 
@@ -107,7 +111,7 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 			session->ReceiveCompletion(transferred);
 
 			PacketHeader* header;
-			while (receiveContext->mSession->mReceiveBuffer.DataSize() >= PACKET_HEADER_SIZE)
+			while (ioContext->mSession->mReceiveBuffer.DataSize() >= PACKET_HEADER_SIZE)
 			{
 				header = reinterpret_cast<PacketHeader*>(session->mReceiveBuffer.FrontData());
 				uint16 requireBodySize = header->mPacketSize - PACKET_HEADER_SIZE;
@@ -142,30 +146,20 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 		}
 		case IOKey::SEND:
 		{
-			OverlappedIOReceiveContext* sendContext = reinterpret_cast<OverlappedIOReceiveContext*>(ioContext);
-			if (!sendContext->mSession->IsConnect())
+			if (!ioContext->mSession->IsConnect())
 			{
-				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", sendContext->mSession->mTCPSocket->mSocket);
+				GLogger->PrintConsole(Color::RED, L"%d Client Session Not Found(Receive)", ioContext->mSession->mTCPSocket->mSocket);
 				break;
 			}
 
-			sendContext->mSession->SendCompletion(transferred);
+			ioContext->mSession->SendCompletion(transferred);
 
-			break;
-		}
-		case IOKey::DISCONNECT:
-		{
-			OverlappedIODisconnectContext* disconnectContext = reinterpret_cast<OverlappedIODisconnectContext*>(ioContext);
-			ErrorCode errorCode = mListenSocket->AcceptAsync(disconnectContext->mTCPSocket);
-			if (errorCode != ErrorCode::SUCCESS)
-			{
-				GLogger->PrintConsole(Color::RED, L"Socket(index: %d) Accept Async Error: %d\n", i, static_cast<uint16>(errorCode));
-			}
 			break;
 		}
 		}
 
-		DeleteIOContext(ioContext);
+		ioContext->Clear();
+		GIOContextPool->Push(ioContext);
 	}
 
 

@@ -12,7 +12,7 @@ ErrorCode UserManager::Init(const int maxUserNum)
 	for (int i = 0; i < maxUserNum; i++)
 	{
 		mUserIndexPool.push(i);
-		mUserPool.emplace_back();
+		mUserPool.push_back(User{});
 	}
 
 	return ErrorCode::SUCCESS;

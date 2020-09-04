@@ -23,11 +23,12 @@ namespace NetworkLib
 
 
 	private:
+		void Init();
 		const size_t MaxBufferSize() const;
 		bool Rearrange();
 
+
 	public:
-		void Clear();
 		bool Push(const char* data, const size_t size);
 		bool Pop(const size_t size);
 

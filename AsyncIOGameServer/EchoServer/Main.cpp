@@ -12,7 +12,7 @@ int main()
 		return -1;
 	}
 	
-	std::unique_ptr<std::thread> networkThread = std::make_unique<std::thread>([&]() {network.Run(); });
+	network.Run();
 
 	while (true)
 	{
@@ -26,8 +26,6 @@ int main()
 
 		network.Send(packet.mSessionIndex, packet.mPacketId, packet.mBodyData, packet.mBodyDataSize);
 	}
-
-	networkThread->join();
 
 	return 0;
 }
