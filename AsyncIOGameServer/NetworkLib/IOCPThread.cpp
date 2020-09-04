@@ -96,6 +96,7 @@ DWORD WINAPI IOCPThread::IOCPSocketProcess()
 				// TODO 최흥배
 				// 다른 스레드에서 send 작업이 걸려 있다면 아래는 스레드세이프하지 않습니다.
 				// IOCP에서 Close 처리가 꽤 까다롭습니다
+				// TODO: 일단 여러번 테스트해보고 문제 파악 & 고민해보고 수정하기
 				session->Disconnect();
 
 				GLogger->PrintConsole(Color::LGREEN, L"Client %d Disconnected!\n", session->mTCPSocket->mSocket);
